@@ -63,6 +63,7 @@ void BattleContext::init(const GameContext &gc) {
     initRelics(gc);
     player.energy += player.energyPerTurn;
 
+    executeActions();
 }
 
 // this doesnt apply powers in order, so if that matters in the future all relics will have to be sorted

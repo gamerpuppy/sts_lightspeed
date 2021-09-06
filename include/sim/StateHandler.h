@@ -26,8 +26,8 @@ namespace sts {
 
     public:
         void setupState(const GameContext &gc);
-        int getStateSize(const GameContext &gc);
-        void chooseOption(GameContext &gc, int option);
+        [[nodiscard]] int getStateSize(const GameContext &gc) const;
+        void chooseOption(GameContext &gc, int option) const;
 
     private:
         void setupMapOptions(const GameContext &gc);
@@ -44,13 +44,19 @@ namespace sts {
 
     class RandomBattleStateHandler {
         static constexpr int NORMAL_STATE_SIZE = (6 * 5) + (10 * 5) + 1; // 81
+
         fixed_list<BattleContextOperator, NORMAL_STATE_SIZE> optionFunctions;
+//        std::vector<std::string> optionFunctionDescs;
+
         fixed_list<int, CardManager::MAX_DRAWPILE_SIZE> validCardIdxs;
         std::function <void (BattleContext&, int idx)> cardSelectFunction;
+//        std::string cardSelectFunctionDesc = "";
 
     public:
-        int setupState(const BattleContext &bc); // returns state size
-        void chooseOption(BattleContext &bc, int option);
+        int setupState(const BattleContext &bc, bool withDesc=false); // returns state size
+        void chooseOption(BattleContext &bc, int option) const;
+
+//        std::string getDescForOption(BattleContext &bc, int option);
 
     private:
         int setupNormalOptions(const BattleContext &bc);

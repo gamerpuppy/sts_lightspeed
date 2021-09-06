@@ -54,7 +54,6 @@ void RandomAgent::playoutWithBattles(GameContext &gc) {
         if (gc.screenState == ScreenState::BATTLE) {
             bc = {};
             bc.init(gc);
-            bc.executeActions();
 
             playoutBattle(bc);
             bc.exitBattle(gc);

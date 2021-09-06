@@ -69,7 +69,7 @@ void RandomStateHandler::setupState(const GameContext &gc) {
     }
 }
 
-int RandomStateHandler::getStateSize(const GameContext &gc) {
+int RandomStateHandler::getStateSize(const GameContext &gc) const {
     switch (gc.screenState) {
         case ScreenState::CARD_SELECT:
             return gc.info.toSelectCards.size();
@@ -100,7 +100,7 @@ int RandomStateHandler::getStateSize(const GameContext &gc) {
     }
 }
 
-void RandomStateHandler::chooseOption(GameContext &gc, int option) {
+void RandomStateHandler::chooseOption(GameContext &gc, int option) const {
     switch (gc.screenState) {
         case ScreenState::INVALID:
             break;
@@ -682,7 +682,7 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
 }
 
 
-int RandomBattleStateHandler::setupState(const BattleContext &bc) {
+int RandomBattleStateHandler::setupState(const BattleContext &bc, bool withDesc) {
     if (bc.inputState == InputState::PLAYER_NORMAL) {
         return setupNormalOptions(bc);
 
@@ -696,7 +696,7 @@ int RandomBattleStateHandler::setupState(const BattleContext &bc) {
     }
 }
 
-void RandomBattleStateHandler::chooseOption(BattleContext &bc, int option) {
+void RandomBattleStateHandler::chooseOption(BattleContext &bc, int option) const {
     if (bc.inputState == InputState::PLAYER_NORMAL) {
         optionFunctions[option](bc);
 
@@ -710,6 +710,22 @@ void RandomBattleStateHandler::chooseOption(BattleContext &bc, int option) {
     bc.inputState = InputState::EXECUTING_ACTIONS;
     bc.executeActions();
 }
+
+
+
+//std::string RandomBattleStateHandler::getDescForOption(BattleContext &bc, int option) {
+//    if (bc.inputState == InputState::PLAYER_NORMAL) {
+//        optionFunctions[option](bc);
+//
+//    } else if (bc.inputState == InputState::CARD_SELECT) {
+//        cardSelectFunction(bc, validCardIdxs[option]);
+//
+//    } else {
+//        assert(false);
+//    }
+//
+//}
+
 
 int RandomBattleStateHandler::setupNormalOptions(const BattleContext &bc) {
     optionFunctions.clear();
@@ -766,8 +782,6 @@ int RandomBattleStateHandler::setupNormalOptions(const BattleContext &bc) {
 
     return optionFunctions.size();
 }
-
-
 
 typedef std::function <bool (const CardInstance &c)> CIPredicate;
 typedef fixed_list<int, CardManager::MAX_DRAWPILE_SIZE> IndexList;

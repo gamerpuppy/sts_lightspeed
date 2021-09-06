@@ -15,7 +15,6 @@ namespace sts {
         CARD_SELECT,
 
         CHOOSE_STANCE_ACTION, // from stance potion
-
         CHOOSE_TOOLBOX_COLORLESS_CARD,
         CHOOSE_EXHAUST_POTION_CARDS,
         CHOOSE_GAMBLING_CARDS,

@@ -7,7 +7,6 @@
 #include "combat/BattleContext.h"
 #include "sim/ConsoleSimulator.h"
 #include "sim/PrintHelpers.h"
-#include "sim/BattleCommon.h"
 
 #include <regex>
 #include <sstream>
@@ -34,7 +33,6 @@ void BattleSimulator::initBattle(const GameContext &gc) {
     initialized = true;
     *bc = BattleContext(); // todo this hacky and slow
     bc->init(gc);
-    bc->executeActions();
 }
 
 void BattleSimulator::exitBattle(GameContext &gc) {
@@ -159,7 +157,6 @@ void BattleSimulator::doPrintCommand(std::ostream &os, const std::string &cmd) {
     if (cmd == "rng") {
         printBattleContextRng(os, *bc);
     }
-
 }
 
 void BattleSimulator::doSetCommand(const std::string &cmd) {

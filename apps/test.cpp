@@ -22,10 +22,10 @@
 #include "sim/PrintHelpers.h"
 #include "sim/RandomAgent.h"
 #include "sim/StateHandler.h"
+#include "sim/BattleScumSearcher.h"
 
 
 using namespace sts;
-
 
 int findIdxInArr(const CardId *arr, CardId item) {
     int i = 0;
@@ -404,6 +404,27 @@ void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
         << std::endl;
 }
 
+int scumSearch(int argc, const char *argv[]) {
+    const auto depth = std::stoi(argv[2]);
+    const auto saveFilePath = argv[3];
+
+    SaveFile saveFile = SaveFile::loadFromPath(saveFilePath, sts::CharacterClass::IRONCLAD);
+    GameContext gc;
+    gc.initFromSave(saveFile);
+
+    BattleContext bc;
+    bc.init(gc);
+
+    BattleScumSearcher scumSearcher;
+    scumSearcher.search(bc, depth);
+
+
+    for (int i = 0; i < scumSearcher.bestInfos.size(); ++i) {
+        std::cout << scumSearcher.bestInfos[i] << '\n';
+    }
+    return 0;
+}
+
 int main(int argc, const char* argv[]) {
     if (argc < 2) {
         std::cout << "incorrect arguments" << std::endl;
@@ -429,6 +450,9 @@ int main(int argc, const char* argv[]) {
         const int playoutCount(std::stoi(argv[4]));
 
         playRandomMt(threadCount, startSeedLong, playoutCount);
+
+    } else if (command == "scum_search") {
+        return scumSearch(argc, argv);
     }
 
 
