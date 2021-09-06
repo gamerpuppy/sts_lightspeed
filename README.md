@@ -6,6 +6,7 @@ requires https://github.com/nlohmann/json
 (download the zip and place the folder in the main project folder)
 
 **Features**
+* c++ 17 compiled with gcc
 * Standalone
 * Designed to be 100% RNG accurate*
 * Playable in console
