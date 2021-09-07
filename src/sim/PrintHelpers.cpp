@@ -71,31 +71,49 @@ namespace sts {
             << ",keyBits:" << gc.keyBits
             << ",cc:" << getCharacterClassName(gc.cc)
             << ",potionCapacity:" << gc.potionCapacity;
-        os << "}";
+        os << "}\n";
     }
 
-    void printRngInfo(std::ostream &os, const GameContext &gc, const std::string prepend) {
-        os << prepend << "neowRng: " << gc.neowRng.counter << '\n';
-        os << prepend << "treasureRng: " << gc.treasureRng.counter << '\n';
-        os << prepend << "eventRng: " << gc.eventRng.counter << '\n';
-        os << prepend << "relicRng: " << gc.relicRng.counter << '\n';
-        os << prepend << "potionRng: " << gc.potionRng.counter << '\n';
-        os << prepend << "cardRng: " << gc.cardRng.counter << '\n';
-        os << prepend << "cardRandomRng: " << gc.cardRandomRng.counter << '\n';
-        os << prepend << "merchantRng: " << gc.merchantRng.counter << '\n';
-        os << prepend << "monsterRng: " << gc.monsterRng.counter << '\n';
-        os << prepend << "shuffleRng: " << gc.shuffleRng.counter << '\n';
-        os << prepend << "miscRng: " << gc.miscRng.counter << '\n';
-        os << prepend << "mathUtilRng: " << gc.shuffleRng.counter << '\n';
+    void printRngInfo(std::ostream &os, const GameContext &gc, const std::string &separator) {
+        os << separator << "neowRng: " << gc.neowRng.counter;
+        os << separator << "treasureRng: " << gc.treasureRng.counter;
+        os << separator << "eventRng: " << gc.eventRng.counter;
+        os << separator << "relicRng: " << gc.relicRng.counter;
+        os << separator << "potionRng: " << gc.potionRng.counter;
+        os << separator << "cardRng: " << gc.cardRng.counter;
+        os << separator << "cardRandomRng: " << gc.cardRandomRng.counter;
+        os << separator << "merchantRng: " << gc.merchantRng.counter;
+        os << separator << "monsterRng: " << gc.monsterRng.counter;
+        os << separator << "shuffleRng: " << gc.shuffleRng.counter;
+        os << separator << "miscRng: " << gc.miscRng.counter;
+        os << separator << "mathUtilRng: " << gc.shuffleRng.counter;
+        os << '\n';
     }
 
-    void printPotionInfo(std::ostream &os, const GameContext &gc, const std::string prepend) {
-        os << prepend << "{";
+    void printPotionInfo(std::ostream &os, const GameContext &gc) {
+        os << "potions: {";
         for (int i = 0; i < gc.potionCapacity; ++i) {
-            os << prepend << getPotionName(gc.potions[i]) << ",";
+            os << getPotionName(gc.potions[i]) << ",";
         }
-        os << prepend << "}";
+        os  << "}\n";
     }
+
+
+    void printMonsterLists(std::ostream &os, const GameContext &gc) {
+        os << "\tmonsterList: offset(" << gc.monsterListOffset << ") {";
+        for (auto m : gc.monsterList) {
+            os << monsterEncounterStrings[static_cast<int>(m)] << ", ";
+        }
+        os << "\n";
+
+
+        os << "\teliteMonsterList: offset(" << gc.eliteMonsterListOffset << ") {";
+        for (auto m : gc.eliteMonsterList) {
+            os << monsterEncounterStrings[static_cast<int>(m)] << ", ";
+        }
+        os << "\n";
+    }
+
 
     std::ostream& operator<<(std::ostream &os, const sts::GameContext &gc) {
         os << "GameContext: {\n";
@@ -109,9 +127,18 @@ namespace sts {
             << " boss2: " << monsterEncounterStrings[static_cast<int>(gc.secondBoss)]
             << '\n';
 
-        os << "\t"; printPlayerInfo(os, gc); os << "\n";
-        printRngInfo(os, gc, "\t");
-        printPotionInfo(os, gc, "\t"); os << '\n';
+
+        os << "\t";
+        printPlayerInfo(os, gc);
+
+        os << '\t';
+        printRngInfo(os, gc, " ");
+
+        os << '\t';
+        printPotionInfo(os, gc);
+
+        printMonsterLists(os, gc);
+
         os << "\t" << gc.deck << "\n";
         os << "\t" << gc.relics << "\n";
 

@@ -353,7 +353,7 @@ void Monster::damage(BattleContext &bc, int damage) {
     }
 
 
-    if (hasStatus<MS::INTANGIBLE>()) {
+    if (hasStatus<MS::INTANGIBLE>()) { // this is probably wrong with potions
         if (damage > 0) {
             damage = 1;
         }
@@ -408,11 +408,14 @@ void Monster::onHpLost(BattleContext &bc, int amount) {
                 if (newModeShiftAmount <= 0) {
                     removeStatus<MS::MODE_SHIFT>();
                     setMove(MonsterMoveId::THE_GUARDIAN_DEFENSIVE_MODE);
-                    bc.addToBot( Actions::GainBlock(20) );
+                    bc.addToBot( Actions::MonsterGainBlock(idx, 20) );
                 } else {
                     setStatus<MS::MODE_SHIFT>(newModeShiftAmount);
                 }
             }
+            break;
+
+        default:
             break;
     }
 }
@@ -445,7 +448,7 @@ int Monster::calculateDamageToPlayer(const BattleContext &bc, int baseDamage) co
     // apply backIdx attack for spire guard elites
 
     if (p.hasStatus<PS::INTANGIBLE>()) {
-        damage = std::max(damage, static_cast<float>(1));
+        damage = std::min(damage, static_cast<float>(1));
     }
 
     return std::max(static_cast<int>(std::floor(damage)), 0);

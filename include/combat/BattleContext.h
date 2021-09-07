@@ -103,8 +103,7 @@ namespace sts {
 
         void executeActions();
 
-        void playCardQueueItem();
-
+        void playCardQueueItem(CardQueueItem);
         void useCard();
         void useNoTriggerCard();
 
@@ -115,8 +114,8 @@ namespace sts {
         void onUseAttackCard();
         void onUseSkillCard();
         void onUsePowerCard();
-        void onUseStatusOrCurseCard();
 
+        void onUseStatusOrCurseCard();
         void onAfterUseCard();
 
         void setState(InputState state);

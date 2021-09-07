@@ -25,9 +25,10 @@ namespace sts {
         bool freeToPlay = false;
         bool randomTarget = false;
         bool autoplay = false;
-        bool exhaustOnUseOnce = false;
-        bool purgeOnUse = false;
         int regretCardCount = 0; // maybe use to indicate triggerOnUse too?
+
+        bool purgeOnUse = false;
+        bool exhaustOnUse = false;
 
         CardQueueItem() = default;
         CardQueueItem(const CardInstance &card, int target, int energyOnUse) : card(card), target(target), energyOnUse(energyOnUse) {}

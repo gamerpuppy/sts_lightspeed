@@ -93,11 +93,6 @@ namespace sts {
 
     std::ostream &operator <<(std::ostream &os, const CardManager &c);
 
-//    template<CardManager::CardGroup from, CardManager::CardGroup to>
-//    void CardManager::move(int fromIdx) {
-//
-//    }
-
 }
 
 #endif //STS_LIGHTSPEED_CARDMANAGER_H

@@ -6,8 +6,25 @@
 #include "game/Deck.h"
 #include "game/Random.h"
 #include "game/GameContext.h"
+#include "game/SaveFile.h"
 
 using namespace sts;
+
+
+void Deck::initFromSaveFile(const SaveFile &s) {
+    // the first card with a matching id will be bottled
+    CardId bottledCardIds[] {s.bottledCards[0], s.bottledCards[1], s.bottledCards[2], CardId::INVALID};
+
+    for (const auto &c : s.cards) {
+        obtainRaw(c);
+
+        if (c.getId() == bottledCardIds[static_cast<int>(c.getType())]) {
+            bottleCard(static_cast<int>(cards.size()-1), c.getType());
+            bottledCardIds[static_cast<int>(c.getType())] = CardId::INVALID;
+        }
+    }
+}
+
 
 int Deck::size() const {
     return cards.size();
@@ -155,6 +172,7 @@ void Deck::obtain(GameContext &gc, Card card, int count) {
 
         case CardType::STATUS:
         case CardType::INVALID:
+        default:
             assert(false);
             break;
     }
@@ -169,8 +187,35 @@ void Deck::obtain(GameContext &gc, Card card, int count) {
     }
 }
 
-void Deck::obtainCurse(GameContext &gc, CardId id, int count) {
-    obtain(gc, id, count);
+void Deck::obtainRaw(Card card) {
+    cards.push_back(card);
+    ++transformableCount;
+    ++cardTypeCounts[static_cast<int>(card.getType())];
+
+    switch (card.getType()) {
+        case CardType::ATTACK:
+        case CardType::SKILL:
+        case CardType::POWER:
+            ++transformableCount;
+            ++cardTypeCounts[static_cast<int>(card.getType())];
+            if (card.canUpgrade()) {
+                ++upgradeableCount;
+            }
+            break;
+
+        case CardType::CURSE:
+            if (card.canTransform()) {
+                ++transformableCount;
+                ++cardTypeCounts[static_cast<int>(card.getType())];
+            }
+            break;
+
+        case CardType::STATUS:
+        case CardType::INVALID:
+        default:
+            assert(false);
+            break;
+    }
 }
 
 void Deck::bottleCard(int idx, CardType bottleType) {

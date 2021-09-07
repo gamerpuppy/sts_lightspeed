@@ -139,19 +139,22 @@ void Player::heal(int amount) {
     }
 }
 
-void Player::damage(BattleContext &bc, int calculatedDamage, bool selfDamage) {
+void Player::damage(BattleContext &bc, const int calculatedDamage, const bool selfDamage) {
 #ifdef sts_asserts
     assert(calculatedDamage >= 0);
 #endif
 
     int damage = calculatedDamage;
-    const auto savedBlock = block;
-    block = std::max(0, block-damage);
-    damage -= savedBlock;
 
     if (damage > 0 && hasStatus<PS::INTANGIBLE>()) {
         damage = 1;
     }
+
+    const auto savedBlock = block;
+    block = std::max(0, block-damage);
+    damage -= savedBlock;
+
+
 
     damage -= block;
     if (damage > 0) {

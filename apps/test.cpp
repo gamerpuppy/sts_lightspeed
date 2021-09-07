@@ -453,6 +453,14 @@ int main(int argc, const char* argv[]) {
 
     } else if (command == "scum_search") {
         return scumSearch(argc, argv);
+
+    } else if (command == "json") {
+        const std::string saveFilePath(argv[2]);
+        const std::string jsonOutPath(argv[3]);
+        std::ofstream outFileStream(jsonOutPath);
+        outFileStream << SaveFile::getJson(saveFilePath);
+        outFileStream.close();
+
     }
 
 

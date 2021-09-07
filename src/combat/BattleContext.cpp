@@ -726,10 +726,11 @@ void BattleContext::executeActions() {
 
         if (!cardQueue.isEmpty()) {
             // play a card queue item
-            playCardQueueItem();
+            auto item = cardQueue.popFront();
+            playCardQueueItem(item);
+
             continue;
         }
-
 
         // can't win check
         if (cards.cardsInHand + cards.discardPile.size() + cards.drawPile.size() == 0) {
@@ -773,44 +774,34 @@ void BattleContext::executeActions() {
     }
 }
 
-void BattleContext::playCardQueueItem() { // todo refactor this
+void BattleContext::playCardQueueItem(CardQueueItem playItem) {
     // if c is null callEndOfTurnActions()
     // if cardQueueSize is 1 and carditem is endTurnAutoplay diable unceasing top
 
-    bool canPlayCard = false; // not really sure what this is used for
-
-    curCardQueueItem = cardQueue.front();
-
+    curCardQueueItem = playItem;
     auto &item = curCardQueueItem;
     auto &c = item.card;
 
-
     if (item.isEndTurn) {
         // the game removes this card from limbo - don't think necessary
-        cardQueue.popFront();
         callEndOfTurnActions();
         return;
     }
+
 
     // if cardQueueItem random target, assign a target
     if (item.randomTarget) {
         item.target = monsters.getRandomMonsterIdx(cardRandomRng);
     }
 
+//    bool canPlayCard = false; // not really sure what this is used for
     const bool canUseCard = item.purgeOnUse || (item.triggerOnUse && c.canUse(*this, item.autoplay) && (!c.requiresTarget() || monsters.arr[item.target].isTargetable()));
     if (canUseCard) { // not sure if this is correct,
-        canPlayCard = true; // what is this for......
+//        canPlayCard = true; // what is this for......
 
         if (c.isFreeToPlay(*this)) { // what the fuck
             c.freeToPlayOnce = true;
         }
-
-//        c.energyOnUse = item.energyOnUse;
-//        if (c.isInAutoplay) {
-//            c.ignoreEnergyOnUse = true;
-//        } else {
-//            c.ignoreEnergyOnUse = item.ignoreEnergyTotal;
-//        }
 
         if (!c.requiresTarget() || monsters.arr[item.target].isTargetable()) { // this is redundant right???? -> no i think echo form abilities can queue a card with invalid target
             useCard();
@@ -821,65 +812,52 @@ void BattleContext::playCardQueueItem() { // todo refactor this
     if (!item.triggerOnUse) {
         useNoTriggerCard(); // for burn, decay, doubt, regret and shame,
     }
-
-    cardQueue.popFront();
-
 }
 
-
 void BattleContext::useCard() {
-    {
-        auto &item = cardQueue.front();
-        auto &c = item.card;
+    auto &item = curCardQueueItem;
+    auto &c = item.card;
 
-        bool actionExhaustsCard = item.exhaustOnUseOnce || c.doesExhaust();
-        ++player.cardsPlayedThisTurn;
+    item.exhaustOnUse |= c.doesExhaust();
+    ++player.cardsPlayedThisTurn;
 
-        switch (c.getType()) {
-            case CardType::ATTACK:
-                useAttackCard();
-                onUseAttackCard();
-                break;
+    switch (c.getType()) {
+        case CardType::ATTACK:
+            useAttackCard();
+            onUseAttackCard();
+            break;
 
-            case CardType::SKILL:
-                useSkillCard();
-                onUseSkillCard();
-                if (player.hasStatus<PS::CORRUPTION>()) {
-                    actionExhaustsCard = true;
-                }
-                break;
+        case CardType::SKILL:
+            useSkillCard();
+            onUseSkillCard();
+            if (player.hasStatus<PS::CORRUPTION>()) {
+                item.exhaustOnUse = true;
+            }
+            break;
 
-            case CardType::POWER:
-                usePowerCard();
-                onUsePowerCard();
-                break;
+        case CardType::POWER:
+            usePowerCard();
+            onUsePowerCard();
+            break;
 
-            case CardType::STATUS:
-            case CardType::CURSE:
-                onUseStatusOrCurseCard();
-                break;
+        case CardType::STATUS:
+        case CardType::CURSE:
+            onUseStatusOrCurseCard();
+            break;
 
-            default:
-                // unreachable
-                break;
-        }
+        default:
+            // unreachable
+            break;
     }
 
-    {
-        auto &item = curCardQueueItem;
-        auto &c = item.card;
+    addToBot(Actions::OnAfterCardUsed());
+    triggerOnOtherCardPlayed(c);
 
-        addToBot(Actions::OnAfterCardUsed());
-
-        triggerOnOtherCardPlayed(c);
-
-        if (!item.purgeOnUse) { // todo change to checking the card queue item
-            cards.removeFromHandById(c.uniqueId);
-            if (c.costForTurn > 0 && !c.isFreeToPlay(*this) && !item.autoplay && !(player.hasStatus<PS::CORRUPTION>() && c.getType() == CardType::SKILL)) {
-                player.useEnergy(c.costForTurn);
-            }
+    if (!item.purgeOnUse) { // todo change to checking the card queue item
+        cards.removeFromHandById(c.uniqueId);
+        if (c.costForTurn > 0 && !c.isFreeToPlay(*this) && !item.autoplay && !(player.hasStatus<PS::CORRUPTION>() && c.getType() == CardType::SKILL)) {
+            player.useEnergy(c.costForTurn);
         }
-//        cardInUse = c;
     }
 }
 
@@ -1156,7 +1134,6 @@ void BattleContext::useAttackCard() {
 void BattleContext::useSkillCard() {
     auto &item = curCardQueueItem;
     auto &c = item.card;
-
     const auto t = item.target;
     const bool up = c.isUpgraded();
 
@@ -1537,6 +1514,11 @@ void BattleContext::usePowerCard() {
             addToBot( Actions::BuffPlayer<PS::SADISTIC>(up ? 7 : 5) );
             break;
 
+        case CardId::WRAITH_FORM:
+            addToBot( Actions::BuffPlayer<PS::INTANGIBLE>(up ? 3 : 2) );
+            addToBot( Actions::DebuffPlayer<PS::WRAITH_FORM>(1) );
+            break;
+
         default:
 #ifdef sts_asserts
             std::cerr << "attempted to use unimplemented card: " << c.getName() << std::endl;
@@ -1764,7 +1746,6 @@ void BattleContext::onUseSkillCard() {
     }
 }
 
-
 void BattleContext::onUsePowerCard() {
     auto &item = curCardQueueItem;
     auto &c = item.card;
@@ -1857,7 +1838,7 @@ void BattleContext::onUseStatusOrCurseCard() {
 
     if (c.getType() == CardType::CURSE && p.hasRelic<R::BLUE_CANDLE>()) {
         addToBot( Actions::PlayerLoseHp(1, true) );
-        item.exhaustOnUseOnce = true;
+        item.exhaustOnUse = true;
     }
 
     if (p.hasRelic<R::INK_BOTTLE>()) {
@@ -1894,7 +1875,6 @@ void BattleContext::onAfterUseCard() {
     }
 
     bool rebound = false;
-    bool exhaust = item.exhaustOnUseOnce || c.doesExhaust(); // the game sets this when UseCardActionCreated.
     c.freeToPlayOnce = false;
 
     if (c.getType() == CardType::POWER) {
@@ -1913,11 +1893,11 @@ void BattleContext::onAfterUseCard() {
     }
 
     bool spoonProc = false;
-    if (exhaust && player.hasRelic<R::STRANGE_SPOON>()) {
+    if (item.exhaustOnUse && player.hasRelic<R::STRANGE_SPOON>()) {
         spoonProc = cardRandomRng.randomBoolean();
     }
 
-    if (exhaust && !spoonProc) {
+    if (item.exhaustOnUse && !spoonProc) {
         triggerAndMoveToExhaustPile(c);
 
     } else {
@@ -2071,6 +2051,10 @@ void BattleContext::afterMonsterTurns() {
         applyEndOfRoundPowers();
     }
 
+    ++turn;
+    skipMonsterTurn = false;
+    turnHasEnded = false;
+
     // player stance atStartOfTurn
     if (player.stance == Stance::DIVINITY) {
         addToBot(Actions::ChangeStance(Stance::NEUTRAL));
@@ -2086,11 +2070,6 @@ void BattleContext::afterMonsterTurns() {
     // player.applyStartOfTurnOrbs()
     //for each orb : OnStartOfTurn
     //if have relic cables: apply orb[0].OnStartOfTurn again
-
-    ++turn;
-
-    skipMonsterTurn = false;
-    turnHasEnded = false;
 
     if (player.hasStatus<PS::BARRICADE>()) {
 
@@ -2431,7 +2410,7 @@ void BattleContext::playTopCardInDrawPile(int monsterTargetIdx, bool exhausts) {
     }
 
     CardQueueItem item(cards.popFromDrawPile(), monsterTargetIdx, player.energy);
-    item.exhaustOnUseOnce = exhausts;
+    item.exhaustOnUse = exhausts;
     item.autoplay = true;
     item.freeToPlay = true; // todo remove the autoplay boolean? added this instead
     addToTopCard(item);

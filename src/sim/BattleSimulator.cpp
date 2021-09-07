@@ -120,31 +120,6 @@ void BattleSimulator::takeAction(const std::string &action) {
             takeCardSelectAction(action);
             break;
 
-
-//        case InputState::CHOOSE_DISCOVERY_CARD:
-//            takeDiscoveryAction(action);
-//            break;
-//
-//        case InputState::CHOOSE_DISCARD_TO_HAND_CARDS:
-//            takeDiscardToHandAction(action);
-//            break;
-//
-//        case InputState::CHOOSE_CARDS_IN_HAND:
-//            takeChooseCardsInHandAction(action);
-//            break;
-//
-//        case InputState::CHOOSE_HEADBUTT_CARD: {
-//            int discardIdx = std::stoi(action);
-//            bc->chooseHeadbuttCard(discardIdx);
-//            break;
-//        }
-//
-//        case InputState::CHOOSE_WARCRY_CARD: {
-//            int handIdx = std::stoi(action);
-//            bc->chooseWarcryCard(handIdx);
-//            break;
-//        }
-
         default:
             break;
     }
@@ -258,7 +233,7 @@ void BattleSimulator::printNormalActions(std::ostream &os) const {
             continue;
         }
 
-        os << i << ": " << card.getName();
+        os << i << ": " << card;
         if (card.requiresTarget() && targetableCount > 1) {
             os << ", ";
             for (int mIdx = 0; mIdx < bc->monsters.monsterCount; ++mIdx) {

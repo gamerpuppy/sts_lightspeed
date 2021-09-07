@@ -90,8 +90,7 @@ void GameContext::initFromSave(const SaveFile &s) {
     curHp = s.current_health;
     maxHp = s.max_health;
     gold = s.gold;
-
-    // todo speedrun pace
+    speedrunPace = s.play_time < (60*13 + 20); // speedrun pace is below 13m20s
 
     treasureRng = Random(seed, s.treasure_seed_count);
     eventRng = Random(seed, s.event_seed_count);
@@ -103,7 +102,7 @@ void GameContext::initFromSave(const SaveFile &s) {
     mathUtilRng = Random(seed, 0);
     merchantRng = Random(seed, s.merchant_seed_count); // arbitrary
     miscRng = Random(seed+floorNum);
-
+    monsterRng = Random(seed, s.monster_seed_count);
 
     cardRarityFactor = s.card_random_seed_randomizer;
     potionChance = s.potion_chance;
@@ -175,9 +174,7 @@ void GameContext::initFromSave(const SaveFile &s) {
             assert(false);  // other rooms not supported right now.
     }
 
-    for (const auto &c : s.cards) {
-        deck.obtain(*this, c);
-    }
+    deck.initFromSaveFile(s);
 
     initRelicsFromSave(s);
 
@@ -211,13 +208,8 @@ void GameContext::initRelicsFromSave(const SaveFile &s) {
         auto r = s.relics[i];
 //        std::cout << getRelicName(r) << " " << s.relic_counters[i] << '\n';
 
+        // todo lizard tail, and others
         switch (r) {
-            case RelicId::NUNCHAKU: {
-                RelicInstance relic{r, s.relic_counters[i]};
-                relics.add(relic);
-                break;
-            }
-
             default:
                 RelicInstance relic {r, s.relic_counters[i]};
                 relics.add(relic);
@@ -1790,7 +1782,7 @@ void GameContext::openTreasureRoomChest() {
     }
 
     if (hasRelic(RelicId::CURSED_KEY)) {
-        deck.obtainCurse(*this, getRandomCurse(cardRng));
+        deck.obtain(*this, getRandomCurse(cardRng));
     }
 
     if (info.haveGold) {
@@ -2164,7 +2156,7 @@ void GameContext::chooseNeowOption(const Neow::Option &o) {
     if (o.d == Neow::Drawback::CURSE) {
         regainControlAction = [](auto &gc) {
             int roll = gc.cardRng.random(static_cast<int>(9));
-            gc.deck.obtainCurse(gc, curseCardPool[roll]);
+            gc.deck.obtain(gc, curseCardPool[roll]);
             gc.screenState = ScreenState::MAP_SCREEN;
             gc.regainControlAction = gc.returnToMapAction;
         };
@@ -2266,7 +2258,7 @@ void GameContext::chooseNeowOption(const Neow::Option &o) {
             openCardSelectScreen(CardSelectScreenType::TRANSFORM, 2);
             {
                 int roll = cardRng.random(static_cast<int>(9));
-                deck.obtainCurse(*this, curseCardPool[roll]);
+                deck.obtain(*this, curseCardPool[roll]);
             }
             regainControlAction = returnToMapAction;
             break;
@@ -2357,7 +2349,7 @@ void GameContext::chooseEventOption(int idx) {
                     break;
 
                 case 1:
-                    deck.obtainCurse(*this, CardId::PAIN);
+                    deck.obtain(*this, CardId::PAIN);
                     obtainRelic(RelicId::WARPED_TONGS);
                     regainControl();
                     break;
@@ -2385,7 +2377,7 @@ void GameContext::chooseEventOption(int idx) {
                 case 1: {
                     auto r = returnRandomScreenlessRelic(returnRandomRelicTier(relicRng, act), false);
                     obtainRelic(r);
-                    deck.obtainCurse(*this, CardId::SHAME);
+                    deck.obtain(*this, CardId::SHAME);
                     regainControl();
                     break;
                 }
@@ -2445,7 +2437,7 @@ void GameContext::chooseEventOption(int idx) {
                 case 2: {
                     auto r = returnRandomScreenlessRelic(returnRandomRelicTier(relicRng, act));
                     obtainRelic(r);
-                    deck.obtainCurse(*this, CardId::REGRET);
+                    deck.obtain(*this, CardId::REGRET);
                     regainControl();
                     break;
                 }
@@ -2712,7 +2704,7 @@ void GameContext::chooseEventOption(int idx) {
                     break;
 
                 case 2:
-                    deck.obtainCurse(*this, CardId::DECAY);
+                    deck.obtain(*this, CardId::DECAY);
                     regainControl();
                     break;
 
@@ -2760,7 +2752,7 @@ void GameContext::chooseEventOption(int idx) {
         case Event::GOLDEN_IDOL: {
             if (relics.has(RelicId::GOLDEN_IDOL)) {
                 switch (idx) {
-                    case 0: deck.obtainCurse(*this, CardId::INJURY); break;
+                    case 0: deck.obtain(*this, CardId::INJURY); break;
                     case 1: damagePlayer(info.hpAmount0); break;
                     case 2: loseMaxHp(info.hpAmount1); break;
                     default:
@@ -2791,7 +2783,7 @@ void GameContext::chooseEventOption(int idx) {
 
                 case 1:
                     gainGold(275);
-                    deck.obtainCurse(*this, CardId::REGRET);
+                    deck.obtain(*this, CardId::REGRET);
                     regainControl();
                     break;
 
@@ -2863,7 +2855,7 @@ void GameContext::chooseEventOption(int idx) {
         case Event::LIARS_GAME: { // The Ssssserpent
             if (idx == 0) {
                 gainGold(unfavorable ? 150 : 175);
-                deck.obtainCurse(*this, CardId::DOUBT);
+                deck.obtain(*this, CardId::DOUBT);
                 regainControl();
 
             } else  if (idx == 1) {
@@ -2959,13 +2951,13 @@ void GameContext::chooseEventOption(int idx) {
 
                 case 2:
                     gainGold(999);
-                    deck.obtainCurse(*this, CardId::NORMALITY, 2);
+                    deck.obtain(*this, CardId::NORMALITY, 2);
                     regainControl();
                     break;
 
                 case 3:
                     playerHeal(maxHp);
-                    deck.obtainCurse(*this, CardId::DOUBT);
+                    deck.obtain(*this, CardId::DOUBT);
                     regainControl();
                     break;
 
@@ -3240,7 +3232,7 @@ void GameContext::chooseEventOption(int idx) {
             if (idx == 0) {
                 auto result = miscRng.randomBoolean();
                 if (result || unfavorable) {
-                    deck.obtainCurse(*this, CardId::WRITHE);
+                    deck.obtain(*this, CardId::WRITHE);
                 }
                 regainControl();
 
@@ -3448,7 +3440,7 @@ void GameContext::chooseEventOption(int idx) {
                     break;
 
                 case 3:
-                    deck.obtainCurse(*this, CardId::DECAY);
+                    deck.obtain(*this, CardId::DECAY);
                     regainControl();
                     break;
 
@@ -3476,7 +3468,7 @@ void GameContext::chooseEventOption(int idx) {
 
                 case 1:
                     playerHeal(info.hpAmount1);
-                    deck.obtainCurse(*this, CardId::WRITHE);
+                    deck.obtain(*this, CardId::WRITHE);
                     regainControl();
                     break;
 

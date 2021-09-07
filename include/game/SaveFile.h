@@ -78,6 +78,7 @@ namespace sts {
         int current_health;
         int max_health;
 
+        int play_time;
         int room_x;
         int room_y;
         int floor_num;
@@ -112,6 +113,7 @@ namespace sts {
         std::vector<Potion> potions;
 
         std::vector<Card> cards;
+        std::array<CardId, 3> bottledCards;
 
         std::vector<RelicId> relics;
         std::vector<int> relic_counters;
@@ -131,8 +133,8 @@ namespace sts {
         std::vector<MonsterEncounter> boss_list;
 
 
-        static SaveFile fromJson(const std::string &json, CharacterClass cc);
         static SaveFile loadFromPath(const std::string& path, CharacterClass cc);
+        static std::string getJson(const std::string &path);
 
         SaveFile() = default;
         SaveFile(const SaveFile &rhs) = default;

@@ -1,5 +1,5 @@
 //
-// Created by keega on 9/6/2021.
+// Created by gamerpuppy on 9/6/2021.
 //
 
 #include "sim/BattleScumSearcher.h"

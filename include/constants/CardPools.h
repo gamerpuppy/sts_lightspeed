@@ -160,10 +160,13 @@ namespace sts {
         static constexpr CardId getCardAt(CharacterClass cc, CardType type, int offset) {
             if (type == CardType::ATTACK) {
                 return cardBlob[offset];
+
             } else if (type == CardType::SKILL) {
                 return skills[offset];
+
             } else if (type == CardType::POWER) {
                 return powers[offset];
+
             } else {
                 return powers[offset];
             }

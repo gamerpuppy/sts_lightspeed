@@ -325,5 +325,24 @@ bool CardInstance::canUse(const BattleContext &bc, const bool inAutoplay) const 
 
 namespace sts {
 
+    std::ostream &operator<<(std::ostream &os, const CardInstance &c) {
+        os << "("
+           << c.getName()
+           << (c.upgraded ? "+" : "")
+           << "," << std::to_string(c.uniqueId)
+           << "," << static_cast<int>(c.cost)
+           << "," << static_cast<int>(c.costForTurn);
+
+        if (c.usesSpecialData()) {
+            os << ",s=" << static_cast<int>(c.specialData);
+        }
+        if (c.freeToPlayOnce) {
+            os << ",f";
+        }
+        if (c.retain) {
+            os << ",r";
+        }
+        return os  <<")";
+    }
 
 }

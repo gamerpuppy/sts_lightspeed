@@ -78,6 +78,8 @@ namespace sts {
 
     };
 
+    std::ostream& operator <<(std::ostream &os, const CardInstance &c);
+
     typedef CardInstance CI;
 
 

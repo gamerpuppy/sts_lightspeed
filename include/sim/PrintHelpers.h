@@ -41,8 +41,10 @@ namespace sts {
 
     void printEventListState(std::ostream &os, const GameContext &gc);
     void printPlayerInfo(std::ostream &os, const GameContext &gc);
-    void printRngInfo(std::ostream &os, const GameContext &gc, const std::string prepend="");
-    void printPotionInfo(std::ostream &os, const GameContext &gc, const std::string prepend="");
+    void printRngInfo(std::ostream &os, const GameContext &gc, const std::string &separator="");
+    void printPotionInfo(std::ostream &os, const GameContext &gc);
+    void printMonsterLists(std::ostream &os, const GameContext &gc);
+
 
     std::ostream& operator<<(std::ostream& os,  const GameContext &gc);
 

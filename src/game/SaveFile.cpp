@@ -126,7 +126,7 @@ sts::SaveFile::SaveFile(const std::string &json, sts::CharacterClass cc): json(j
     j.at("current_health").get_to(current_health);
     j.at("max_health").get_to(max_health);
 
-
+    j.at("play_time").get_to(play_time);
     j.at("room_x").get_to(room_x);
     j.at("room_y").get_to(room_y);
     j.at("floor_num").get_to(floor_num);
@@ -179,6 +179,17 @@ sts::SaveFile::SaveFile(const std::string &json, sts::CharacterClass cc): json(j
         cards.push_back(card);
     }
 
+    bottledCards = { CardId::INVALID, CardId::INVALID, CardId::INVALID };
+    if (j.contains("bottled_flame")) {
+        j.at("bottled_flame").get_to(bottledCards[0]);
+    }
+    if (j.contains("bottled_lightning")) {
+        j.at("bottled_lightning").get_to(bottledCards[1]);
+    }
+    if (j.contains("bottled_tornado")) {
+        j.at("bottled_tornado").get_to(bottledCards[2]);
+    }
+
     j.at("relics").get_to(relics);
     j.at("relic_counters").get_to(relic_counters);
 
@@ -199,14 +210,13 @@ sts::SaveFile::SaveFile(const std::string &json, sts::CharacterClass cc): json(j
     j.at("boss_list").get_to(boss_list);
 }
 
-
-sts::SaveFile sts::SaveFile::fromJson(const std::string &json, sts::CharacterClass cc) {
-    return SaveFile(json, cc);
-}
-
-sts::SaveFile sts::SaveFile::loadFromPath(const std::string &path, sts::CharacterClass cc) {
+std::string SaveFile::getJson(const std::string &path) {
     std::string utf8Content = readFile(path);
     auto dataBits = decodeBase64(utf8Content);
     auto json = xorWithKey(dataBits);
-    return SaveFile(json, cc);
+    return json;
+}
+
+sts::SaveFile sts::SaveFile::loadFromPath(const std::string &path, sts::CharacterClass cc) {
+    return SaveFile(getJson(path), cc);
 }

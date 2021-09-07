@@ -18,6 +18,7 @@ namespace sts {
     class Random;
     class GameContext;
     class SelectScreenCard;
+    class SaveFile;
 
     typedef std::function<bool(const Card &)> CardPredicate;
 
@@ -31,6 +32,8 @@ namespace sts {
 
         int upgradeableCount = 0;
         int transformableCount = 0; // does not include cards which are bottled
+
+        void initFromSaveFile(const SaveFile &s);
 
         [[nodiscard]] int size() const;
         [[nodiscard]] bool hasCurse() const;
@@ -49,7 +52,8 @@ namespace sts {
         void transformRandomCards(Random &miscRng, int count);
 
         void obtain(GameContext &gc, Card card, int count=1); // for all cards
-        void obtainCurse(GameContext &gc, CardId id, int count=1); // optimized for cards whose ids are not known but are a curse
+        void obtainRaw(Card card);
+
         void remove(GameContext &gc, int idx);
         void removeSelected(GameContext &gc, const fixed_list<SelectScreenCard, 3> &selectList);
         void upgrade(int idx);
