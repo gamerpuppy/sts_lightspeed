@@ -155,6 +155,8 @@ namespace sts {
         void damage(BattleContext &bc, int damage);
         void onHpLost(BattleContext &bc, int amount);
 
+        void removeDebuffs();
+
         void setMove(MonsterMoveId moveId);
         [[nodiscard]] bool firstTurn(); // only to be called in rollMove() before any moves are set
         [[nodiscard]] bool lastMove(MonsterMoveId moveId);

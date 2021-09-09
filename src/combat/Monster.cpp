@@ -436,6 +436,22 @@ void Monster::onHpLost(BattleContext &bc, int amount) {
     }
 }
 
+void Monster::removeDebuffs() {
+    if (getStatus<MS::STRENGTH>() < 0) {
+        setStatus<MS::STRENGTH>(0);
+    }
+
+    removeStatus<MS::VULNERABLE>();
+    removeStatus<MS::WEAK>();
+    removeStatus<MS::END_OF_TURN_GAIN_STRENGTH>();
+
+//    removeStatus<MS::POISON>();
+//    removeStatus<MS::CHOKED>();
+//    removeStatus<MS::CORPSE_EXPLOSION>();
+//    removeStatus<MS::LOCK_ON>();
+
+}
+
 // this is calculated at the player when the damage occurs in game, consider testing whether there are any scenarios when it can't be done before
 int Monster::calculateDamageToPlayer(const BattleContext &bc, int baseDamage) const {
     const auto &p = bc.player;

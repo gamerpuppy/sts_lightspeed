@@ -267,7 +267,7 @@ void BattleContext::initRelics(const GameContext &gc) {
                 break;
 
             case R::NEOWS_LAMENT: // remember to decrement somewhere else
-                if (r.data) {
+                if (r.data > 0) {
                     for (int i = 0; i < monsters.monsterCount; ++i) {
                         Monster &m = monsters.arr[i];
                         m.curHp = 1;
@@ -506,6 +506,10 @@ void BattleContext::updateRelicsOnExit(GameContext &g) const {
 
             case RelicId::INSERTER:
                 r.data = player.inserterCounter;
+                break;
+
+            case RelicId::NEOWS_LAMENT:
+                --r.data;
                 break;
 
             case RelicId::NUNCHAKU:
@@ -1414,7 +1418,11 @@ void BattleContext::useSkillCard() {
 
         case CardId::TRUE_GRIT:
             addToBot( Actions::GainBlock(calculateCardBlock(up ? 9 : 7)) );
-            addToBot( Actions::ExhaustRandomCardInHand(1) );
+            if (up) {
+                addToBot( Actions::ChooseExhaustOne() );
+            } else {
+                addToBot( Actions::ExhaustRandomCardInHand(1) );
+            }
             break;
 
         case CardId::VIOLENCE:

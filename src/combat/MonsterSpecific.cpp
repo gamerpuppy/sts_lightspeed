@@ -967,6 +967,65 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             break;
         }
 
+        // ************ THE CHAMP ************
+
+        case MMID::THE_CHAMP_ANGER: {
+            const int strAmts[3] {6, 9, 12};
+            removeDebuffs();
+            buff<MS::STRENGTH>(strAmts[bossDiffIdx]);
+            rollMove(bc);
+            break;
+        }
+
+        case MMID::THE_CHAMP_DEFENSIVE_STANCE: {
+            const int blockAmts[3] {15, 18, 20};
+            const int metallicizeAmts[3] {5, 6, 7};
+            const auto buffIdx = getTriIdx(bc.ascension, 9, 19);
+
+            const auto blockAmt = blockAmts[buffIdx];
+            const auto metallicizeAmt = metallicizeAmts[buffIdx];
+
+            addBlock(blockAmt);
+            buff<MS::METALLICIZE>(metallicizeAmt);
+
+            rollMove(bc);
+            break;
+        }
+
+        case MMID::THE_CHAMP_EXECUTE: {
+            attackPlayerHelper(bc, 10, 2);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+        }
+
+        case MMID::THE_CHAMP_FACE_SLAP: {
+            attackPlayerHelper(bc, asc4 ? 14 : 12);
+            bc.addToBot( Actions::DebuffPlayer<PS::FRAIL>(2, true) );
+            bc.addToBot( Actions::DebuffPlayer<PS::VULNERABLE>(2, true) );
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+        }
+
+        case MMID::THE_CHAMP_GLOAT: {
+            const int strAmts[3] {3, 4, 5};
+            buff<MS::STRENGTH>(strAmts[bossDiffIdx]);
+            rollMove(bc);
+            break;
+        }
+
+        case MMID::THE_CHAMP_HEAVY_SLASH: {
+            attackPlayerHelper(bc, asc4 ? 18 : 16);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+        }
+
+        case MMID::THE_CHAMP_TAUNT: {
+            bc.player.debuff<PS::WEAK>(2, true);
+            bc.player.debuff<PS::VULNERABLE>(2, true);
+            rollMove(bc);
+            break;
+        }
+
         // ************ THE COLLECTOR ************
 
         case MMID::THE_COLLECTOR_BUFF: { //3
