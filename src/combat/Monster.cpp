@@ -193,11 +193,19 @@ void Monster::addBlock(int amount) {
 
 void Monster::die(BattleContext &bc, bool triggerRelics) {
     //todo implement trigger relics
-    bc.monsters.monstersAlive--;
-    if (bc.monsters.monstersAlive == 0) {
-        bc.cleanCardQueue();
-        bc.outcome = Outcome::PLAYER_VICTORY;
-        return;
+    --bc.monsters.monstersAlive;
+    if (!hasStatus<MS::MINION>()) {
+        const bool isMinionLeader =
+            id == MonsterId::BRONZE_AUTOMATON ||
+            id == MonsterId::GREMLIN_LEADER ||
+            id == MonsterId::REPTOMANCER ||
+            id == MonsterId::THE_COLLECTOR;
+        if (bc.monsters.monstersAlive == 0 || isMinionLeader)
+        {
+            bc.cleanCardQueue();
+            bc.outcome = Outcome::PLAYER_VICTORY;
+            return;
+        }
     }
 
     if (hasStatus<MS::SPORE_CLOUD>()) {
@@ -244,13 +252,17 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
     }
 
     if (hasStatus<MS::FLIGHT>() && damage > 0) {
-        decrementStatus<MS::FLIGHT>();
+        auto flight = getStatus<MS::FLIGHT>();
+        if (flight == 1) {
+            setMove(MonsterMoveId::BYRD_STUNNED);
+        }
+        setStatus<MS::FLIGHT>(flight-1);
         // todo add to bot change enemy action to grounded?
     }
 
     if (hasStatus<MS::MALLEABLE>()) {
-        int malleable = getStatus<MS::MALLEABLE>();
-        bc.addToBot(Actions::MonsterGainBlock(this->idx, malleable) );
+        const auto malleable = getStatus<MS::MALLEABLE>();
+        bc.addToBot( Actions::MonsterGainBlock(this->idx, malleable) );
         setStatus<MS::MALLEABLE>(malleable+1);
     }
 
@@ -309,13 +321,12 @@ void Monster::attacked(BattleContext &bc, int damage) {
         }
     }
 
-    const int tempBlock = block;
+    const bool hadBlock = block > 0;
     const int tempDamage = damage;
-
     damage -= block;
     block = std::max(0, block - tempDamage);
 
-    if (block == 0 && tempBlock > 0 && bc.player.hasRelic<RelicId::HAND_DRILL>()) {
+    if (hadBlock && block == 0 && bc.player.hasRelic<RelicId::HAND_DRILL>()) {
         bc.addToBot(Actions::DebuffEnemy<MS::VULNERABLE>(idx, 2, false) );
     }
 
@@ -370,9 +381,14 @@ void Monster::damage(BattleContext &bc, int damage) {
         }
     }
 
+    const bool hadBlock = block > 0;
     const int tempDamage = damage;
     damage -= block;
     block = std::max(0, block-tempDamage);
+
+    if (hadBlock && block == 0 && bc.player.hasRelic<RelicId::HAND_DRILL>()) {
+        bc.addToBot(Actions::DebuffEnemy<MS::VULNERABLE>(idx, 2, false) );
+    }
 
     if (damage > 0) {
         damageUnblockedHelper(bc, damage);

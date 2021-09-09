@@ -40,10 +40,11 @@ namespace sts {
         BRONZE_ORB_BEAM,
         BRONZE_ORB_SUPPORT_BEAM,
         BYRD_CAW,
-        BYRD_PECK,
-        BYRD_SWOOP,
         BYRD_FLY,
         BYRD_HEADBUTT,
+        BYRD_PECK,
+        BYRD_STUNNED,
+        BYRD_SWOOP,
         CENTURION_SLASH,
         CENTURION_FURY,
         CENTURION_DEFEND,
@@ -144,7 +145,7 @@ namespace sts {
         SNAKE_PLANT_CHOMP,
         SNAKE_PLANT_ENFEEBLING_SPORES,
         SNEAKY_GREMLIN_PUNCTURE,
-        SNECKO_PERPLEXING_GAZE,
+        SNECKO_PERPLEXING_GLARE,
         SNECKO_TAIL_WHIP,
         SNECKO_BITE,
         SPHERIC_GUARDIAN_SLAM,
@@ -204,6 +205,8 @@ namespace sts {
         WRITHING_MASS_STRONG_STRIKE,
     };
 
+    typedef MonsterMoveId MMID;
+
     static constexpr const char* const  monsterMoveStrings[] = {
             "INVALID",
             "GENERIC_ESCAPE_MOVE",
@@ -237,10 +240,11 @@ namespace sts {
             "BRONZE_ORB_BEAM",
             "BRONZE_ORB_SUPPORT_BEAM",
             "BYRD_CAW",
-            "BYRD_PECK",
-            "BYRD_SWOOP",
             "BYRD_FLY",
             "BYRD_HEADBUTT",
+            "BYRD_PECK",
+            "BYRD_STUNNED",
+            "BYRD_SWOOP",
             "CENTURION_SLASH",
             "CENTURION_FURY",
             "CENTURION_DEFEND",
@@ -341,7 +345,7 @@ namespace sts {
             "SNAKE_PLANT_CHOMP",
             "SNAKE_PLANT_ENFEEBLING_SPORES",
             "SNEAKY_GREMLIN_PUNCTURE",
-            "SNECKO_PERPLEXING_GAZE",
+            "SNECKO_PERPLEXING_GLARE",
             "SNECKO_TAIL_WHIP",
             "SNECKO_BITE",
             "SPHERIC_GUARDIAN_SLAM",
@@ -545,7 +549,7 @@ namespace sts {
             case MonsterMoveId::SNAKE_PLANT_CHOMP:
             case MonsterMoveId::SNAKE_PLANT_ENFEEBLING_SPORES:
             case MonsterMoveId::SNEAKY_GREMLIN_PUNCTURE:
-            case MonsterMoveId::SNECKO_PERPLEXING_GAZE:
+            case MonsterMoveId::SNECKO_PERPLEXING_GLARE:
             case MonsterMoveId::SNECKO_TAIL_WHIP:
             case MonsterMoveId::SNECKO_BITE:
             case MonsterMoveId::SPHERIC_GUARDIAN_SLAM:

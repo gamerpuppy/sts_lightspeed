@@ -24,8 +24,10 @@ namespace sts {
         std::bitset<5> extraRollMoveOnTurn;
 
         [[nodiscard]] bool areMonstersBasicallyDead() const;
-        [[nodiscard]] int getTargetableCount() const;
         [[nodiscard]] int getAliveCount() const;
+
+        [[nodiscard]] int getTargetableCount() const; // calculated here, not fast
+        [[nodiscard]] int getFirstTargetable() const;
 
         [[nodiscard]] int getRandomMonsterIdx(Random &rng, bool aliveOnly=true) const;
 
@@ -41,7 +43,7 @@ namespace sts {
         void createShapes(BattleContext &bc, int count);
 
         static MonsterId getAncientShape(Random &miscRng);
-        static MonsterId getGremlin(Random &miscRng);
+        static MonsterId getGremlin(Random &rng);
         static MonsterId getLouse(Random &miscRng);
         static MonsterId getSlaver(Random &miscRng);
 

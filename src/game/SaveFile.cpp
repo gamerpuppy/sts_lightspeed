@@ -12,7 +12,7 @@
 
 using namespace sts;
 
-std::string readFile(std::string path)
+std::string SaveFile::readFileToStringHelper(const std::string &path)
 {
     std::string result;
     std::ifstream ifs(path.c_str(), std::ios::binary);
@@ -211,7 +211,7 @@ sts::SaveFile::SaveFile(const std::string &json, sts::CharacterClass cc): json(j
 }
 
 std::string SaveFile::getJson(const std::string &path) {
-    std::string utf8Content = readFile(path);
+    std::string utf8Content = readFileToStringHelper(path);
     auto dataBits = decodeBase64(utf8Content);
     auto json = xorWithKey(dataBits);
     return json;
@@ -220,3 +220,4 @@ std::string SaveFile::getJson(const std::string &path) {
 sts::SaveFile sts::SaveFile::loadFromPath(const std::string &path, sts::CharacterClass cc) {
     return SaveFile(getJson(path), cc);
 }
+

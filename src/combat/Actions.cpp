@@ -427,6 +427,77 @@ Action Actions::GainBlockRandomEnemy(int sourceMonster, int amount) {
     }};
 }
 
+Action Actions::SummonGremlins() {
+    // gremlin leader searches in the order 1, 2, 0 for open space
+
+    return {[=] (BattleContext &bc) {
+        int openIdxCount = 0;
+        int newGremlinIdxs[2];
+        if (bc.monsters.arr[1].isDying()) {
+            newGremlinIdxs[openIdxCount++] = 1;
+        }
+        if (bc.monsters.arr[2].isDying()) {
+            newGremlinIdxs[openIdxCount++] = 2;
+        }
+        if (openIdxCount < 2 && bc.monsters.arr[0].isDying()) {
+            newGremlinIdxs[openIdxCount++];
+        }
+#ifdef sts_asserts
+        assert(openIdxCount == 2);
+#endif
+
+        auto &gremlin0 = bc.monsters.arr[newGremlinIdxs[0]];
+        auto &gremlin1 = bc.monsters.arr[newGremlinIdxs[1]];
+
+        gremlin0 = Monster();
+        gremlin1 = Monster();
+
+        gremlin0.construct(bc, MonsterGroup::getGremlin(bc.aiRng), newGremlinIdxs[0]);
+        gremlin1.construct(bc, MonsterGroup::getGremlin(bc.aiRng), newGremlinIdxs[1]);
+        bc.monsters.monstersAlive += 2;
+
+        if (bc.player.hasRelic<R::PHILOSOPHERS_STONE>()) {
+            gremlin0.buff<MS::STRENGTH>(1);
+            gremlin1.buff<MS::STRENGTH>(1);
+        }
+        gremlin0.buff<MS::MINION>();
+        gremlin1.buff<MS::MINION>();
+
+        gremlin0.rollMove(bc);
+        gremlin1.rollMove(bc);
+    }};
+}
+
+Action Actions::SpawnTorchHeads() {
+    return {[=] (BattleContext &bc) {
+        const auto spawnCount = 3-bc.monsters.monstersAlive;
+#ifdef sts_asserts
+        assert(spawnCount > 0);
+#endif
+        const int spawnIdxs[2] {(bc.monsters.arr[1].isDying() ? 1 : 0), 0};
+
+        for (int i = 0; i < spawnCount; ++i) {
+            const auto idx = spawnIdxs[i];
+            auto &torchHead = bc.monsters.arr[idx];
+            torchHead = Monster();
+            torchHead.construct(bc, MonsterId::TORCH_HEAD, idx);
+            torchHead.initHp(bc.monsterHpRng, bc.ascension); // bug somewhere in game
+            torchHead.setMove(MonsterMoveId::TORCH_HEAD_TACKLE);
+            torchHead.buff<MS::MINION>();
+
+            if (bc.player.hasRelic<R::PHILOSOPHERS_STONE>()) {
+                torchHead.buff<MS::STRENGTH>(1);
+            }
+            ++bc.monsters.monstersAlive;
+        }
+
+        for (int i = 0; i < spawnCount; ++i) {
+            bc.noOpRollMove();
+        }
+    }};
+}
+
+
 Action Actions::OnAfterCardUsed() {
     return {[] (BattleContext &bc) {
         bc.onAfterUseCard();
@@ -450,7 +521,6 @@ Action Actions::PutRandomCardsInDrawPile(CardType type, int count) {
         }
     }};
 }
-
 
 Action Actions::DiscoveryAction(CardType type, int amount) {
     return {[=] (BattleContext &bc) {
@@ -535,11 +605,7 @@ Action Actions::ViolenceAction(int count) { // todo a faster algorithm for inser
             removeIdxs[i] = removeIdx;
 
             const auto &c = bc.cards.drawPile[removeIdx];
-            if (bc.cards.cardsInHand == 10) {
-                bc.cards.moveToDiscardPile(c);
-            } else {
-                bc.cards.moveToHand(c);
-            }
+            bc.cards.moveToHand(c);
         }
 
         std::sort(removeIdxs, removeIdxs+i);
@@ -622,11 +688,13 @@ Action Actions::DualWieldAction(int copyCount) {
 
         if (validCount == 1) {
             for (int i = 0; i < copyCount; ++i) {
-                const auto &c = bc.cards.hand[lastValidIdx];
+                auto c = bc.cards.hand[lastValidIdx];
                 if (bc.cards.cardsInHand + 1 <= CardManager::MAX_HAND_SIZE) {
                     bc.cards.createTempCardInHand(c);
+
                 } else {
                     bc.cards.createTempCardInDiscard(c);
+
                 }
             }
 
@@ -859,10 +927,11 @@ Action Actions::EnlightenmentAction(bool upgraded) {
         for (int i = 0; i < bc.cards.cardsInHand; ++i) {
             auto &c = bc.cards.hand[i];
             if (c.costForTurn > 1) {
-                c.setCostForTurn(1);
+                c.costForTurn = 1;
             }
             if (upgraded && c.cost > 1) {
-                c.setCostForCombat(1);
+                c.costForTurn = 1;
+                c.cost = 1;
             }
         }
     }};
@@ -880,7 +949,7 @@ Action Actions::FeedAction(int idx, int damage, bool upgraded) {
         if (m.isDeadOrEscaped()) {
             return;
         }
-        bc.monsters.arr[idx].damage(bc, damage);
+        bc.monsters.arr[idx].attacked(bc, damage);
         if (!m.hasStatus<MS::MINION>() && !m.isAlive()) {
             bc.player.increaseMaxHp(upgraded ? 4 : 3);
         }
@@ -952,7 +1021,7 @@ Action Actions::RitualDaggerAction(int idx, int damage) {
         if (m.isDeadOrEscaped()) {
             return;
         }
-        bc.monsters.arr[idx].damage(bc, damage);
+        bc.monsters.arr[idx].attacked(bc, damage);
         if (!m.hasStatus<MS::MINION>() && !m.isAlive()) {
             auto &dagger = bc.curCardQueueItem.card;
             dagger.specialData += dagger.isUpgraded() ? 5 : 3;
@@ -1043,21 +1112,3 @@ Action Actions::WhirlwindAction(int baseDamage, int energy, bool useEnergy) {
         }
     }};
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -298,7 +298,8 @@ namespace sts {
 
     template <PlayerStatus s>
     void Player::buff(int amount) {
-        // corruption sets the costs of cards immediately
+        // corruption effects handled elsewhere
+
         if (amount == 0) {
             return;
         }

@@ -225,23 +225,25 @@ void BattleSimulator::printNormalActions(std::ostream &os) const {
         return;
     }
 
-    const int targetableCount = bc->monsters.getTargetableCount();
-
     for (int i = 0; i < bc->cards.cardsInHand; ++i) {
         const auto card = bc->cards.hand[i];
-        if (!card.canUse(*bc)) {
+
+        if (!card.canUseOnAnyTarget(*bc)) {
             continue;
         }
 
         os << i << ": " << card;
-        if (card.requiresTarget() && targetableCount > 1) {
+        if (card.requiresTarget()) {
+
             os << ", ";
             for (int mIdx = 0; mIdx < bc->monsters.monsterCount; ++mIdx) {
                 if (bc->monsters.arr[mIdx].isTargetable()) {
                     os << " " << mIdx;
                 }
             }
+
         }
+
         os << "\n";
     }
 
@@ -261,6 +263,7 @@ void BattleSimulator::takeNormalAction(const std::string &action) {
         int cardIdx;
         ss >> cardIdx;
 
+        assert(cardIdx >= 0 && cardIdx < bc->cards.cardsInHand);
         const auto &card = bc->cards.hand[cardIdx];
 
         int targetIdx = -1;

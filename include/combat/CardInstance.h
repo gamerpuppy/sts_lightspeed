@@ -59,6 +59,7 @@ namespace sts {
         // *****  *****
         void upgradeBaseCost(int newBaseCost); // Blood for Blood when upgraded
         void updateCost(int amount);
+//        void modifyCostForCombat(int amount);
 
         void setCostForCombat(int cost);
         void setCostForTurn(int newCost);
@@ -74,8 +75,9 @@ namespace sts {
 
 
         [[nodiscard]] bool isFreeToPlay(const BattleContext &bc) const;
-        [[nodiscard]] bool canUse(const BattleContext &bc, bool inAutoplay=false) const;
 
+        [[nodiscard]] bool canUseOnAnyTarget(const BattleContext &bc) const; // not for use in critical path
+        [[nodiscard]] bool canUse(const BattleContext &bc, int target, bool inAutoplay) const;
     };
 
     std::ostream& operator <<(std::ostream &os, const CardInstance &c);

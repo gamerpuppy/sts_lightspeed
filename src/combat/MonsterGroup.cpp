@@ -14,9 +14,23 @@ bool MonsterGroup::areMonstersBasicallyDead() const {
     return monstersAlive <= 0;
 }
 
-// todo
 int MonsterGroup::getTargetableCount() const {
-    return monstersAlive;
+    int count = 0;
+    for (int i = 0; i < monsterCount; ++i) {
+        if (arr[i].isTargetable()) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+int MonsterGroup::getFirstTargetable() const {
+    for (int i = 0; i < monsterCount; ++i) {
+        if (arr[i].isTargetable()) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 int MonsterGroup::getAliveCount() const {
@@ -54,13 +68,16 @@ int MonsterGroup::getRandomMonsterIdx(Random &rng, bool aliveOnly) const {
 
 void MonsterGroup::init(BattleContext &bc, MonsterEncounter encounter) {
     createMonsters(bc, encounter);
-
     for (int i = 0; i < monsterCount; ++i) {
-        arr[i].rollMove(bc);
+        if (arr[i].idx != -1) {
+            arr[i].rollMove(bc);
+        }
     }
 
     for (int i = 0; i < monsterCount; ++i) {
-        arr[i].preBattleAction(bc);
+        if (arr[i].idx != -1) {
+            arr[i].preBattleAction(bc);
+        }
     }
 }
 
@@ -170,6 +187,7 @@ void MonsterGroup::createMonsters(BattleContext &bc, MonsterEncounter encounter)
             break;
 
         case MonsterEncounter::COLLECTOR:
+            monsterCount = 2;
             createMonster(bc, MonsterId::THE_COLLECTOR);
             break;
 
@@ -192,8 +210,8 @@ void MonsterGroup::createMonsters(BattleContext &bc, MonsterEncounter encounter)
             break;
 
         case MonsterEncounter::CHOSEN_AND_BYRDS:
-            createMonster(bc, MonsterId::CHOSEN);
             createMonster(bc, MonsterId::BYRD);
+            createMonster(bc, MonsterId::CHOSEN);
             break;
 
         case MonsterEncounter::CULTIST:
@@ -218,11 +236,18 @@ void MonsterGroup::createMonsters(BattleContext &bc, MonsterEncounter encounter)
             createMonster(bc, MonsterId::GIANT_HEAD);
             break;
 
-        case MonsterEncounter::GREMLIN_LEADER:
-            createMonster(bc, getGremlin(bc.miscRng));
-            createMonster(bc, getGremlin(bc.miscRng));
-            createMonster(bc, MonsterId::GREMLIN_LEADER);
+        case MonsterEncounter::GREMLIN_LEADER: {
+            arr[1].construct(bc, getGremlin(bc.miscRng), 1);
+            arr[1].buff<MS::MINION>();
+
+            arr[2].construct(bc, getGremlin(bc.miscRng), 2);
+            arr[2].buff<MS::MINION>();
+
+            arr[3].construct(bc, MonsterId::GREMLIN_LEADER, 3);
+            monstersAlive = 3;
+            monsterCount = 4;
             break;
+        }
 
         case MonsterEncounter::GREMLIN_NOB:
             createMonster(bc, MonsterId::GREMLIN_NOB);
@@ -490,7 +515,7 @@ MonsterId MonsterGroup::getAncientShape(Random &miscRng) {
     return shapes[miscRng.random(2)];
 }
 
-MonsterId MonsterGroup::getGremlin(Random &miscRng) {
+MonsterId MonsterGroup::getGremlin(Random &rng) {
     const MonsterId gremlins[] {
             MonsterId::MAD_GREMLIN,
             MonsterId::MAD_GREMLIN,
@@ -501,7 +526,7 @@ MonsterId MonsterGroup::getGremlin(Random &miscRng) {
             MonsterId::SHIELD_GREMLIN,
             MonsterId::GREMLIN_WIZARD,
     };
-    return gremlins[miscRng.random(7)];
+    return gremlins[rng.random(7)];
 }
 
 MonsterId MonsterGroup::getLouse(Random &miscRng) {
@@ -539,7 +564,7 @@ void MonsterGroup::applyPreTurnLogic(BattleContext &bc) {
         if (m.isDying() || m.isEscaping()) { // todo fix this line
             continue;
         }
-        m.applyStartOfTurnPowers(bc);
+        m.applyStartOfTurnPowers(bc); // dont need to do this before I think
     }
 }
 

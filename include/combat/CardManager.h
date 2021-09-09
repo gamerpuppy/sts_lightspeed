@@ -81,13 +81,13 @@ namespace sts {
 
         void eraseAtIdxInHand(int idx); // does not call notifyRemoveFromHand
         int getRandomCardIdxInHand(Random &rng);
-
         void resetAttributesAtEndOfTurn();
 
         // special helpers
         void draw(BattleContext &bc, int amount);
         void onTookDamage(); // update blood for blood, masterful stab
         void findAndUpgradeRampage(const CardInstance &purgeCard);
+        void onBuffCorruption();
 
     };
 

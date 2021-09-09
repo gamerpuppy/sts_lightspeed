@@ -7,7 +7,6 @@
 
 using namespace sts;
 
-
 SearchInfo::SearchInfo(const BattleContext &bc) : bc(bc) {
     if (bc.outcome != Outcome::UNDECIDED) {
         stateSize = 0;

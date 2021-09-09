@@ -110,7 +110,23 @@ void GameContext::initFromSave(const SaveFile &s) {
     shopChance = s.shopChance;
     treasureChance = s.treasureChance;
 
-    shrineList.clear(); // this is a game bug, the shrine list is not stored in the save file
+    // this is a game bug, the shrine list is not stored in the save file
+    shrineList.clear();
+    switch (act) {
+        case 1:
+            shrineList.insert(shrineList.begin(), EventPools::Act1::shrines.begin(), EventPools::Act1::shrines.end());
+            break;
+
+        case 2:
+        case 3:
+            shrineList.insert(shrineList.begin(), EventPools::Act2::shrines.begin(), EventPools::Act2::shrines.end());
+            break;
+
+        case 4:
+        default:
+            break;
+    }
+
     eventList.insert(eventList.begin(), s.event_list.begin(), s.event_list.end());
     specialOneTimeEventList.insert(
             specialOneTimeEventList.begin(),
@@ -192,7 +208,6 @@ void GameContext::initFromSave(const SaveFile &s) {
         }
         potions[i] = p;
     }
-
 
     map = new Map();
     *map = Map::fromSeed(seed, ascension, act, true);
@@ -1857,7 +1872,7 @@ Rewards GameContext::createBossCombatReward() {
     return reward;
 }
 
-Event GameContext::getShrine(Random &eventRngCopy) {  // todo fix, this is slow probably
+Event GameContext::getShrine(Random &eventRngCopy) {  // todo fix, this is slow
     int tempLength = 0;
     Event tempShrines[20];
 

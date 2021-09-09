@@ -211,6 +211,10 @@ namespace sts {
             const std::array<Event,6> shrines { Event::MATCH_AND_KEEP, Event::WHEEL_OF_CHANGE, Event::GOLDEN_SHRINE, Event::TRANSMORGRIFIER, Event::PURIFIER, Event::UPGRADE_SHRINE };
         }
 
+
+
+
+
     }
 
 }

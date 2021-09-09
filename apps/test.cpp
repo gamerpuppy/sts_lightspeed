@@ -464,6 +464,20 @@ int main(int argc, const char* argv[]) {
     }
 
 
+
+//    else if (command == "json_to_save") {
+//        const std::string jsonInPath(argv[2]);
+//        const std::string saveFileOutPath(argv[3]);
+//
+//
+//        SaveFile s(jsonInPath, sts::CharacterClass::IRONCLAD);
+//        std::ofstream outFileStream(jsonOutPath);
+//        outFileStream << SaveFile::getJson(saveFilePath);
+//        outFileStream.close();
+//
+//    }
+
+
     //    printSizes();
 //    std::cout << SeedHelper::getString(77) << '\n';
 //    playRandom();

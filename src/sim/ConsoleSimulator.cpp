@@ -737,7 +737,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             if (gc->deck.getTransformableCount(2) > 1) {
                 os << "1: [Become Test Subject] Choose and Transform 2 cards in your deck.\n";
             }
-            os << "2: [Ingest Mutagens] Obtain a MutagenicStrength.png Mutagenic Strength.\n";
+            os << "2: [Ingest Mutagens] Obtain Mutagenic Strength.\n";
             break;
         }
 

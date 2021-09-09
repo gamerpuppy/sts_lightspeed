@@ -66,7 +66,6 @@ namespace sts {
     }
 
     struct SaveFile {
-
         std::string json;
 
         std::uint64_t seed;
@@ -132,13 +131,14 @@ namespace sts {
         std::vector<MonsterEncounter> elite_monster_list;
         std::vector<MonsterEncounter> boss_list;
 
+        SaveFile() = default;
+        SaveFile(const SaveFile &rhs) = default;
+        SaveFile(const std::string &json, CharacterClass cc);
 
         static SaveFile loadFromPath(const std::string& path, CharacterClass cc);
         static std::string getJson(const std::string &path);
 
-        SaveFile() = default;
-        SaveFile(const SaveFile &rhs) = default;
-        SaveFile(const std::string &json, CharacterClass cc);
+        static std::string readFileToStringHelper(const std::string &path);
     };
 
 }

@@ -66,6 +66,10 @@ int Player::getStatusRuntime(PlayerStatus s) const {
 }
 
 void Player::gainBlock(BattleContext &bc, int amount) {
+    if (amount <= 0) {
+        return;
+    }
+
     block += amount;
 
     if (hasStatus<PS::JUGGERNAUT>()) {
@@ -215,6 +219,10 @@ void Player::attacked(BattleContext &bc, int enemyIdx, int calculatedDamage) {
             decrementStatus<PS::PLATED_ARMOR>();
         }
 
+        if (bc.monsters.arr[enemyIdx].hasStatus<MS::PAINFUL_STABS>()) {
+            bc.addToBot( Actions::MakeTempCardInDiscard({CardId::WOUND}) );
+        }
+
         hpWasLost(bc, damage, false);
 
     } else {
@@ -223,6 +231,10 @@ void Player::attacked(BattleContext &bc, int enemyIdx, int calculatedDamage) {
 }
 
 void Player::loseHp(BattleContext &bc, int amount, bool selfDamage) {
+    if (hasStatus<PS::INTANGIBLE>()) {
+        amount = 1;
+    }
+
     if (amount > 0 && hasRelic<RelicId::TUNGSTEN_ROD>()) {
         amount -= 1;
         if (amount == 0) {
@@ -741,7 +753,7 @@ namespace sts {
 //    }
 
     void printRelics(std::ostream &os, const Player &p) {
-        os << "\n\t" << "Relics: ";
+        os << "\t" << "Relics: ";
 
         // this is slow and stupid
         int i = static_cast<int>(R::AKABEKO);
@@ -760,7 +772,7 @@ namespace sts {
     void printAllInfos(std::ostream &os, const Player &p) {
         const std::string s = ", ";
 
-        os << "\n\t" << "Relic Counters: "
+        os << "\t" << "Relic Counters: "
             << "" << "happyFlowerCounter: " << p.happyFlowerCounter
             << s << "incenseBurnerCounter: " << p.incenseBurnerCounter
             << s << "inkBottleCounter: " << p.inkBottleCounter
@@ -789,17 +801,11 @@ namespace sts {
                 << "}";
 
             os << s << "cardsDiscardedThisTurn: " << p.cardsDiscardedThisTurn;
+            os << s << "gold: " << p.gold << '\n';
     }
 
-    std::ostream& operator<<(std::ostream &os, const Player &p) {
-        os << "Player: {\n";
 
-        os << "\t" << "hp:(" << p.curHp << "/" << p.maxHp << ")"
-            << " energy:(" << p.energy << "/" << p.energyPerTurn
-        << ") block:(" << p.block << ")";
-
-
-        printRelics(os, p);
+    void printStatusEffects(std::ostream &os, const Player &p) {
         os << "\tStatusEffects: {";
         if (p.hasStatus<PS::CONFUSED>()) {
             os << "(Confused), ";
@@ -818,11 +824,19 @@ namespace sts {
         for (auto pair : p.statusMap) {
             printIfHaveStatus(p, os, pair.first);
         }
-        os << "} ";
+        os << "}\n";
+    }
 
+    std::ostream& operator<<(std::ostream &os, const Player &p) {
+        os << "Player: {\n";
 
+        os << "\t" << "hp:(" << p.curHp << "/" << p.maxHp << ")"
+            << " energy:(" << p.energy << "/" << p.energyPerTurn
+        << ") block:(" << p.block << ")\n";
+
+        printStatusEffects(os, p);
+        printRelics(os, p);
         printAllInfos(os, p);
-        os << '\n';
 
         os << "}\n";
         return os;

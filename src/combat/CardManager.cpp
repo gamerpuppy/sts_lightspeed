@@ -137,6 +137,9 @@ void CardManager::removeFromExhaustPile(int idx) {
 // **************** START Move Methods ****************
 
 void CardManager::moveToHand(const CardInstance &c) {
+#ifdef sts_asserts
+    assert(cardsInHand < 10);
+#endif
     notifyAddToHand(c);
     hand[cardsInHand++] = c;
 }
@@ -311,7 +314,7 @@ void CardManager::draw(BattleContext &bc, int amount) {
 
         if (bc.player.hasStatus<PS::CONFUSED>()) {
             if (c.cost >= 0) {  // todo status and curses affected by this?
-                const auto newCost = bc.cardRandomRng.random(3);
+                const auto newCost = static_cast<std::int8_t>(bc.cardRandomRng.random(3));
                 if (c.cost != newCost) {
                     c.costForTurn = newCost;
                     c.cost = newCost;
@@ -320,17 +323,19 @@ void CardManager::draw(BattleContext &bc, int amount) {
             }
         }
 
-        if (bc.player.hasStatus<PS::CORRUPTION>() && c.getType() == CardType::SKILL) {
-            c.costForTurn = 0;
+        if (c.getType() == CardType::SKILL) {
+            if (bc.player.hasStatus<PS::CORRUPTION>()) {
+                c.setCostForTurn(-9);
+            }
 
         } else if (c.getType() == CardType::STATUS) {
             if (evolve) {
                 bc.addToBot( Actions::DrawCards(evolve) );
             }
-
             if (fireBreathing) {
                 bc.addToBot( Actions::DamageAllEnemy(fireBreathing) );
             }
+
         } else if (c.getType() == CardType::CURSE) {
             if (fireBreathing) {
                 bc.addToBot( Actions::DamageAllEnemy(fireBreathing) );
@@ -338,7 +343,12 @@ void CardManager::draw(BattleContext &bc, int amount) {
 
         }
 
-        moveToHand(c);
+        // do we need to check this?
+        if (cardsInHand < 10) {
+            moveToHand(c);
+        } else {
+            moveToDiscardPile(c);
+        }
     }
 
 }
@@ -429,6 +439,42 @@ void CardManager::findAndUpgradeRampage(const CardInstance &purgeCard) {
             return;
         }
     }
+
+}
+
+void CardManager::onBuffCorruption() {
+    // game does modifyCostForCombat here but I don't think its necessary as skills cant cost more than 4?
+    for (int i = 0; i < cardsInHand; ++i) {
+        auto &c = hand[i];
+        if (c.cost > 0) {
+            c.cost = 0;
+            c.costForTurn = 0;
+        }
+    }
+
+    // probably only need to do hand?
+
+    for (auto &c : drawPile) {
+        if (c.cost > 0) {
+            c.cost = 0;
+            c.costForTurn = 0;
+        }
+    }
+
+    for (auto &c : discardPile) {
+        if (c.cost > 0) {
+            c.cost = 0;
+            c.costForTurn = 0;
+        }
+    }
+
+    for (auto &c : exhaustPile) {
+        if (c.cost > 0) {
+            c.cost = 0;
+            c.costForTurn = 0;
+        }
+    }
+
 
 }
 

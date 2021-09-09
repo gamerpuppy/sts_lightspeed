@@ -91,6 +91,7 @@ void BattleContext::initRelics(const GameContext &gc) {
 
             case R::BAG_OF_MARBLES:
             case R::BAG_OF_PREPARATION:
+            case R::CLOCKWORK_SOUVENIR:
             case R::GREMLIN_VISAGE:
             case R::MARK_OF_PAIN:
             case R::RED_MASK:
@@ -218,10 +219,6 @@ void BattleContext::initRelics(const GameContext &gc) {
 
             case R::BUSTED_CROWN:
                 p.energyPerTurn++;
-                break;
-
-            case R::CLOCKWORK_SOUVENIR:
-                p.buff<PS::ARTIFACT>(1);
                 break;
 
             case R::COFFEE_DRIPPER:
@@ -382,12 +379,17 @@ void BattleContext::initRelics(const GameContext &gc) {
                 addToBot( Actions::DrawCards(2) );
                 break;
 
+            case R::CLOCKWORK_SOUVENIR:
+                addToBot( Actions::BuffPlayer<PS::ARTIFACT>(1) );
+                break;
+
             case R::GREMLIN_VISAGE:
                 p.debuff<PS::WEAK>(1);
                 break;
 
             case R::MARK_OF_PAIN: // todo handle elsewhere
                 addToBot( Actions::MakeTempCardInDrawPile( {CardId::WOUND}, 2, true) );
+                break;
 
             case R::RED_MASK:
                 addToBot( Actions::DebuffAllEnemy<MS::WEAK>(1) );
@@ -603,8 +605,8 @@ bool BattleContext::requiresStolenGoldCheck() const {
     return miscBits.test(0);
 }
 
-int BattleContext::getMonsterTurnCount() const {
-    return turn; // todo;
+int BattleContext::getMonsterTurnNumber() const {
+    return turn+1; // todo;
 }
 
 void BattleContext::setState(InputState s) {
@@ -674,7 +676,7 @@ void BattleContext::clearPostCombatActions() {
 
 void BattleContext::cleanCardQueue() {
     // todo
-
+    // not sure where this matters, as we don't queue more than 1 item at a time in the hand
 }
 
 bool BattleContext::isCardPlayAllowed() const {
@@ -795,7 +797,7 @@ void BattleContext::playCardQueueItem(CardQueueItem playItem) {
     }
 
 //    bool canPlayCard = false; // not really sure what this is used for
-    const bool canUseCard = item.purgeOnUse || (item.triggerOnUse && c.canUse(*this, item.autoplay) && (!c.requiresTarget() || monsters.arr[item.target].isTargetable()));
+    const bool canUseCard = item.purgeOnUse || (item.triggerOnUse && c.canUse(*this, item.target, item.autoplay) && (!c.requiresTarget() || monsters.arr[item.target].isTargetable()));
     if (canUseCard) { // not sure if this is correct,
 //        canPlayCard = true; // what is this for......
 
@@ -867,11 +869,11 @@ void BattleContext::useNoTriggerCard() {
 
     switch (c.id) {
         case CardId::BURN:
-            addToTop(Actions::DamagePlayer(c.isUpgraded() ? 4 : 2, true));
+            addToTop( Actions::DamagePlayer(c.isUpgraded() ? 4 : 2, true));
             break;
 
         case CardId::DECAY:
-            addToTop(Actions::DamagePlayer(2, true));
+            addToTop( Actions::DamagePlayer(2, true));
             break;
 
         case CardId::DOUBT:
@@ -879,7 +881,7 @@ void BattleContext::useNoTriggerCard() {
             break;
 
         case CardId::REGRET:
-            addToTop(Actions::PlayerLoseHp(item.regretCardCount, true));
+            addToTop( Actions::PlayerLoseHp(item.regretCardCount, true));
             break;
 
         case CardId::SHAME:
@@ -895,6 +897,7 @@ void BattleContext::useNoTriggerCard() {
             break;
     }
 
+    cards.removeFromHandById(c.uniqueId);
     addToBot(Actions::DiscardNoTriggerCard()); // todo what if havoc plays one of these
 }
 
@@ -2002,6 +2005,7 @@ void BattleContext::callEndOfTurnActions() {
                 item.regretCardCount = cards.cardsInHand;
                 item.card = c;
                 addToBotCard(item);
+                break;
             }
             default:
                 break;
@@ -2264,16 +2268,16 @@ void BattleContext::drinkPotion(int idx, int target) {
             break;
 
         case Potion::POISON_POTION:
-            addToBot(Actions::DebuffEnemy<MS::POISON>(target, hasBark ? 12 : 6));
+            addToBot( Actions::DebuffEnemy<MS::POISON>(target, hasBark ? 12 : 6) );
             break;
 
         case Potion::POTION_OF_CAPACITY:
-            addToBot(Actions::IncreaseOrbSlots(hasBark ? 4 : 2));
+            addToBot( Actions::IncreaseOrbSlots(hasBark ? 4 : 2) );
             break;
 
         case Potion::POWER_POTION:
             haveUsedDiscoveryAction = true;
-            addToBot(Actions::DiscoveryAction(CardType::POWER, hasBark ? 2 : 1));
+            addToBot( Actions::DiscoveryAction(CardType::POWER, hasBark ? 2 : 1) );
             break;
 
         case Potion::REGEN_POTION:
@@ -2336,10 +2340,10 @@ void BattleContext::drawCards(int count) {
     int amountToDraw = std::min(10-cards.cardsInHand, count);
 
     if (cards.drawPile.size() < amountToDraw) {
-        int temp = amountToDraw-cards.drawPile.size();
+        const auto temp = amountToDraw-static_cast<int>(cards.drawPile.size());
         addToTop( Actions::DrawCards(temp) );
         onShuffle();
-        addToTop(Actions::EmptyDeckShuffle());
+        addToTop( Actions::EmptyDeckShuffle() );
 
         if (!cards.drawPile.empty()) {
             drawCards(static_cast<int>(cards.drawPile.size())); // the game adds this to top
@@ -2414,6 +2418,17 @@ void BattleContext::playTopCardInDrawPile(int monsterTargetIdx, bool exhausts) {
     item.autoplay = true;
     item.freeToPlay = true; // todo remove the autoplay boolean? added this instead
     addToTopCard(item);
+}
+
+void BattleContext::moveToHandHelper(CardInstance c) {
+    if (cards.cardsInHand < 10) {
+        if (player.hasStatus<PS::CORRUPTION>() && c.getType() == CardType::SKILL) {
+            c.setCostForTurn(-9);
+        }
+        cards.moveToHand(c);
+    } else {
+        cards.moveToDiscardPile(c);
+    }
 }
 
 void BattleContext::exhaustSpecificCardInHand(int idx, std::int16_t uniqueId) {
@@ -2643,7 +2658,7 @@ void BattleContext::queuePurgeCard(const CardInstance &c, int target) {
     item.energyOnUse = curCardQueueItem.energyOnUse;
     item.ignoreEnergyTotal = true;
     item.autoplay = true;
-    addToFrontOfCardQueue(item);
+    addPurgeCardToCardQueue(item);
 }
 
 CardId BattleContext::returnTrulyRandomCardInCombat() {
@@ -2651,10 +2666,15 @@ CardId BattleContext::returnTrulyRandomCardInCombat() {
     return getTrulyRandomCard(cardRandomRng, player.cc);
 }
 
-void BattleContext::addToFrontOfCardQueue(const CardQueueItem &item) {
-    auto temp = cardQueue.front();
-    cardQueue.front() = item;
-    cardQueue.pushFront(temp);
+void BattleContext::addPurgeCardToCardQueue(const CardQueueItem &item) {
+    if (cardQueue.size > 0) {
+        auto temp = cardQueue.front();
+        cardQueue.front() = item;
+        cardQueue.pushFront(temp);
+    } else {
+        cardQueue.pushFront(item);
+    }
+
 }
 
 void BattleContext::noOpRollMove() {
@@ -2745,6 +2765,7 @@ void BattleContext::mummifiedHandOnUsePower() {
 }
 
 void BattleContext::openDiscoveryScreen(std::array<CardId, 3> discoveryCards, int copyCount) {
+    inputState = InputState::CARD_SELECT;
     cardSelectInfo.cardSelectTask = CardSelectTask::DISCOVERY;
     cardSelectInfo.pickCount = 1;
     cardSelectInfo.canPickAnyNumber = false;
@@ -2766,12 +2787,7 @@ void BattleContext::chooseDrawToHandCards(const int *idxs, int cardCount) {
         const auto drawIdx = idxs[i];
         auto c = cards.drawPile[drawIdx];
         cards.removeFromDrawPileAtIdx(drawIdx);
-
-        if (cards.cardsInHand == 10) {
-            cards.moveToDiscardPile(c);
-        } else {
-            cards.moveToHand(c);
-        }
+        moveToHandHelper(c);
     }
 }
 
@@ -2853,8 +2869,10 @@ void BattleContext::chooseDualWieldCard(int handIdx) {
     for (int x = 0; x < copyCount; ++x) {
         if (cards.cardsInHand + 1 <= CardManager::MAX_HAND_SIZE) {
             cards.createTempCardInHand(dualWieldCard);
+
         } else {
             cards.createTempCardInDiscard(dualWieldCard);
+
         }
     }
 
@@ -2863,41 +2881,38 @@ void BattleContext::chooseDualWieldCard(int handIdx) {
 void BattleContext::chooseDiscoveryCard(const int idx) {
     const auto discoveryAmount = cardSelectInfo.data0;
 
-    CardInstance discoveryCard(cardSelectInfo.discovery_Cards()[idx]);
-    discoveryCard.setCostForTurn(0);
+    CardInstance c(cardSelectInfo.discovery_Cards()[idx]);
+    c.setCostForTurn(0);
 
     for (int i = 0; i < discoveryAmount; ++i) {
         if (cards.cardsInHand + 1 <= CardManager::MAX_HAND_SIZE) {
-            cards.createTempCardInHand(discoveryCard);
+            if (player.hasStatus<PS::CORRUPTION>() && c.getType() == CardType::SKILL) {
+                c.setCostForTurn(-9);
+            }
+            cards.createTempCardInHand(c);
+
         } else {
-            cards.createTempCardInDiscard(discoveryCard);
+            cards.createTempCardInDiscard(c);
         }
     }
 }
 
 void BattleContext::chooseDiscardToHandCard(int discardIdx, bool forZeroCost) {
-        CardInstance c = cards.discardPile[discardIdx];
-        cards.removeFromDiscard(discardIdx);
-        if (cardSelectInfo.cardSelectTask == CardSelectTask::LIQUID_MEMORIES_POTION) {
-            c.setCostForTurn(0);
-        }
-        if (cards.cardsInHand < 10) {
-            cards.moveToHand(c);
-        } else {
-            cards.moveToDiscardPile(c);
-        }
+    CardInstance c = cards.discardPile[discardIdx];
+    cards.removeFromDiscard(discardIdx);
+    if (cardSelectInfo.cardSelectTask == CardSelectTask::LIQUID_MEMORIES_POTION) {
+        c.setCostForTurn(0);
+    }
+    moveToHandHelper(c);
 }
-
-
 
 void BattleContext::chooseExhumeCard(int exhaustIdx) {
     // todo game handles corruption here
-
     auto c = cards.exhaustPile[exhaustIdx];
     cards.removeFromExhaustPile(exhaustIdx);
-
     cards.notifyCreateCard(c);
-    cards.moveToHand(c);
+
+    moveToHandHelper(c);
 }
 
 void BattleContext::chooseForethoughtCard(int handIdx) {
@@ -2941,6 +2956,23 @@ void BattleContext::chooseWarcryCard(int handIdx) {
 namespace sts {
 
 
+    void printRngCounters(std::ostream &os, const BattleContext &bc) {
+        const std::string separator = " ";
+        os << '\t';
+
+        os << "aiRng: " << bc.aiRng.counter << separator;
+        os << "cardRandomRng: " << bc.cardRandomRng.counter << separator;
+        os << "shuffleRng: " << bc.shuffleRng.counter << separator;
+
+        os << "     ";
+
+        os << "miscRng: " << bc.miscRng.counter << separator;
+        os << "monsterHpRng: " << bc.monsterHpRng.counter << separator;
+        os << "potionRng: " << bc.potionRng.counter << separator;
+
+        os << '\n';
+    }
+
     void printPotions(std::ostream &os, const BattleContext &bc) {
         const auto s = "\n\t";
         os << "\t" << "potionCount: " << bc.potionCount;
@@ -2956,9 +2988,14 @@ namespace sts {
     std::ostream& operator<<(std::ostream &os, const BattleContext &bc) {
         os << "BattleContext: {\n";
         printPotions(os, bc);
-        os << "\tqueueSize: " << bc.actionQueue.size << ",\n";
-        os << "\tcardQueueSize: " << bc.cardQueue.size << ",\n";
-        os << "\tturn: " << bc.turn << ",\n";
+        printRngCounters(os, bc);
+
+        os << "\tactionQueueSize: " << bc.actionQueue.size
+            << ", cardQueueSize: " << bc.cardQueue.size
+            << ", turn: " << bc.turn
+            << ", ascension: " << bc.ascension
+            << "\n";
+
         os << bc.monsters;
         os << bc.player;
         os << bc.cards;

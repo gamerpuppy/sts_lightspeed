@@ -105,6 +105,9 @@ namespace sts {
         static Action DamageRandomEnemy(int damage); // juggernaut
         static Action GainBlockRandomEnemy(int sourceMonster, int amount);
 
+        static Action SummonGremlins();
+        static Action SpawnTorchHeads();
+
         static Action ExhaustRandomCardInHand(int count);
         static Action MadnessAction();
         static Action RandomizeHandCost();

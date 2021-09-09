@@ -756,7 +756,7 @@ int RandomBattleStateHandler::setupNormalOptions(const BattleContext &bc) {
 
     for (int i = 0; i < bc.cards.cardsInHand; ++i) {
         const auto card = bc.cards.hand[i];
-        if (!card.canUse(bc)) {
+        if (!card.canUseOnAnyTarget(bc)) {
             continue;
         }
 

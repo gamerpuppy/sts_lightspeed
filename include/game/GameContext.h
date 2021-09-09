@@ -166,6 +166,7 @@ namespace sts {
         Random shuffleRng;
         Random treasureRng;
 
+        // todo change these to fixed lists
         std::vector<Event> eventList;
         std::vector<Event> shrineList;
         std::vector<Event> specialOneTimeEventList;

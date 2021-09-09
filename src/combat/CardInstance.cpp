@@ -123,7 +123,12 @@ void CardInstance::setCostForCombat(int newCost) {
 }
 
 void CardInstance::setCostForTurn(int newCost) {
-    costForTurn = newCost;
+//#ifdef sts_asserts
+//    assert(newCost >= 0);
+//#endif
+    if (costForTurn > 0) {
+        costForTurn = std::max(0,newCost);
+    }
 }
 
 void CardInstance::setUniqueId(int _uniqueId) {
@@ -252,9 +257,16 @@ bool canUseClash(const BattleContext &bc) {
     return true;
 }
 
-bool CardInstance::canUse(const BattleContext &bc, const bool inAutoplay) const {
+bool CardInstance::canUseOnAnyTarget(const BattleContext &bc) const {
+    if (requiresTarget()) {
+        return canUse(bc, bc.monsters.getFirstTargetable(), false);
+    } else {
+        return canUse(bc, 0, false);
+    }
+}
 
-    if (this->requiresTarget() && (bc.monsters.areMonstersBasicallyDead() || bc.monsters.getTargetableCount() == 0)) {
+bool CardInstance::canUse(const BattleContext &bc, int target, const bool inAutoplay) const {
+    if (this->requiresTarget() && (bc.monsters.areMonstersBasicallyDead() || !bc.monsters.arr[target].isTargetable())) {
         return false;
     }
 

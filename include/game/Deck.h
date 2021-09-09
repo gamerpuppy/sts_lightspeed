@@ -65,8 +65,6 @@ namespace sts {
         void removeAllMatching(GameContext &gc, const CardPredicate &p);
 
         [[nodiscard]] fixed_list<int, MAX_SIZE> getUpgradeableCardIdxs() const;
-
-
     };
 
 }

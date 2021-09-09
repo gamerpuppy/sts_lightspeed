@@ -48,6 +48,14 @@ namespace sts {
     class BattleContext;
 
     struct Monster {
+
+        /*
+         * Things to possibly cache about a monster
+         * - damage actions
+         * - death actions
+         * - whether they are a minion leader
+         */
+
         int idx = -1;
         MonsterId id = MonsterId::INVALID;
         int curHp = -1;
@@ -72,6 +80,7 @@ namespace sts {
         // Red Slaver entangled turn
         // hexaghost divider damage
         // Gremlin wizard charge
+        // book of stabbing n
         int miscInfo = 0;
 
         // Lagavulin asleep
@@ -116,7 +125,7 @@ namespace sts {
         template <MonsterStatus> void addDebuff(int amount, bool isSourceMonster=true);
 
         template <MonsterStatus> void removeStatus();
-        template <MonsterStatus> void buff(int amount);
+        template <MonsterStatus> void buff(int amount=1);
 
 
         template <MonsterStatus> void setJustApplied(bool value);
@@ -147,7 +156,7 @@ namespace sts {
         void onHpLost(BattleContext &bc, int amount);
 
         void setMove(MonsterMoveId moveId);
-        [[nodiscard]] bool firstTurn();
+        [[nodiscard]] bool firstTurn(); // only to be called in rollMove() before any moves are set
         [[nodiscard]] bool lastMove(MonsterMoveId moveId);
         [[nodiscard]] bool lastMoveBefore(MonsterMoveId moveId);
         [[nodiscard]] bool lastTwoMoves(MonsterMoveId moveId);
@@ -163,6 +172,7 @@ namespace sts {
         void stealGoldFromPlayer(BattleContext &bc, int amount);
         static void largeSlimeSplit(BattleContext &bc, MonsterId mediumSlimeType, int placeIdx, int hp);
         static void slimeBossSplit(BattleContext &bc, int hp);
+        [[nodiscard]] static int getAliveGremlinCount(const BattleContext &bc);
     };
 
     std::ostream& operator<<(std::ostream &os, const sts::Monster &m);
@@ -278,10 +288,18 @@ namespace sts {
 
     template <MonsterStatus s>
     void Monster::buff(int amount) {
+        if (s == MonsterStatus::BARRICADE) {
+            setHasStatus<s>(true);
+            return;
+        }
+
         if (s == MS::STRENGTH) {
             strength += amount;
             return;
-        } else if (s == MS::RITUAL) {
+
+        }
+
+        if (s == MS::RITUAL) {
             setJustApplied<s>(true);
         }
 

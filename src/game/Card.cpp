@@ -30,7 +30,7 @@ bool Card::isUpgraded() const {
 }
 
 bool Card::isInnate() const {
-    return false;
+    return isCardInnate(id, upgraded);
 }
 
 bool Card::isStrikeCard() const {

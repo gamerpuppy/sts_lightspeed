@@ -97,7 +97,7 @@ namespace sts {
 
         void setRequiresStolenGoldCheck(bool value);
         [[nodiscard]] bool requiresStolenGoldCheck() const;
-        [[nodiscard]] int getMonsterTurnCount() const;
+        [[nodiscard]] int getMonsterTurnNumber() const;  // returns 1 for first turn, 2 for second, etc.
 
 // ****************************************
 
@@ -150,6 +150,7 @@ namespace sts {
 
         void playTopCardInDrawPile(int monsterTargetIdx, bool exhausts);
 
+        void moveToHandHelper(CardInstance c);
         void exhaustSpecificCardInHand(int idx, std::int16_t uniqueId);
         void restoreRetainedCards(int count);
         void exhaustTopCardInHand();
@@ -166,7 +167,7 @@ namespace sts {
 
 
         void queuePurgeCard(const CardInstance &c, int target);
-        void addToFrontOfCardQueue(const CardQueueItem &item); // not really the front but hey
+        void addPurgeCardToCardQueue(const CardQueueItem &item); // not really the front but hey
         void noOpRollMove(); // called by monsters to manipulate the aiRng counter when their rollMove function doesn't do anything
 
         CardId returnTrulyRandomCardInCombat();
@@ -176,7 +177,6 @@ namespace sts {
         void mummifiedHandOnUsePower();
 
         // card select screens
-
         void openDiscoveryScreen(std::array<CardId, 3> discoveryCards, int copyCount);
         void openSimpleCardSelectScreen(CardSelectTask task, int count);
 
@@ -202,6 +202,9 @@ namespace sts {
     template <PlayerStatus s>
     Action Actions::BuffPlayer(int amount) {
         return {[=] (BattleContext &bc) {
+            if (s == PlayerStatus::CORRUPTION && !bc.player.hasStatus<PS::CORRUPTION>()) {
+                bc.cards.onBuffCorruption();
+            }
             bc.player.buff<s>(amount);
         }};
     }
