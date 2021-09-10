@@ -10,8 +10,8 @@
 
 #include "constants/MonsterEncounters.h"
 #include "constants/MonsterIds.h"
-
 #include "combat/Monster.h"
+#include "data_structure/fixed_list.h"
 
 namespace sts {
 
@@ -25,10 +25,8 @@ namespace sts {
 
         [[nodiscard]] bool areMonstersBasicallyDead() const;
         [[nodiscard]] int getAliveCount() const;
-
         [[nodiscard]] int getTargetableCount() const; // calculated here, not fast
         [[nodiscard]] int getFirstTargetable() const;
-
         [[nodiscard]] int getRandomMonsterIdx(Random &rng, bool aliveOnly=true) const;
 
         // initialization

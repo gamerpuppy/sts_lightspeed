@@ -605,7 +605,11 @@ Action Actions::ViolenceAction(int count) { // todo a faster algorithm for inser
             removeIdxs[i] = removeIdx;
 
             const auto &c = bc.cards.drawPile[removeIdx];
-            bc.cards.moveToHand(c);
+            if (bc.cards.cardsInHand == 10) {
+                bc.cards.moveToDiscardPile(c);
+            } else {
+                bc.cards.moveToHand(c);
+            }
         }
 
         std::sort(removeIdxs, removeIdxs+i);

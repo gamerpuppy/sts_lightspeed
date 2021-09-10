@@ -5,9 +5,11 @@
 #ifndef STS_LIGHTSPEED_MONSTERIDS_H
 #define STS_LIGHTSPEED_MONSTERIDS_H
 
+#include <cstdint>
+
 namespace sts {
 
-    enum class MonsterId {
+    enum class MonsterId : std::uint8_t {
         INVALID = 0,
         ACID_SLIME_L,
         ACID_SLIME_M,

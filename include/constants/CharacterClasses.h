@@ -5,9 +5,11 @@
 #ifndef STS_LIGHTSPEED_CHARACTERCLASSES_H
 #define STS_LIGHTSPEED_CHARACTERCLASSES_H
 
+#include <cstdint>
+
 namespace sts {
 
-    enum class CharacterClass {
+    enum class CharacterClass : std::uint8_t {
         IRONCLAD=0,
         SILENT,
         DEFECT,

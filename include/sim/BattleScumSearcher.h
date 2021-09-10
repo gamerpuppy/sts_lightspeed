@@ -41,19 +41,20 @@ namespace sts {
         static StateValue evaluateState(const BattleContext &bc);
     };
 
-
-
     struct ScumSearcherAgent {
         std::default_random_engine rng;
         int choiceCount = 0;
         bool print = false;
-        static inline int searchDepth = 6;
+        const int searchDepth = 6;
 
         ScumSearcherAgent(const std::default_random_engine &rng) : rng(rng) {}
 
 
         void playout(GameContext &gc);
         void playoutBattle(BattleContext &gc);
+
+        void chooseRandom(GameContext &gc);
+        void pickGoodEventOutcome(GameContext &gc);
 
     };
 

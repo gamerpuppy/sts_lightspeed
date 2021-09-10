@@ -32,8 +32,20 @@ namespace sts {
         int size = 0;
         int back = 0;
         int front = 0;
-        std::array<ActionFunction, capacity> arr;
+        ActionFunction arr[capacity];
         std::bitset<capacity> bits; // for the shouldClear field
+
+        ActionQueue() = default;
+
+        ActionQueue(const ActionQueue &rhs) : size(rhs.size), back(rhs.back), front(rhs.front), bits(rhs.bits) {
+            int cur = rhs.front;
+            for (int i = 0; i < rhs.size; ++i) {
+                if (cur >= capacity) {
+                    cur = 0;
+                }
+                arr[cur] = rhs.arr[cur];
+            }
+        }
 
         void clear();
         void pushFront(Action a);
@@ -55,24 +67,28 @@ namespace sts {
 
     template <int capacity>
     void ActionQueue<capacity>::pushFront(Action a) {
-        assert(size != arr.size());
+#ifdef sts_asserts
+        assert(size != capacity);
+#endif
         --front;
         ++size;
         if (front < 0) {
             front = capacity-1;
         }
         bits.set(front, a.clearOnCombatVictory);
-        arr.at(front) = std::move(a.actFunc);
+        arr[front] = std::move(a.actFunc);
     }
 
     template<int capacity>
     void ActionQueue<capacity>::pushBack(Action a) {
+#ifdef sts_asserts
         assert(size != capacity);
+#endif
         if (back >= capacity) {
             back = 0;
         }
         bits.set(back, a.clearOnCombatVictory);
-        arr.at(back) = std::move(a.actFunc);
+        arr[back] = std::move(a.actFunc);
         ++back;
         ++size;
     }
@@ -84,8 +100,10 @@ namespace sts {
 
     template<int capacity>
     ActionFunction ActionQueue<capacity>::popFront() {
-        assert(size > 0);
-        ActionFunction &a = arr.at(front);
+#ifdef sts_asserts
+        assert(size > 0 );
+#endif
+        ActionFunction &a = arr[front];
         ++front;
         --size;
         if (front >= capacity) {
@@ -98,57 +116,6 @@ namespace sts {
     int ActionQueue<capacity>::getCapacity() {
         return capacity;
     }
-
-
-    // this was bugged, some ub somewhere
-//    template<int capacity>
-//    ActionFunction ActionQueue<capacity>::popBack() {
-//        assert(size > 0);
-//        --back;
-//        --size;
-//        if (back < 0) {
-//            back = arr.size() - 1;
-//        }
-//        ActionFunction &a = arr.at(back);
-//        return a;
-//    }
-
-//    template<int capacity>
-//    void ActionQueue<capacity>::clearOnCombatVictory() {
-//
-//        int tempSize = 0;
-//        std::array<ActionFunction, capacity> tempArr {nullptr};
-//        std::bitset<capacity> tempBits;
-//
-//
-////        while (size > 0) {
-////            popFront()
-////        }
-//        int cur = front;
-//        for (int i = 0; i < size; ++i) {
-//            if (cur >= capacity) {
-//                cur = 0;
-//            }
-//            const auto shouldClearAction = bits[cur];
-//            if (!shouldClearAction) {
-////                tempBits.set(tempSize, shouldClearAction);
-//                tempArr.at(tempSize) = arr.at(tempSize);
-//                ++tempSize;
-//            }
-//        }
-//
-//        front = 0;
-//        back = 0;
-//        size = tempSize;
-//
-//        bits.reset();
-//        arr = tempArr;
-//
-//        for (int i = 0; i < tempSize; ++i) {
-//            arr[i] = std::move(tempArr[i]);
-//        }
-//    }
-
 
 }
 

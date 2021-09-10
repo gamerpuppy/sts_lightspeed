@@ -5,9 +5,11 @@
 #ifndef MONSTERSPECIFIC_CPP_MONSTERMOVES_H
 #define MONSTERSPECIFIC_CPP_MONSTERMOVES_H
 
+#include <cstdint>
+
 namespace sts {
 
-    enum class MonsterMoveId {
+    enum class MonsterMoveId : std::uint16_t {
         INVALID=0,
         GENERIC_ESCAPE_MOVE,
         ACID_SLIME_L_CORROSIVE_SPIT,

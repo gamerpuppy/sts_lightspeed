@@ -1231,6 +1231,13 @@ bool GameContext::obtainRelic(RelicId r) {
             break;
         }
 
+        case RelicId::BLACK_BLOOD: {
+            if (hasRelic(RelicId::BURNING_BLOOD)) {
+                relics.remove(RelicId::BURNING_BLOOD);
+            }
+            break;
+        }
+
         case RelicId::BOTTLED_FLAME: {
             opensScreen = obtainBottleHelper(*this, CardType::ATTACK);
             break;

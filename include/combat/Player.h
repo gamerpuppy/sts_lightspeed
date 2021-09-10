@@ -32,15 +32,16 @@ namespace sts {
 
     struct Player {
         CharacterClass cc;
-        int gold = 0;
+
+        int16_t gold = 0;
         int curHp = 80;
         int maxHp = 80;
         int energy = 0;
-        int energyPerTurn = 3;
-        int cardDrawPerTurn = 5; // AbstractPlayer gameHandSize
+        int8_t energyPerTurn = 3;
+        int8_t cardDrawPerTurn = 5; // AbstractPlayer gameHandSize
 
         Stance stance = Stance::NEUTRAL;
-        int orbSlots = 0;
+        int8_t orbSlots = 0;
 
         // todo rework all of the power data structures...
         int block = 0;
@@ -60,34 +61,33 @@ namespace sts {
         // special info
         bool cursedWithParasite = false; // if have omamori this indicates a charge on it was used, have omamori is initialized to false if it is out of charges
 
-        int happyFlowerCounter = 0;
-        int incenseBurnerCounter = 0;
-        int inkBottleCounter = 0;
-        int inserterCounter = 0;
-        int nunchakuCounter = 0;
-        int penNibCounter = 0;
-        int sundialCounter = 0;
+        int8_t  happyFlowerCounter = 0;
+        int8_t  incenseBurnerCounter = 0;
+        int8_t  inkBottleCounter = 0;
+        int8_t  inserterCounter = 0;
+        int8_t  nunchakuCounter = 0;
+        int8_t  penNibCounter = 0;
+        int8_t  sundialCounter = 0;
         bool haveUsedNecronomiconThisTurn = false;
 
-        int combustHpLoss = 0;
-        int devaFormEnergyPerTurn = 0;
-        int echoFormCardsDoubled = 0;
-        int panacheCounter = 0;
+        int8_t  combustHpLoss = 0;
+        int16_t  devaFormEnergyPerTurn = 0;
+        int8_t  echoFormCardsDoubled = 0;
+        int8_t  panacheCounter = 0;
 
-
-        int cardsPlayedThisTurn = 0;
-        int attacksPlayedThisTurn = 0;
-        int skillsPlayedThisTurn = 0;
+        int16_t  cardsPlayedThisTurn = 0;
+        int16_t attacksPlayedThisTurn = 0;
+        int16_t skillsPlayedThisTurn = 0;
         std::bitset<3> orangePelletsCardTypesPlayed;
-        int cardsDiscardedThisTurn = 0;
+        int16_t cardsDiscardedThisTurn = 0;
 
         // currently unused
-        int lastAttackUnblockedDamage = 0;
-        int timesDamagedThisCombat = 0;
+        int16_t lastAttackUnblockedDamage = 0;
+        int16_t timesDamagedThisCombat = 0;
 
-        int bomb1 = 0;
-        int bomb2 = 0;
-        int bomb3 = 0;
+        int8_t bomb1 = 0;
+        int8_t bomb2 = 0;
+        int8_t bomb3 = 0;
 
         template <RelicId r> void setHasRelic(bool value);
         template <PlayerStatus> void setHasStatus(bool value);

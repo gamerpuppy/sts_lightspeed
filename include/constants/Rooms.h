@@ -5,9 +5,11 @@
 #ifndef STS_LIGHTSPEED_ROOMS_H
 #define STS_LIGHTSPEED_ROOMS_H
 
+#include <cstdint>
+
 namespace sts {
 
-    enum class Room {
+    enum class Room : std::uint8_t {
         SHOP = 0,
         REST,
         EVENT,

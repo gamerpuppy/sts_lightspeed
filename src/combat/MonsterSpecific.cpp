@@ -1947,7 +1947,6 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             break;
     }
 
-
 }
 
 
@@ -1960,7 +1959,7 @@ void Monster::initSpawnedMonster(BattleContext &bc, const MonsterId monsterId, c
 }
 
 void Monster::stealGoldFromPlayer(BattleContext &bc, int amount) {
-    const auto theftAmount = std::min(bc.player.gold, amount);
+    const auto theftAmount = std::min(static_cast<int>(bc.player.gold), amount);
     if (theftAmount > 0) {
         miscInfo += theftAmount;
         bc.player.gold -= theftAmount;

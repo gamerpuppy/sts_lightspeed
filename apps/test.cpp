@@ -352,6 +352,8 @@ void playRandom3(PlayRandomInfo *info) {
             ++info->lossCount;
         }
         info->floorSum += gc.floorNum;
+
+
 //        std::cout << seed << '\n';
 
     }
@@ -369,10 +371,14 @@ void playRandom4(PlayRandomInfo *info) {
 
         if (gc.act == 2) {
             ++info->winCount;
+//            std::cout << gc << std::endl;
+
         } else {
             ++info->lossCount;
         }
         info->floorSum += gc.floorNum;
+
+
     }
 
 //        ScumSearcherAgent agent( (std::default_random_engine(seed)) );

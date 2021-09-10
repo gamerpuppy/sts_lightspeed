@@ -9,7 +9,7 @@
 
 namespace sts {
 
-    enum class Potion {
+    enum class Potion : std::uint8_t {
         INVALID = 0,
         EMPTY_POTION_SLOT,
         AMBROSIA,

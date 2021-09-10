@@ -5,7 +5,9 @@
 #ifndef STS_LIGHTSPEED_PLAYERSTATUSEFFECTS_H
 #define STS_LIGHTSPEED_PLAYERSTATUSEFFECTS_H
 
-enum class PlayerStatus {
+#include <cstdint>
+
+enum class PlayerStatus : std::uint8_t {
 
     // *********    Statuses that use JustApplied  ************
     DOUBLE_DAMAGE=0,
@@ -115,7 +117,7 @@ static constexpr const char* const playerStatusEffectNames[] {
 };
 
 
-enum class Stance {
+enum class Stance : uint8_t {
     NEUTRAL=0,
     CALM,
     WRATH,
@@ -129,7 +131,7 @@ static constexpr const char* const stanceStrings[] {
         "DIVINITY",
 };
 
-enum class Orb {
+enum class Orb : uint8_t {
     EMPTY=0,
     DARK,
     FROST,

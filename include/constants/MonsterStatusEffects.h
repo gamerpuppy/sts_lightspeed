@@ -7,7 +7,7 @@
 
 namespace sts {
 
-    enum class MonsterStatus {
+    enum class MonsterStatus: std::uint8_t {
 
         // statuses that use just applied
         VULNERABLE=0,

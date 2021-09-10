@@ -5,9 +5,11 @@
 #ifndef STS_LIGHTSPEED_RELICS_H
 #define STS_LIGHTSPEED_RELICS_H
 
+#include <cstdint>
+
 namespace sts {
 
-    enum class RelicId {
+    enum class RelicId : std::uint8_t {
         // battle relics -- relics which state is needed in battle
         AKABEKO = 0,
         ART_OF_WAR,

@@ -5,10 +5,11 @@
 #ifndef STS_LIGHTSPEED_CARDS_H
 #define STS_LIGHTSPEED_CARDS_H
 
+#include <cstdint>
 
 namespace sts {
 
-    enum class CardId {
+    enum class CardId : std::uint16_t {
         INVALID = 0,
         ACCURACY,
         ACROBATICS,

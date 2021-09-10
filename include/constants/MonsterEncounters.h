@@ -5,9 +5,11 @@
 #ifndef STS_LIGHTSPEED_MONSTERENCOUNTERS_H
 #define STS_LIGHTSPEED_MONSTERENCOUNTERS_H
 
+#include <cstdint>
+
 namespace sts {
 
-    enum class MonsterEncounter {
+    enum class MonsterEncounter : std::uint8_t {
         INVALID=0,
         // Act 1 Weak
         CULTIST,

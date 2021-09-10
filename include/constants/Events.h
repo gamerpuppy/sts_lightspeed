@@ -5,11 +5,12 @@
 #ifndef STS_LIGHTSPEED_EVENTS_H
 #define STS_LIGHTSPEED_EVENTS_H
 
+#include <cstdint>
 #include <array>
 
 namespace sts {
 
-    enum class Event {
+    enum class Event : std::uint8_t {
         INVALID = 0,
         MONSTER,
         REST,

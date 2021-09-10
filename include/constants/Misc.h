@@ -5,23 +5,25 @@
 #ifndef STS_LIGHTSPEED_MISC_H
 #define STS_LIGHTSPEED_MISC_H
 
+#include <cstdint>
+
 namespace sts {
 
-    enum class Key {
+    enum class Key : std::uint8_t {
         EMERALD_KEY=0,
         RUBY_KEY,
         SAPPHIRE_KEY,
         INVALID
     };
 
-    enum class ChestSize {
+    enum class ChestSize : std::uint8_t {
         SMALL=0,
         MEDIUM,
         LARGE,
         INVALID
     };
 
-    enum HpType {
+    enum HpType : std::uint8_t {
         CEIL,
         FLOOR,
         ROUND,
