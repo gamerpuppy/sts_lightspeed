@@ -8,7 +8,7 @@ project(
 file (GLOB_RECURSE sts_lightspeed_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS  "-Wno-shift-count-overflow")
+set(CMAKE_CXX_FLAGS  "-Wno-shift-count-overflow -O3")
 
 add_subdirectory(nlohmann_json)
 
@@ -23,4 +23,6 @@ target_include_directories(test PUBLIC include)
 target_include_directories(test PUBLIC nlohmann_json/include)
 
 
-
+add_executable(small-test apps/small-test.cpp src/game/SaveFile.cpp)
+target_include_directories(small-test PUBLIC include)
+target_include_directories(small-test PUBLIC nlohmann_json/include)

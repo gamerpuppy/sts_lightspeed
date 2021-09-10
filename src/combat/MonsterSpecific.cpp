@@ -1121,8 +1121,9 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
 }
 
 void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
-    bool asc17 = bc.ascension >= 17;
-    bool asc18 = bc.ascension >= 18;
+    const bool asc17 = bc.ascension >= 17;
+    const bool asc18 = bc.ascension >= 18;
+    const bool asc19 = bc.ascension >= 19;
 
     switch (id) {
 
@@ -1835,9 +1836,58 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
         }
 
         case MonsterId::THE_CHAMP: {
+            // 1 Heavy Slash
+            // 2 Defensive Stance
+            // 3 Execute
+            // 4 Face Slap
+            // 5 Gloat
+            // 6 Taunt
+            // 7 Anger
+
+            // is in phase2
+            if (miscInfo & 0x4) {
+                if (!lastMove(MonsterMoveId::THE_CHAMP_EXECUTE) && !lastMoveBefore(MonsterMoveId::THE_CHAMP_EXECUTE)) {
+                    setMove(MonsterMoveId::THE_CHAMP_EXECUTE);
+                    break;
+                }
+
+            } else {
+                if (curHp < maxHp / 2) {
+                    miscInfo |= 0x4;
+                    setMove(MonsterMoveId::THE_CHAMP_ANGER);
+                    break;
+
+                } else if ((bc.getMonsterTurnNumber()+1) % 4 == 0) {
+                    setMove(MonsterMoveId::THE_CHAMP_TAUNT);
+                    break;
+                }
+            }
 
 
+            // check if should use defensive stance
+            const auto defensiveStanceUseCount = miscInfo & 0x3;
+            const auto rollThreshold = asc19 ? 30 : 15;
+            if (roll <= rollThreshold
+                && !lastMove(MonsterMoveId::THE_CHAMP_DEFENSIVE_STANCE)
+                && defensiveStanceUseCount < 2)
+            {
+                ++miscInfo;
+                setMove(MonsterMoveId::THE_CHAMP_DEFENSIVE_STANCE);
+                break;
+            }
 
+            if (roll <= 30 && !lastMove(MonsterMoveId::THE_CHAMP_GLOAT) && !lastMove(MonsterMoveId::THE_CHAMP_DEFENSIVE_STANCE)) {
+                setMove(MonsterMoveId::THE_CHAMP_GLOAT);
+
+            } else if (roll <= 55 && !lastMove(MonsterMoveId::THE_CHAMP_FACE_SLAP)) {
+                setMove(MonsterMoveId::THE_CHAMP_FACE_SLAP);
+
+            } else if (!lastMove(MonsterMoveId::THE_CHAMP_HEAVY_SLASH)) {
+                setMove(MonsterMoveId::THE_CHAMP_HEAVY_SLASH);
+
+            } else {
+                setMove(MonsterMoveId::THE_CHAMP_FACE_SLAP);
+            }
             break;
         }
 

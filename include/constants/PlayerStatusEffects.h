@@ -21,13 +21,11 @@ enum class PlayerStatus {
     CONSTRICTED,
     ENTANGLED,
     FASTING,
-    FOCUS_DEBUFF,
     HEX,
     LOSE_DEXTERITY,
     LOSE_STRENGTH,
     NO_BLOCK,
     NO_DRAW,
-    SADISTIC,
     WRAITH_FORM,
 
     // *********    POWERS   ************
@@ -92,6 +90,7 @@ enum class PlayerStatus {
     REGEN,
     RITUAL,
     RUPTURE,
+    SADISTIC,
     STATIC_DISCHARGE,
     THORNS,
     THOUSAND_CUTS,
@@ -112,7 +111,7 @@ enum class PlayerStatus {
 typedef PlayerStatus PS;
 
 static constexpr const char* const playerStatusEffectNames[] {
-        "Double Damage","Draw Reduction","Frail","Intangible","Vulnerable","Weak","Bias","Confused","Constricted","Entangled","Fasting","Focus Debuff","Hex","Lose Dexterity","Lose Strength","No Block","No Draw","Sadistic","Wraith Form","Barricade","Blasphemer","Corruption","Electro","Master Reality","Pen Nib","Wrath Next Turn","Amplify","Blur","Buffer","Collect","Double Tap","Duplication","Echo Form","Free Attack Power","Rebound","Mantra","Accuracy","After Image","Battle Hymn","Brutality","Burst","Combust","Creative Ai","Dark Embrace","Demon Form","Deva","Devotion","Draw Card Next Turn","Energized","Envenom","Establishment","Evolve","Feel No Pain","Fire Breathing","Flame Barrier","Focus","Foresight","Hello World","Infinite Blades","Juggernaut","Like Water","Loop","Magnetism","Mayhem","Metallicize","Next Turn Block","Noxious Fumes","Omega","Panache","Phantasmal","Plated Armor","Rage","Regen","Ritual","Rupture","Static Discharge","Thorns","Thousand Cuts","Tools Of The Trade","Vigor","Wave Of The Hand","Equilibrium","Artifact","Dexterity","Strength","The Bomb",
+        "Double Damage","Draw Reduction","Frail","Intangible","Vulnerable","Weak","Bias","Confused","Constricted","Entangled","Fasting","Hex","Lose Dexterity","Lose Strength","No Block","No Draw","Wraith Form","Barricade","Blasphemer","Corruption","Electro","Master Reality","Pen Nib","Wrath Next Turn","Amplify","Blur","Buffer","Collect","Double Tap","Duplication","Echo Form","Free Attack Power","Rebound","Mantra","Accuracy","After Image","Battle Hymn","Brutality","Burst","Combust","Creative Ai","Dark Embrace","Demon Form","Deva","Devotion","Draw Card Next Turn","Energized","Envenom","Establishment","Evolve","Feel No Pain","Fire Breathing","Flame Barrier","Focus","Foresight","Hello World","Infinite Blades","Juggernaut","Like Water","Loop","Magnetism","Mayhem","Metallicize","Next Turn Block","Noxious Fumes","Omega","Panache","Phantasmal","Plated Armor","Rage","Regen","Ritual","Rupture","Sadistic","Static Discharge","Thorns","Thousand Cuts","Tools Of The Trade","Vigor","Wave Of The Hand","Equilibrium","Artifact","Dexterity","Strength","The Bomb",
 };
 
 

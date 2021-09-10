@@ -70,27 +70,27 @@ void CardManager::createDeckCardInstanceInDrawPile(const Card &card, int deckIdx
     auto &c = drawPile[drawIdx];
     c = CardInstance(card);
     c.setUniqueId(deckIdx);
-    notifyCreateCard(c);
+    notifyAddCardToCombat(c);
     notifyAddToDrawPile(c);
 }
 
 void CardManager::createTempCardInDrawPile(int idx, CardInstance c) {
     c.uniqueId = static_cast<std::int16_t>(nextUniqueCardId++);
-    notifyCreateCard(c);
+    notifyAddCardToCombat(c);
     notifyAddToDrawPile(c);
     drawPile.insert(drawPile.begin()+idx, c);
 }
 
 void CardManager::createTempCardInDiscard(CardInstance c) {
     c.uniqueId = static_cast<std::int16_t>(nextUniqueCardId++);
-    notifyCreateCard(c);
+    notifyAddCardToCombat(c);
     notifyAddToDiscardPile(c);
     discardPile.push_back(c);
 }
 
 void CardManager::createTempCardInHand(CardInstance c) {
     c.uniqueId = static_cast<std::int16_t>(nextUniqueCardId++);
-    notifyCreateCard(c);
+    notifyAddCardToCombat(c);
     notifyAddToHand(c);
     hand[cardsInHand++] = c;
 }
@@ -195,7 +195,7 @@ void CardManager::moveDiscardPileIntoToDrawPile() {
 
 // **************** BEGIN NOTIFY METHODS ****************
 
-void CardManager::notifyCreateCard(const CardInstance &c) {
+void CardManager::notifyAddCardToCombat(const CardInstance &c) {
     if (c.isStrikeCard()) {
         ++strikeCount;
     }
@@ -446,7 +446,7 @@ void CardManager::onBuffCorruption() {
     // game does modifyCostForCombat here but I don't think its necessary as skills cant cost more than 4?
     for (int i = 0; i < cardsInHand; ++i) {
         auto &c = hand[i];
-        if (c.cost > 0) {
+        if (c.getType() == CardType::SKILL && c.cost > 0) {
             c.cost = 0;
             c.costForTurn = 0;
         }
@@ -455,21 +455,21 @@ void CardManager::onBuffCorruption() {
     // probably only need to do hand?
 
     for (auto &c : drawPile) {
-        if (c.cost > 0) {
+        if (c.getType() == CardType::SKILL && c.cost > 0) {
             c.cost = 0;
             c.costForTurn = 0;
         }
     }
 
     for (auto &c : discardPile) {
-        if (c.cost > 0) {
+        if (c.getType() == CardType::SKILL && c.cost > 0) {
             c.cost = 0;
             c.costForTurn = 0;
         }
     }
 
     for (auto &c : exhaustPile) {
-        if (c.cost > 0) {
+        if (c.getType() == CardType::SKILL && c.cost > 0) {
             c.cost = 0;
             c.costForTurn = 0;
         }

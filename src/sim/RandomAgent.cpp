@@ -41,7 +41,7 @@ void RandomAgent::playout(GameContext &gc, const GameContextPredicate &predicate
         handler.chooseOption(gc, randomChoice);
     }
 
-//    std::cout << "random playout finished\n";
+//    std::cout << "random playoutBattle finished\n";
 }
 
 
@@ -84,9 +84,9 @@ void RandomAgent::playoutWithBattles(GameContext &gc) {
 
     if (print) {
         if (gc.outcome == GameOutcome::PLAYER_LOSS) {
-            std::cout << "random playout finished with a loss" << std::endl;
+            std::cout << "random playoutBattle finished with a loss" << std::endl;
         } else {
-            std::cout << "random playout finished with a victory! hp: " << gc.curHp << std::endl;
+            std::cout << "random playoutBattle finished with a victory! hp: " << gc.curHp << std::endl;
         }
     }
 }

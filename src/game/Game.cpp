@@ -225,7 +225,7 @@ CardId sts::getTrulyRandomCardInCombat(Random &cardRandomRng, const CharacterCla
 
 
 // using hacky arguments: status = colorless cards, invalid = any type
-std::array<CardId, 3> sts::getDiscoveryCards(Random &cardRandomRng, const CharacterClass cc, const CardType type) {
+std::array<CardId, 3> sts::generateDiscoveryCards(Random &cardRandomRng, CharacterClass cc, CardType type) {
     int cardCount = 0;
     std::array<CardId, 3> cards;
 

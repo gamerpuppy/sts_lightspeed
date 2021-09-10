@@ -66,7 +66,7 @@ namespace sts {
         void moveDiscardPileIntoToDrawPile();
 
         // **************
-        void notifyCreateCard(const CardInstance &c);
+        void notifyAddCardToCombat(const CardInstance &c);
         void notifyRemoveFromCombat(const CardInstance &c);
 
         void notifyAddToHand(const CardInstance &c);

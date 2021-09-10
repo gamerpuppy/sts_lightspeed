@@ -117,7 +117,28 @@ bool Player::hasEmptyOrb() const {
 }
 
 void Player::removeDebuffs() {
-    // todo
+    if (getStatus<PS::STRENGTH>() < 0) {
+        setStatusValueNoChecks<PS::STRENGTH>(0);
+    }
+    if (getStatus<PS::DEXTERITY>() < 0) {
+        setStatusValueNoChecks<PS::DEXTERITY>(0);
+    }
+
+    removeStatus<PS::BIAS>();
+    removeStatus<PS::CONFUSED>();
+    removeStatus<PS::CONSTRICTED>();
+    removeStatus<PS::DRAW_REDUCTION>();
+    removeStatus<PS::ENTANGLED>();
+    removeStatus<PS::FASTING>();
+    removeStatus<PS::FRAIL>();
+    removeStatus<PS::HEX>();
+    removeStatus<PS::LOSE_DEXTERITY>();
+    removeStatus<PS::LOSE_STRENGTH>();
+    removeStatus<PS::NO_BLOCK>();
+    removeStatus<PS::NO_DRAW>();
+    removeStatus<PS::VULNERABLE>();
+    removeStatus<PS::WEAK>();
+    removeStatus<PS::WRAITH_FORM>();
 }
 
 void Player::increaseMaxHp(int amount) {
@@ -524,6 +545,15 @@ void Player::applyStartOfTurnRelics(BattleContext &bc) {
     if (hasRelic<R::MERCURY_HOURGLASS>()) {
         bc.addToBot( Actions::DamageAllEnemy(3) );
     }
+
+    if (hasRelic<R::NECRONOMICON>()) {
+        haveUsedNecronomiconThisTurn = false;
+    }
+
+    if (hasRelic<R::ORANGE_PELLETS>()) {
+        orangePelletsCardTypesPlayed.reset();
+    }
+
 }
 
 void Player::applyStartOfTurnPowers(BattleContext &bc) {

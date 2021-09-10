@@ -45,7 +45,7 @@ namespace sts {
     CardId getTrulyRandomCardInCombat(Random &cardRandomRng, CharacterClass cc);
     CardId getTrulyRandomCardInCombat(Random &cardRandomRng, CharacterClass cc, CardType type);
 
-    std::array<CardId, 3> getDiscoveryCards(Random &cardRandomRng, CharacterClass cc, CardType type);
+    std::array<CardId, 3> generateDiscoveryCards(Random &cardRandomRng, CharacterClass cc, CardType type);
 
     RelicTier returnRandomRelicTier(Random &relicRng, int act);
     RelicTier returnRandomRelicTierElite(Random &relicRng);

@@ -291,7 +291,7 @@ void playFromSaveFile(const std::string &fname, const std::string &actionFile) {
 //    for (std::uint64_t seed = 1; seed < 100; ++seed) {
 //        GameContext gc(seed, CharacterClass::IRONCLAD, 0);
 //        gc.skipBattles = true;
-//        agent.playout(gc);
+//        agent.playoutBattle(gc);
 //    }
 //}
 
@@ -359,6 +359,32 @@ void playRandom3(PlayRandomInfo *info) {
 //    std::cout << "thread finished: " << info->seedOffset << std::endl;
 }
 
+void playRandom4(PlayRandomInfo *info) {
+    for (std::uint64_t seed = info->startSeed + info->seedOffset; seed < info->endSeed; seed += info->seedIncrement) {
+        ScumSearcherAgent agent((std::default_random_engine(seed)));
+        agent.print = false;
+
+        GameContext gc(seed, CharacterClass::IRONCLAD, 0);
+        agent.playout(gc);
+
+        if (gc.act == 2) {
+            ++info->winCount;
+        } else {
+            ++info->lossCount;
+        }
+        info->floorSum += gc.floorNum;
+    }
+
+//        ScumSearcherAgent agent( (std::default_random_engine(seed)) );
+//        agent.print = true;
+//
+//        GameContext gc(seed, CharacterClass::IRONCLAD, 0);
+//        agent.playout(gc);
+//
+//        std::cout << "finished at floor: " << gc.floorNum << std::endl;
+//}
+}
+
 void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
     auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -376,7 +402,7 @@ void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
     }
 
     for (int tid = 0; tid < threadCount; ++tid) {
-        threads.emplace_back( new std::thread(playRandom3, &infos[tid]) );
+        threads.emplace_back( new std::thread(playRandom4, &infos[tid]) );
     }
 
     std::int64_t winCount = 0;
@@ -444,7 +470,7 @@ int main(int argc, const char* argv[]) {
         const int playoutCount(std::stoi(argv[3]));
         playRandom2(startSeedLong, playoutCount);
 
-    } else if (command == "random_mt") {
+    } else if (command == "random_mt") { // actually doing tree search now
         const int threadCount(std::stoi(argv[2]));
         const std::uint64_t startSeedLong(std::stoull(argv[3]));
         const int playoutCount(std::stoi(argv[4]));
@@ -458,24 +484,26 @@ int main(int argc, const char* argv[]) {
         const std::string saveFilePath(argv[2]);
         const std::string jsonOutPath(argv[3]);
         std::ofstream outFileStream(jsonOutPath);
-        outFileStream << SaveFile::getJson(saveFilePath);
+        outFileStream << SaveFile::getJsonFromSaveFile(saveFilePath);
         outFileStream.close();
 
+    } else if (command == "json_to_save") {
+        const std::string jsonInPath(argv[2]);
+        const std::string saveFileOutPath(argv[3]);
+
+        std::ifstream jsonIfStream(jsonInPath);
+        SaveFile::writeJsonToSaveFile(jsonIfStream, saveFileOutPath);
+
+    }  else if (command == "scum_searcher") {
+        const std::uint64_t startSeedLong(std::stoull(argv[2]));
+        const int playoutCount(std::stoi(argv[3]));
+
+        for (std::uint64_t seed = startSeedLong; seed < startSeedLong+playoutCount; ++seed) {
+//            playRandom4(startSeedLong);
+        }
+
+
     }
-
-
-
-//    else if (command == "json_to_save") {
-//        const std::string jsonInPath(argv[2]);
-//        const std::string saveFileOutPath(argv[3]);
-//
-//
-//        SaveFile s(jsonInPath, sts::CharacterClass::IRONCLAD);
-//        std::ofstream outFileStream(jsonOutPath);
-//        outFileStream << SaveFile::getJson(saveFilePath);
-//        outFileStream.close();
-//
-//    }
 
 
     //    printSizes();

@@ -525,7 +525,7 @@ Action Actions::PutRandomCardsInDrawPile(CardType type, int count) {
 Action Actions::DiscoveryAction(CardType type, int amount) {
     return {[=] (BattleContext &bc) {
         bc.haveUsedDiscoveryAction = true;
-        bc.openDiscoveryScreen(sts::getDiscoveryCards(bc.cardRandomRng, bc.player.cc, type), amount);
+        bc.openDiscoveryScreen(sts::generateDiscoveryCards(bc.cardRandomRng, bc.player.cc, type), amount);
     }};
 }
 
@@ -868,7 +868,12 @@ Action Actions::UpgradeRandomCardAction() {
 }
 
 Action Actions::CodexAction() {
-    return {};
+    return {[] (BattleContext &bc) {
+        bc.inputState = InputState::CARD_SELECT;
+        bc.cardSelectInfo.cardSelectTask = CardSelectTask::CODEX;
+        bc.cardSelectInfo.codexCards() =
+                generateDiscoveryCards(bc.cardRandomRng, CharacterClass::IRONCLAD, CardType::INVALID);
+    }};
 }
 
 Action Actions::DualityAction() {

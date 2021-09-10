@@ -14,8 +14,7 @@ namespace sts {
 
 
     struct StateValue {
-        int playerHp = 0;
-        int enemyCombinedHp = 0;
+        double score = 0;
 
         bool operator<(const StateValue &rhs) const;
         bool operator>(const StateValue &rhs) const;
@@ -27,15 +26,10 @@ namespace sts {
 
     struct SearchInfo {
         BattleContext bc;
-        int curOptionIdx = -1;
-
+        int optionIdx = -1;
         int stateSize = 0;
         RandomBattleStateHandler handler;
-
         StateValue value; // equal to the cur value or the best state resulting from itself
-        int bestOptionIdx = -1;
-
-        SearchInfo(const BattleContext &bc);
     };
 
     struct BattleScumSearcher {
@@ -46,6 +40,23 @@ namespace sts {
 
         static StateValue evaluateState(const BattleContext &bc);
     };
+
+
+
+    struct ScumSearcherAgent {
+        std::default_random_engine rng;
+        int choiceCount = 0;
+        bool print = false;
+        static inline int searchDepth = 6;
+
+        ScumSearcherAgent(const std::default_random_engine &rng) : rng(rng) {}
+
+
+        void playout(GameContext &gc);
+        void playoutBattle(BattleContext &gc);
+
+    };
+
 
     std::ostream& operator<<(std::ostream &os, const SearchInfo &s);
 }

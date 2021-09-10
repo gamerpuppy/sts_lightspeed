@@ -315,11 +315,16 @@ void BattleSimulator::printCardSelectActions(std::ostream &os) const {
             );
             break;
 
+        case CardSelectTask::CODEX:
+            os << "Codex Action: Choose a card to shuffle int your draw pile.\n";
+            printCardOptionsHelper(os, bc->cardSelectInfo.codexCards().begin(), bc->cardSelectInfo.codexCards().end());
+            os << "3: skip\n";
+            break;
+
+
         case CardSelectTask::DISCOVERY:
             os << "Discovery Action: Choose a card to create " << bc->cardSelectInfo.discovery_CopyCount() << " copies of in your hand.\n";
-            for (int i = 0; i < 3; ++i) {
-                os << i << ": " << getCardName(bc->cardSelectInfo.discovery_Cards()[i]) << '\n';
-            }
+            printCardOptionsHelper(os, bc->cardSelectInfo.discovery_Cards().begin(), bc->cardSelectInfo.discovery_Cards().end());
             break;
 
         case CardSelectTask::DUAL_WIELD:
@@ -428,8 +433,17 @@ void BattleSimulator::takeCardSelectAction(const std::string &action) {
             bc->chooseArmamentsCard(std::stoi(action));
             break;
 
+        case CardSelectTask::CODEX: {
+            const auto chooseIdx = std::stoi(action);
+            assert(chooseIdx >= 0 && chooseIdx < 4);
+            if (chooseIdx != 3) {
+                bc->chooseCodexCard(bc->cardSelectInfo.codexCards()[chooseIdx]);
+            }
+            break;
+        }
+
         case CardSelectTask::DISCOVERY:
-            bc->chooseDiscoveryCard(std::stoi(action));
+            bc->chooseDiscoveryCard(bc->cardSelectInfo.discovery_Cards()[std::stoi(action)]);
             break;
 
         case CardSelectTask::DUAL_WIELD:

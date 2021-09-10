@@ -170,8 +170,6 @@ namespace sts {
         void addPurgeCardToCardQueue(const CardQueueItem &item); // not really the front but hey
         void noOpRollMove(); // called by monsters to manipulate the aiRng counter when their rollMove function doesn't do anything
 
-        CardId returnTrulyRandomCardInCombat();
-
         void onShuffle();
         void triggerAndMoveToExhaustPile(CardInstance c);
         void mummifiedHandOnUsePower();
@@ -185,9 +183,9 @@ namespace sts {
         void chooseExhaustCards(const int *idxs, int cardCount);
 
         void chooseArmamentsCard(int handIdx);
-        void chooseDiscoveryCard(int idx);
+        void chooseCodexCard(CardId id);
         void chooseDiscardToHandCard(int discardIdx, bool forZeroCost);
-
+        void chooseDiscoveryCard(CardId id);
         void chooseDualWieldCard(int handIdx);
         void chooseExhumeCard(int exhaustIdx);
         void chooseForethoughtCard(int handIdx);

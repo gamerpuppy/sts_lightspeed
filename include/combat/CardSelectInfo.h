@@ -13,6 +13,7 @@ namespace sts {
 
     enum class CardSelectTask {
         ARMAMENTS,
+        CODEX,
         DISCOVERY,
         DUAL_WIELD,
         ELIXIR_POTION,
@@ -47,6 +48,8 @@ namespace sts {
         std::array<CardId, 3>& discovery_Cards() { return cards; }
         int& discovery_CopyCount() { return data0; }
         int& dualWield_CopyCount() { return data0; }
+
+        std::array<CardId, 3>& codexCards() { return cards; }
     };
 
 }

@@ -67,6 +67,7 @@ namespace sts {
         int nunchakuCounter = 0;
         int penNibCounter = 0;
         int sundialCounter = 0;
+        bool haveUsedNecronomiconThisTurn = false;
 
         int combustHpLoss = 0;
         int devaFormEnergyPerTurn = 0;
@@ -327,6 +328,11 @@ namespace sts {
 
         if (s == PS::THE_BOMB) {
             bomb3 += amount;
+            return;
+        }
+
+        if (s == PlayerStatus::BARRICADE || s == PlayerStatus::CORRUPTION || s == PlayerStatus::CONFUSED || s == PlayerStatus::PEN_NIB) {
+            setHasStatus<s>(true);
             return;
         }
 

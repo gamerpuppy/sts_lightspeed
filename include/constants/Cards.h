@@ -790,6 +790,7 @@ namespace sts {
             case CardId::MAGNETISM:
             case CardId::MAYHEM:
             case CardId::MIND_BLAST:
+            case CardId::DARK_EMBRACE:
                 return upgraded ? 1 : 2;
 
             case CardId::HAVOC:
@@ -824,7 +825,10 @@ namespace sts {
             case CardId::REGRET:
             case CardId::SHAME:
             case CardId::WRITHE:
+            case CardId::NECRONOMICURSE:
+            case CardId::CURSE_OF_THE_BELL:
                 return -3;
+
 
             default:
                 return 1;

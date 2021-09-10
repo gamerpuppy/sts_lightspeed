@@ -4,6 +4,7 @@
 
 #include <nlohmann/json.hpp>
 #include <iomanip>
+#include <sstream>
 
 #include "sts_common.h"
 #include "game/SaveFile.h"
@@ -30,8 +31,8 @@ std::string SaveFile::readFileToStringHelper(const std::string &path)
     return result;
 }
 
-char getBase64Value(char c) {
-    char value;
+char Base64::decodeChar(int c) {
+    int value;
     if (c  >= 'A' && c <= 'Z') {
         value = c-'A';
 
@@ -50,44 +51,42 @@ char getBase64Value(char c) {
     } else {
         value = -1;
     }
-
-    return value;
+    return static_cast<char>(value);
 }
 
-static std::vector<char> decodeBase64(const std::string &base64Str) {
-    std::vector<char> out;
+std::string Base64::decode(const std::string &base64Str) {
+    std::string out;
 
     int totalBits = 0;
-    char lastData = 0;
+    int lastData = 0;
 
     for (int i = 0; i < base64Str.size(); ++i) {
         char c = base64Str[i];
         if (c == '=') {
-
             int paddingLength = (i + 1 < base64Str.size()) ? 2 : 1;
             int charsToDecode = 3-paddingLength;
-            int charsDecoded = out.size() % 3;
+            int charsDecoded = static_cast<int>(out.size()) % 3;
             if (charsToDecode < charsDecoded) {
-                out.push_back(lastData);
+                out.push_back(static_cast<char>(lastData));
             }
             return out;
         }
 
-        auto dataBits = getBase64Value(c);
+        auto dataBits = Base64::decodeChar(c);
         totalBits += 6;
 
         int mod8 = totalBits % 8;
         if (mod8 == 0) {
-            char value = lastData | dataBits;
+            char value = static_cast<char>(lastData | dataBits);
             out.push_back(value);
 
         } else if (mod8 == 2) {
-            char value = lastData | (dataBits >> 2);
+            char value = static_cast<char>(lastData | (dataBits >> 2));
             out.push_back(value);
             lastData = (dataBits << 6) & 0xC0;
 
         } else if (mod8 == 4) {
-            char value = lastData | (dataBits >> 4);
+            char value = static_cast<char>(lastData | (dataBits >> 4));
             out.push_back(value);
             lastData = (dataBits << 4) & 0xF0;
 
@@ -98,15 +97,61 @@ static std::vector<char> decodeBase64(const std::string &base64Str) {
     return out;
 }
 
-static std::string xorWithKey(const std::vector<char> &a) {
-    static constexpr char key[] { 107, 101, 121 };
+
+char Base64::encodeChar(int dataMod64) {
+    return chars[dataMod64];
+}
+
+std::string Base64::encode(const std::string &data) {
+    std::string encoded;
+
+    int bits = 0;
+    int bitCount = 0;
+
+    for (unsigned char c : data) {
+
+        if (bitCount == 0) {
+            encoded.push_back(encodeChar(c >> 2));
+            bits = c & 0x3;
+            bitCount = 2;
+
+        } else if (bitCount == 2) {
+            encoded.push_back(encodeChar(bits << 4 | c >> 4));
+            bits = c & 0xF;
+            bitCount = 4;
+
+        } else { // bitCount == 4
+            encoded.push_back(encodeChar(bits << 2 | c >> 6));
+            encoded.push_back(encodeChar(c & 0x3F));
+            bits = 0;
+            bitCount = 0;
+        }
+    }
+
+    if (bitCount == 2) {
+        encoded.push_back(encodeChar(bits << 4));
+        encoded.push_back('=');
+        encoded.push_back('=');
+
+    } else if (bitCount == 4) {
+        encoded.push_back(encodeChar(bits << 2));
+        encoded.push_back('=');
+
+    }
+
+    return encoded;
+}
+
+static std::string xorWithKey(const std::string &a) {
+    static constexpr int key[] { 107, 101, 121 };
     std::string out;
     out.reserve(a.size());
     for(int i = 0; i < a.size(); ++i) {
-        const char keyChar = key[i % 3];
-        char decoded = (static_cast<char>(a[i]) ^ keyChar) & static_cast<char>(0xFF);
+        const int keyChar = key[i % 3];
+        char decoded = static_cast<char>((static_cast<int>(a[i]) ^ keyChar) & 0xFF);
         out.push_back(decoded);
     }
+//    std::cout << out;
     return out;
 }
 
@@ -210,14 +255,26 @@ sts::SaveFile::SaveFile(const std::string &json, sts::CharacterClass cc): json(j
     j.at("boss_list").get_to(boss_list);
 }
 
-std::string SaveFile::getJson(const std::string &path) {
+std::string SaveFile::getJsonFromSaveFile(const std::string &path) {
     std::string utf8Content = readFileToStringHelper(path);
-    auto dataBits = decodeBase64(utf8Content);
+    auto dataBits = Base64::decode(utf8Content);
     auto json = xorWithKey(dataBits);
+    std::cout << json;
     return json;
 }
 
+void SaveFile::writeJsonToSaveFile(std::ifstream &jsonIs, const std::string &savePath) {
+    const nlohmann::json j = nlohmann::json::parse(jsonIs);
+    std::string cleanedJsonStr = j.dump();
+    std::cout << cleanedJsonStr;
+
+    auto obfuscatedStr = xorWithKey(cleanedJsonStr);
+    auto base64Encoding = Base64::encode(cleanedJsonStr);
+    std::ofstream outFileStream(savePath);
+    outFileStream << base64Encoding;
+}
+
 sts::SaveFile sts::SaveFile::loadFromPath(const std::string &path, sts::CharacterClass cc) {
-    return SaveFile(getJson(path), cc);
+    return SaveFile(getJsonFromSaveFile(path), cc);
 }
 

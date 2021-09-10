@@ -93,10 +93,14 @@ void BattleContext::initRelics(const GameContext &gc) {
             case R::BAG_OF_PREPARATION:
             case R::CLOCKWORK_SOUVENIR:
             case R::GREMLIN_VISAGE:
-            case R::MARK_OF_PAIN:
             case R::RED_MASK:
             case R::RING_OF_THE_SNAKE:
             case R::TWISTED_FUNNEL:
+                atBattleStart.push_back(r.id);
+                break;
+
+            case R::MARK_OF_PAIN:
+                ++p.energyPerTurn;
                 atBattleStart.push_back(r.id);
                 break;
 
@@ -121,9 +125,13 @@ void BattleContext::initRelics(const GameContext &gc) {
                 p.energyPerTurn++;
                 break;
 
-            case R::ENCHIRIDION:
-                addToTop( Actions::SetState(InputState::CREATE_ENCHIRIDION_POWER) );
+            case R::ENCHIRIDION: {
+                const auto cardId = getTrulyRandomCardInCombat(cardRandomRng, p.cc, CardType::POWER);
+                CardInstance c(cardId);
+                c.setCostForTurn(0);
+                addToBot( Actions::MakeTempCardInHand(c) );
                 break;
+            }
 
             case R::HAPPY_FLOWER:
                 player.happyFlowerCounter = r.data;
@@ -387,7 +395,7 @@ void BattleContext::initRelics(const GameContext &gc) {
                 p.debuff<PS::WEAK>(1);
                 break;
 
-            case R::MARK_OF_PAIN: // todo handle elsewhere
+            case R::MARK_OF_PAIN:
                 addToBot( Actions::MakeTempCardInDrawPile( {CardId::WOUND}, 2, true) );
                 break;
 
@@ -1193,7 +1201,7 @@ void BattleContext::useSkillCard() {
 
         case CardId::BURNING_PACT:
             addToBot( Actions::ChooseExhaustOne() );
-            addToBot( Actions::DrawCards(1) );
+            addToBot( Actions::DrawCards(up ? 3 : 2) );
             break;
 
         case CardId::CHRYSALIS:
@@ -1612,6 +1620,7 @@ void BattleContext::onUseAttackCard() {
     if (p.hasRelic<R::ORANGE_PELLETS>()) {
         p.orangePelletsCardTypesPlayed.set(static_cast<int>(CardType::ATTACK), true); // set bit 0 true
         if (p.orangePelletsCardTypesPlayed.all()) {
+            p.orangePelletsCardTypesPlayed.reset();
             addToBot(Actions::RemovePlayerDebuffs());
         }
     }
@@ -1624,10 +1633,10 @@ void BattleContext::onUseAttackCard() {
         addToBot( Actions::BuffPlayer<PS::STRENGTH>(1) );
     }
 
-    if (p.hasRelic<R::NECRONOMICON>() && !item.freeToPlay && !item.purgeOnUse &&
+    if (p.hasRelic<R::NECRONOMICON>() && !p.haveUsedNecronomiconThisTurn && !item.freeToPlay && !item.purgeOnUse &&
         (c.costForTurn >= 2 || c.isXCost() && item.energyOnUse >= 2)) {
         queuePurgeCard(c, item.target);
-        // todo
+        p.haveUsedNecronomiconThisTurn = true;
     }
 
     if (p.hasRelic<R::PEN_NIB>()) {
@@ -1724,6 +1733,7 @@ void BattleContext::onUseSkillCard() {
     if (p.hasRelic<R::ORANGE_PELLETS>()) {
         p.orangePelletsCardTypesPlayed.set(static_cast<int>(CardType::SKILL), true); // set bit 0 true
         if (p.orangePelletsCardTypesPlayed.all()) {
+            p.orangePelletsCardTypesPlayed.reset();
             addToBot(Actions::RemovePlayerDebuffs());
         }
     }
@@ -1736,10 +1746,6 @@ void BattleContext::onUseSkillCard() {
 
     if (p.hasRelic<R::MUMMIFIED_HAND>()) {
         // todo
-    }
-
-    if (p.hasRelic<R::BIRD_FACED_URN>()) {
-        addToTop(Actions::HealPlayer(2));
     }
 
     /*
@@ -1788,8 +1794,11 @@ void BattleContext::onUsePowerCard() {
         addToBot( Actions::DamageAllEnemy(p.getStatus<PS::PANACHE>()) );
     }
 
-
     // ********* Relics onUseCard *********
+
+    if (p.hasRelic<R::BIRD_FACED_URN>()) {
+        p.heal(2);
+    }
 
     if (p.hasRelic<R::INK_BOTTLE>()) {
         p.inkBottleCounter++;
@@ -1802,6 +1811,7 @@ void BattleContext::onUsePowerCard() {
     if (p.hasRelic<R::ORANGE_PELLETS>()) {
         p.orangePelletsCardTypesPlayed.set(static_cast<int>(CardType::POWER), true); // set bit 0 true
         if (p.orangePelletsCardTypesPlayed.all()) {
+            p.orangePelletsCardTypesPlayed.reset();
             addToBot(Actions::RemovePlayerDebuffs());
         }
     }
@@ -1847,9 +1857,16 @@ void BattleContext::onUseStatusOrCurseCard() {
         addToBot( Actions::DamageAllEnemy(p.getStatus<PS::PANACHE>()) );
     }
 
-    if (c.getType() == CardType::CURSE && p.hasRelic<R::BLUE_CANDLE>()) {
-        addToBot( Actions::PlayerLoseHp(1, true) );
-        item.exhaustOnUse = true;
+    if (c.getType() == CardType::CURSE) {
+        if (p.hasRelic<R::BLUE_CANDLE>()) {
+            addToBot( Actions::PlayerLoseHp(1, true) );
+            item.exhaustOnUse = true;
+        }
+
+    } else if (c.getType() == CardType::STATUS) {
+        if (p.hasRelic<R::MEDICAL_KIT>()) {
+            item.exhaustOnUse = true;
+        }
     }
 
     if (p.hasRelic<R::INK_BOTTLE>()) {
@@ -1876,8 +1893,7 @@ void BattleContext::onAfterUseCard() {
             m0.setStatus<MS::TIME_WARP>(timeWarp+1);
             ++timeWarp;
         }
-    }
-    if (m0.hasStatus<MS::SLOW>()) {
+    } else if (m0.hasStatus<MS::SLOW>()) {
         m0.setStatus<MS::SLOW>(m0.getStatus<MS::SLOW>()+1);
     }
 
@@ -2669,11 +2685,6 @@ void BattleContext::queuePurgeCard(const CardInstance &c, int target) {
     addPurgeCardToCardQueue(item);
 }
 
-CardId BattleContext::returnTrulyRandomCardInCombat() {
-    // todo this calls a different function
-    return getTrulyRandomCard(cardRandomRng, player.cc);
-}
-
 void BattleContext::addPurgeCardToCardQueue(const CardQueueItem &item) {
     if (cardQueue.size > 0) {
         auto temp = cardQueue.front();
@@ -2718,7 +2729,7 @@ void BattleContext::triggerAndMoveToExhaustPile(CardInstance c) {
     }
 
     if (player.hasRelic<R::DEAD_BRANCH>()){
-        CardId id = returnTrulyRandomCardInCombat();
+        CardId id = getTrulyRandomCardInCombat(cardRandomRng, player.cc);
         addToBot(Actions::MakeTempCardInHand(id));
     }
 
@@ -2836,6 +2847,13 @@ void BattleContext::chooseArmamentsCard(int handIdx) {
 
 }
 
+void BattleContext::chooseCodexCard(CardId id) {
+    CardInstance c(id);
+    c.uniqueId = static_cast<std::int16_t>(cards.nextUniqueCardId++);
+    cards.notifyAddCardToCombat(c);
+    cards.shuffleIntoDrawPile(cardRandomRng, c);
+}
+
 void BattleContext::chooseDualWieldCard(int handIdx) {
 
     // dual wield is so fucking buggy
@@ -2886,10 +2904,18 @@ void BattleContext::chooseDualWieldCard(int handIdx) {
 
 }
 
-void BattleContext::chooseDiscoveryCard(const int idx) {
-    const auto discoveryAmount = cardSelectInfo.data0;
+void BattleContext::chooseDiscardToHandCard(int discardIdx, bool forZeroCost) {
+    CardInstance c = cards.discardPile[discardIdx];
+    cards.removeFromDiscard(discardIdx);
+    if (cardSelectInfo.cardSelectTask == CardSelectTask::LIQUID_MEMORIES_POTION) {
+        c.setCostForTurn(0);
+    }
+    moveToHandHelper(c);
+}
 
-    CardInstance c(cardSelectInfo.discovery_Cards()[idx]);
+void BattleContext::chooseDiscoveryCard(CardId id) {
+    const auto discoveryAmount = cardSelectInfo.data0;
+    CardInstance c(id);
     c.setCostForTurn(0);
 
     for (int i = 0; i < discoveryAmount; ++i) {
@@ -2905,20 +2931,11 @@ void BattleContext::chooseDiscoveryCard(const int idx) {
     }
 }
 
-void BattleContext::chooseDiscardToHandCard(int discardIdx, bool forZeroCost) {
-    CardInstance c = cards.discardPile[discardIdx];
-    cards.removeFromDiscard(discardIdx);
-    if (cardSelectInfo.cardSelectTask == CardSelectTask::LIQUID_MEMORIES_POTION) {
-        c.setCostForTurn(0);
-    }
-    moveToHandHelper(c);
-}
-
 void BattleContext::chooseExhumeCard(int exhaustIdx) {
     // todo game handles corruption here
     auto c = cards.exhaustPile[exhaustIdx];
     cards.removeFromExhaustPile(exhaustIdx);
-    cards.notifyCreateCard(c);
+    cards.notifyAddCardToCombat(c);
 
     moveToHandHelper(c);
 }

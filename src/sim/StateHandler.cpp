@@ -810,10 +810,19 @@ int RandomBattleStateHandler::setupCardSelectOptions(const BattleContext &bc) {
             };
             break;
 
+        case CardSelectTask::CODEX:
+            validCardIdxs = {0,1,2,3};
+            cardSelectFunction = [] (BattleContext &bc, int choice) {
+                if (choice != 3) {
+                    bc.chooseCodexCard(bc.cardSelectInfo.discovery_Cards()[choice]);
+                }
+            };
+            break;
+
         case CardSelectTask::DISCOVERY:
             validCardIdxs = {0,1,2};
             cardSelectFunction = [] (BattleContext &bc, int choice) {
-                bc.chooseDiscoveryCard(choice);
+                bc.chooseDiscoveryCard(bc.cardSelectInfo.discovery_Cards()[choice]);
             };
             break;
 

@@ -65,6 +65,20 @@ namespace sts {
 
     }
 
+    struct Base64 {
+        static constexpr char chars[] = {
+                'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+                'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+                '0','1','2','3','4','5','6','7','8','9','+','/'
+        };
+
+        static char decodeChar(int c); // returns -1 if invalid char
+        static char encodeChar(int dataMod64); // data in low bits
+
+        static std::string decode(const std::string &base64Str);
+        static std::string encode(const std::string &data);
+    };
+
     struct SaveFile {
         std::string json;
 
@@ -136,8 +150,9 @@ namespace sts {
         SaveFile(const std::string &json, CharacterClass cc);
 
         static SaveFile loadFromPath(const std::string& path, CharacterClass cc);
-        static std::string getJson(const std::string &path);
 
+        static std::string getJsonFromSaveFile(const std::string &savePath);
+        static void writeJsonToSaveFile(std::ifstream &jsonIs, const std::string &savePath);
         static std::string readFileToStringHelper(const std::string &path);
     };
 

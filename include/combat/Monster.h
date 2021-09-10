@@ -81,6 +81,7 @@ namespace sts {
         // hexaghost divider damage
         // Gremlin wizard charge
         // book of stabbing n
+        // champ phase2
         int miscInfo = 0;
 
         // Lagavulin asleep
