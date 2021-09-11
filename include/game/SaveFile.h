@@ -13,6 +13,9 @@
 #include <vector>
 #include <cassert>
 
+
+#include "sts_common.h"
+
 #include "constants/Events.h"
 #include "constants/MonsterEncounters.h"
 #include "constants/Relics.h"

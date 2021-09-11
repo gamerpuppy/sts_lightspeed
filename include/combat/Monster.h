@@ -18,33 +18,6 @@
 
 namespace sts {
 
-    struct MonsterAction {
-        MonsterMoveId id;
-        double prob;
-
-        MonsterAction() = default;
-        MonsterAction(MonsterMoveId id);
-        MonsterAction(MonsterMoveId id, double prob);
-    };
-
-    enum class EnemyActionType {
-        ATTACK,
-        ATTACK_DEBUFF,
-        BUFF,
-        SHIELD,
-    };
-
-    enum class DamageType {
-        THORNS,
-        NORMAL,
-        HP_LOSS,
-    };
-
-    struct DamageInfo {
-        int unblockedDamage = 0;
-        bool fatal = false;
-    };
-
     class BattleContext;
 
     struct Monster {
@@ -71,7 +44,7 @@ namespace sts {
 
         std::uint64_t justAppliedBits = 0;
         std::uint64_t statusBits = 0;
-        std::map<MonsterStatus, int> statusMap;
+        std::map<MonsterStatus, std::int16_t> statusMap;
 
         MonsterMoveId moveHistory[2] = { MonsterMoveId::INVALID, MonsterMoveId::INVALID };
 
@@ -82,6 +55,8 @@ namespace sts {
         // Gremlin wizard charge
         // book of stabbing n
         // champ phase2
+        // bronze orb have used stasis
+        // bronze automaton lastBoostWasFlail
         int miscInfo = 0;
 
         // Lagavulin asleep
@@ -97,9 +72,6 @@ namespace sts {
 
         // BeatOfDeathPower
         int uniquePower1 = 0;
-
-
-        DamageInfo lastAttackInfo;
 
         Monster() = default;
         Monster(const Monster& rhs) = default;
@@ -176,7 +148,12 @@ namespace sts {
         void stealGoldFromPlayer(BattleContext &bc, int amount);
         static void largeSlimeSplit(BattleContext &bc, MonsterId mediumSlimeType, int placeIdx, int hp);
         static void slimeBossSplit(BattleContext &bc, int hp);
+        void spawnBronzeOrbs(BattleContext &bc); // Bronze Automaton
+        void stasisAction(BattleContext &bc); // Bronze Orb
+        void returnStasisCard(BattleContext &bc);
+
         [[nodiscard]] static int getAliveGremlinCount(const BattleContext &bc);
+
     };
 
     std::ostream& operator<<(std::ostream &os, const sts::Monster &m);
@@ -292,7 +269,9 @@ namespace sts {
 
     template <MonsterStatus s>
     void Monster::buff(int amount) {
-        if (s == MonsterStatus::BARRICADE) {
+        if (s == MonsterStatus::BARRICADE
+            || s == MonsterStatus::MINION
+        ) {
             setHasStatus<s>(true);
             return;
         }
@@ -300,7 +279,6 @@ namespace sts {
         if (s == MS::STRENGTH) {
             strength += amount;
             return;
-
         }
 
         if (s == MS::RITUAL) {

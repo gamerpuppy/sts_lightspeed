@@ -117,7 +117,9 @@ void BattleContext::initRelics(const GameContext &gc) {
                 p.buff<PS::STRENGTH>(2);
                 for (int i = 0; i < monsters.monsterCount; ++i) {
                     Monster &m = monsters.arr[i];
-                    m.buff<MS::STRENGTH>(1);
+                    if (m.isTargetable()) {
+                        m.buff<MS::STRENGTH>(1);
+                    }
                 }
                 break;
 
@@ -3021,7 +3023,7 @@ namespace sts {
         os << "\tactionQueueSize: " << bc.actionQueue.size
             << ", cardQueueSize: " << bc.cardQueue.size
             << ", turn: " << bc.turn
-            << ", ascension: " << bc.ascension
+            << ", g_searchAscension: " << bc.ascension
             << "\n";
 
         os << bc.monsters;

@@ -23,6 +23,7 @@ void RandomAgent::playout(GameContext &gc) {
 
 void RandomAgent::playout(GameContext &gc, const GameContextPredicate &predicate) {
     RandomStateHandler handler;
+    gc.skipBattles = true;
     while (gc.outcome == GameOutcome::UNDECIDED && (!predicate || !predicate(gc))) {
 
 

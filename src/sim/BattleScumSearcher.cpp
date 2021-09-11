@@ -18,10 +18,10 @@ using namespace sts;
 //    }
 //}
 
-void BattleScumSearcher::search(const BattleContext &bc, const int depth) {
+void BattleScumSearcher::search(const BattleContext &bc) {
     bestInfos.clear();
     std::vector<SearchInfo> searchStack;
-    searchStack.resize(depth);
+    searchStack.resize(maxMoveDepth);
 
     assert(!searchStack.empty());
 
@@ -32,29 +32,40 @@ void BattleScumSearcher::search(const BattleContext &bc, const int depth) {
         searchStack[0].stateSize = 0;
     }
 
+
     int curDepth = 0;
     while (true) {
         if (curDepth < 0) {
             return;
         }
 
-        assert(curDepth < depth && curDepth >= 0);
+        assert(curDepth < maxMoveDepth && curDepth >= 0);
         auto &cur = searchStack[curDepth];
 
 
-        if (cur.optionIdx + 1 < cur.stateSize && curDepth+1 < depth) {
+        if (cur.optionIdx + 1 < cur.stateSize && curDepth+1 < maxMoveDepth) {
             ++cur.optionIdx;
 
         } else {
-            cur.value = evaluateState(cur.bc);
 
-            // no more actions for this state.
-            if (bestInfos.empty() || cur.value > bestInfos.back().value) {
+            if (cur.bc.outcome == Outcome::UNDECIDED && cur.stateSize > 0) {
+                cur.handler.chooseOption(cur.bc, 0);
+            }
 
-                bestInfos.clear();
-                for (int i = 0; i <= curDepth; ++i) {
-                    assert(searchStack.size() > i);
-                    bestInfos.push_back(searchStack.at(i));
+
+            const bool nodeValid = cur.bc.outcome != Outcome::UNDECIDED || cur.bc.turn >= bc.turn+minTurnLookahead;
+            if (nodeValid || bestInfos.empty() || bestInfos.back().bc.turn <= cur.bc.turn) {
+                cur.value = evaluateState(cur.bc);
+                ++nodesEvaluated;
+
+                // no more actions for this state.
+                if (bestInfos.empty() || cur.value > bestInfos.back().value) {
+
+                    bestInfos.clear();
+                    for (int i = 0; i <= curDepth; ++i) {
+                        assert(searchStack.size() > i);
+                        bestInfos.push_back(searchStack.at(i));
+                    }
                 }
             }
 
@@ -99,15 +110,19 @@ StateValue BattleScumSearcher::evaluateState(const BattleContext &bc) {
             + (-combinedHp * 2)
             + (-bc.monsters.monstersAlive * 5);
 
-    return {score};
+    return {score, bc.player.curHp, combinedHp};
 }
 
+BattleScumSearcher::BattleScumSearcher(int maxMoveDepth, int minTurnLookahead) : maxMoveDepth(maxMoveDepth),
+                                                                                 minTurnLookahead(minTurnLookahead) {}
+
+ScumSearcherAgent::ScumSearcherAgent(const std::default_random_engine &_rng, int _searchDepth)
+    : rng(_rng), searchDepth(_searchDepth) {}
 
 void ScumSearcherAgent::playout(GameContext &gc) {
     RandomStateHandler handler;
     BattleContext bc;
     const auto seedStr = std::string(SeedHelper::getString(gc.seed));
-
 
     while (gc.outcome == GameOutcome::UNDECIDED && gc.act < 3) {
         if (gc.screenState == ScreenState::BATTLE) {
@@ -132,12 +147,12 @@ void ScumSearcherAgent::playout(GameContext &gc) {
 }
 
 void ScumSearcherAgent::playoutBattle(BattleContext &bc) {
-    BattleScumSearcher searcher;
+    BattleScumSearcher searcher(searchDepth, minTurnLookahead);
 
     while (bc.outcome == Outcome::UNDECIDED) {
         ++choiceCount;
 
-        searcher.search(bc, searchDepth);
+        searcher.search(bc);
 
         const auto &bestInfo = searcher.bestInfos.at(0);
 
@@ -155,8 +170,8 @@ void ScumSearcherAgent::playoutBattle(BattleContext &bc) {
 
 
         bestInfo.handler.chooseOption(bc, bestInfo.optionIdx);
-
     }
+    nodesEvaluated += searcher.nodesEvaluated;
 }
 
 void ScumSearcherAgent::chooseRandom(GameContext &gc) {
@@ -313,6 +328,9 @@ namespace sts {
     }
 
     std::ostream &operator<<(std::ostream &os, const StateValue &value) {
+        os << "score: " << value.score
+            << " playerHp: " << value.playerHp
+            << " totalEnemyHp: " << value.combinedHp;
         return os;
     }
 }

@@ -589,7 +589,7 @@ Action Actions::TransmutationAction(bool upgraded, int energy, bool useEnergy) {
 
 Action Actions::ViolenceAction(int count) { // todo a faster algorithm for inserting into the attack list
     return {[=] (BattleContext &bc) {
-        fixed_list<int,CardManager::MAX_DRAWPILE_SIZE> attackIdxList;
+        fixed_list<int,CardManager::MAX_GROUP_SIZE> attackIdxList;
         for (int i = 0; i < bc.cards.drawPile.size(); ++i) {
             const auto &c = bc.cards.drawPile[i];
             if (c.getType() == CardType::ATTACK) {

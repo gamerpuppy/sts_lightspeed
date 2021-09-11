@@ -64,7 +64,21 @@ namespace java {
             }
         }
 
+        template<typename ForwardIt>
+        void binary_sort(ForwardIt begin, ForwardIt end) {
+
+
+
+
+
+        }
+
+
+
     }
+
+
+
 
 }
 

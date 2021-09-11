@@ -281,6 +281,8 @@ void playFromSaveFile(const std::string &fname, const std::string &actionFile) {
     std::ifstream actionListInputStream(actionFile);
 
     sim.play(actionListInputStream, std::cout, simContext);
+    actionListInputStream.close();
+
 //    simContext.printFirstLine = true;
     simContext.quitCommandGiven = false;
     sim.play(std::cin, std::cout, simContext);
@@ -335,6 +337,8 @@ struct PlayRandomInfo {
     std::int64_t winCount = 0;
     std::int64_t lossCount = 0;
     std::int64_t floorSum = 0;
+
+    std::int64_t nodeEvalTotal = 0;
 };
 
 void playRandom3(PlayRandomInfo *info) {
@@ -361,23 +365,30 @@ void playRandom3(PlayRandomInfo *info) {
 //    std::cout << "thread finished: " << info->seedOffset << std::endl;
 }
 
+static int g_searchAscension = 0;
+static int g_searchDepth = 5;
+static int g_minTurnLookahead = 1;
+
 void playRandom4(PlayRandomInfo *info) {
     for (std::uint64_t seed = info->startSeed + info->seedOffset; seed < info->endSeed; seed += info->seedIncrement) {
         //        std::cout << seed << std::endl;
-        ScumSearcherAgent agent((std::default_random_engine(seed)));
+        ScumSearcherAgent agent(std::default_random_engine(seed), g_searchDepth);
         agent.print = false;
+        agent.minTurnLookahead = g_minTurnLookahead;
 
-        GameContext gc(seed, CharacterClass::IRONCLAD, 0);
+        GameContext gc(seed, CharacterClass::IRONCLAD, g_searchAscension);
         agent.playout(gc);
 
-        if (gc.act == 3) {
+        info->floorSum += gc.floorNum;
+        info->nodeEvalTotal += agent.nodesEvaluated;
+
+        if (gc.act == 2) {
             ++info->winCount;
 //            std::cout << gc << std::endl;
 
         } else {
             ++info->lossCount;
         }
-        info->floorSum += gc.floorNum;
     }
 //        ScumSearcherAgent agent( (std::default_random_engine(seed)) );
 //        agent.print = true;
@@ -412,12 +423,14 @@ void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
     std::int64_t winCount = 0;
     std::int64_t lossCount = 0;
     std::int64_t floorSum = 0;
+    std::int64_t nodeSearchSum = 0;
 
     for (int tid = 0; tid < threadCount; ++tid) {
         threads[tid]->join();
         winCount += infos[tid].winCount;
         lossCount += infos[tid].lossCount;
         floorSum += infos[tid].floorSum;
+        nodeSearchSum += infos[tid].nodeEvalTotal;
     }
 
     auto endTime = std::chrono::high_resolution_clock::now();
@@ -425,18 +438,22 @@ void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
 
     std::cout << "w/l: (" << winCount  << ", " << lossCount << ")"
         << " percentWin: " << static_cast<double>(winCount) / playoutCount * 100 << "%"
-        << " avgFloorReached: " << static_cast<double>(floorSum) / playoutCount
-        << '\n';
+        << " avgFloorReached: " << static_cast<double>(floorSum) / playoutCount << '\n'
+        << " nodesSearched: " << nodeSearchSum << " avgPerFloor: " << (double)nodeSearchSum/floorSum << '\n';
 
     std::cout << "threads: " << threadCount
         << " playoutCount: " << playoutCount
+        << " depth: " << g_searchDepth
+        << " minTurnLook: " << g_minTurnLookahead
+        << " asc: " << g_searchAscension
         << " elapsed: " << duration
         << std::endl;
 }
 
 int scumSearch(int argc, const char *argv[]) {
     const auto depth = std::stoi(argv[2]);
-    const auto saveFilePath = argv[3];
+    const auto minTurnLookahead = std::stoi(argv[3]);
+    const auto saveFilePath = argv[4];
 
     SaveFile saveFile = SaveFile::loadFromPath(saveFilePath, sts::CharacterClass::IRONCLAD);
     GameContext gc;
@@ -445,15 +462,24 @@ int scumSearch(int argc, const char *argv[]) {
     BattleContext bc;
     bc.init(gc);
 
-    BattleScumSearcher scumSearcher;
-    scumSearcher.search(bc, depth);
+    BattleScumSearcher scumSearcher(depth, minTurnLookahead);
 
+    auto startTime = std::chrono::high_resolution_clock::now();
+
+    scumSearcher.search(bc);
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    double duration = std::chrono::duration<double>(endTime-startTime).count();
+
+    std::cout << " search time: " << duration << "s\n";
 
     for (int i = 0; i < scumSearcher.bestInfos.size(); ++i) {
-        std::cout << scumSearcher.bestInfos[i] << '\n';
+        std::cout << "depth [" << i << "]: " << scumSearcher.bestInfos[i] << '\n';
+
     }
     return 0;
 }
+
 
 int main(int argc, const char* argv[]) {
     if (argc < 2) {
@@ -476,8 +502,15 @@ int main(int argc, const char* argv[]) {
 
     } else if (command == "random_mt") { // actually doing tree search now
         const int threadCount(std::stoi(argv[2]));
-        const std::uint64_t startSeedLong(std::stoull(argv[3]));
-        const int playoutCount(std::stoi(argv[4]));
+        const int depthArg = std::stoi(argv[3]);
+        const int minTurnLookahead = std::stoi(argv[4]);
+        const int ascensionIn = std::stoi(argv[5]);
+        const std::uint64_t startSeedLong(std::stoull(argv[6]));
+        const int playoutCount(std::stoi(argv[7]));
+
+        g_searchAscension = ascensionIn;
+        g_searchDepth = depthArg;
+        g_minTurnLookahead = minTurnLookahead;
 
         playRandomMt(threadCount, startSeedLong, playoutCount);
 

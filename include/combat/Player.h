@@ -53,7 +53,7 @@ namespace sts {
         std::uint32_t justAppliedBits = 0;
         std::uint64_t statusBits0 = 0;
         std::uint32_t statusBits1 = 0;
-        std::map<PlayerStatus, int> statusMap;
+        std::map<PlayerStatus, std::int16_t> statusMap;
 
         std::uint64_t relicBits0 = 0;
         std::uint64_t relicBits1 = 0;

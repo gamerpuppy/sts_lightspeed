@@ -780,7 +780,7 @@ int RandomBattleStateHandler::setupNormalOptions(const BattleContext &bc) {
 }
 
 typedef std::function <bool (const CardInstance &c)> CIPredicate;
-typedef fixed_list<int, CardManager::MAX_DRAWPILE_SIZE> IndexList;
+typedef fixed_list<int, CardManager::MAX_GROUP_SIZE> IndexList;
 
 template <typename ForwardIt>
 void setupCardOptionsHelper(IndexList &idxs, const ForwardIt begin, const ForwardIt end, const CIPredicate &p= nullptr) {

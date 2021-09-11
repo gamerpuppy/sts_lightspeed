@@ -10,10 +10,6 @@
 
 using namespace sts;
 
-MonsterAction::MonsterAction(MonsterMoveId id) : id(id), prob(0) { }
-
-MonsterAction::MonsterAction(MonsterMoveId id, double prob) : id(id), prob(prob) { }
-
 void Monster::setRandomHp(Random &hpRng, bool higherHp) {
     auto hpRange = monsterHpRange[static_cast<int>(id)][higherHp ? 1 : 0];
     curHp = hpRng.random(hpRange[0], hpRange[1]);
@@ -206,7 +202,7 @@ void Monster::die(BattleContext &bc, bool triggerRelics) {
             id == MonsterId::THE_COLLECTOR;
         if (bc.monsters.monstersAlive == 0 || isMinionLeader)
         {
-            bc.cleanCardQueue();
+            bc.cleanCardQueue(); // todo should this really return like this.
             bc.outcome = Outcome::PLAYER_VICTORY;
             return;
         }
@@ -223,7 +219,7 @@ void Monster::die(BattleContext &bc, bool triggerRelics) {
     }
 
     if (hasStatus<MS::STASIS>()) {
-        // todo
+        returnStasisCard(bc);
     }
 
     if (bc.player.hasRelic<RelicId::GREMLIN_HORN>()) {
@@ -288,11 +284,9 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
         decrementStatus<MS::METALLICIZE>(8);
     }
 
-    lastAttackInfo.unblockedDamage += std::min(curHp, damage);
     curHp -= damage;
     if (curHp <= 0) {
         curHp = 0;
-        lastAttackInfo.fatal = true;
         die(bc);
     } else {
         onHpLost(bc, damage);

@@ -520,6 +520,8 @@ namespace sts {
         os << ",\n\thand: " << c.cardsInHand << " ";
         printArray(os, c.hand.begin(), c.hand.begin()+c.cardsInHand);
 
+        os << "\n\tstasisCards{" << c.stasisCards[0] << "," << c.stasisCards[1] << "}";
+
         os << "\n\t" << "handNormalityCount: " << c.handNormalityCount;
         const auto s = ", ";
         os << s << "handPainCount: " << c.handPainCount;

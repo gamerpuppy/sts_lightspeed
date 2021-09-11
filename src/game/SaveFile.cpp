@@ -259,14 +259,20 @@ std::string SaveFile::getJsonFromSaveFile(const std::string &path) {
     std::string utf8Content = readFileToStringHelper(path);
     auto dataBits = Base64::decode(utf8Content);
     auto json = xorWithKey(dataBits);
+
+#ifdef sts_print_debug
     std::cout << json;
+#endif
     return json;
 }
 
 void SaveFile::writeJsonToSaveFile(std::ifstream &jsonIs, const std::string &savePath) {
     const nlohmann::json j = nlohmann::json::parse(jsonIs);
     std::string cleanedJsonStr = j.dump();
+
+#ifdef sts_print_debug
     std::cout << cleanedJsonStr;
+#endif
 
     auto obfuscatedStr = xorWithKey(cleanedJsonStr);
     auto base64Encoding = Base64::encode(cleanedJsonStr);

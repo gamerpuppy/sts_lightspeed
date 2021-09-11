@@ -1139,7 +1139,6 @@ void GameContext::afterBattle() {
             break;
 
         case Room::BOSS:
-
             if (act == 1 || act == 2) {
                 regainControlAction = [=](GameContext &gc) {
                     gc.enterBossTreasureRoom();

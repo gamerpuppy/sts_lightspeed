@@ -120,7 +120,7 @@ namespace sts {
         os << "\tseed: \"" << SeedHelper::getString(gc.seed) << "\" seedAsLong: " << gc.seed << '\n';
         os << "\t" << "floorNum: " << gc.floorNum
             << " act: " << gc.act
-            << " ascension: " << gc.ascension
+            << " g_searchAscension: " << gc.ascension
             << " curRoom: " << roomStrings[static_cast<int>(gc.curRoom)]
             << " curEvent: " << eventIdStrings[static_cast<int>(gc.curEvent)]
             << " boss: " << monsterEncounterStrings[static_cast<int>(gc.boss)]

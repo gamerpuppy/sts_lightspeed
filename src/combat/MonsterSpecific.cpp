@@ -75,7 +75,6 @@ void Monster::initHp(Random &hpRng, int ascension) {
 
         case MonsterId::AWAKENED_ONE:
         case MonsterId::BRONZE_AUTOMATON:
-        case MonsterId::BRONZE_ORB:
         case MonsterId::CORRUPT_HEART:
         case MonsterId::DECA:
         case MonsterId::DONU:
@@ -103,8 +102,14 @@ void Monster::initHp(Random &hpRng, int ascension) {
             setRandomHp(hpRng, ascension >= 8);
             break;
 
+        case MonsterId::BRONZE_ORB:
+            hpRng.random(52, 58);
+            setRandomHp(hpRng, ascension >= 9);
+            break;
+
+
         case MonsterId::TASKMASTER: // bug in game
-            setRandomHp(hpRng, ascension >= 8);
+            hpRng.random(54, 60);
             setRandomHp(hpRng, ascension >= 8);
             break;
 
@@ -402,6 +407,71 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             attackPlayerHelper(bc, asc3 ? 24 : 21);
             bc.addToBot(Actions::RollMove(idx));
             break;
+
+
+        // ************ BRONZE AUTOMATON ************
+
+
+        case MMID::BRONZE_AUTOMATON_BOOST: {// 5
+            buff<MS::STRENGTH>(asc4 ? 4 : 3);
+            addBlock(asc4 ? 12 : 9);
+            auto &lastBoostWasFlail = miscInfo;
+            if (lastBoostWasFlail) {
+                setMove(MonsterMoveId::BRONZE_AUTOMATON_HYPER_BEAM);
+                lastBoostWasFlail = false;
+            } else {
+                setMove(MonsterMoveId::BRONZE_AUTOMATON_FLAIL);
+                lastBoostWasFlail = true;
+            }
+            bc.noOpRollMove();
+            break;
+        }
+
+        case MMID::BRONZE_AUTOMATON_FLAIL: // 1
+            attackPlayerHelper(bc, asc4 ? 8 : 7, 2);
+            setMove(MonsterMoveId::BRONZE_AUTOMATON_BOOST);
+            bc.noOpRollMove();
+            break;
+
+        case MMID::BRONZE_AUTOMATON_HYPER_BEAM: // 2
+            attackPlayerHelper(bc, asc4 ? 50 : 45);
+            if (asc19) {
+                setMove(MonsterMoveId::BRONZE_AUTOMATON_BOOST);
+            } else {
+                setMove(MonsterMoveId::BRONZE_AUTOMATON_STUNNED);
+            }
+            bc.noOpRollMove();
+            break;
+
+        case MMID::BRONZE_AUTOMATON_SPAWN_ORBS: // 4
+            spawnBronzeOrbs(bc);
+            setMove(MMID::BRONZE_AUTOMATON_FLAIL);
+            bc.noOpRollMove();
+            break;
+
+        case MMID::BRONZE_AUTOMATON_STUNNED: // 3
+            setMove(MonsterMoveId::BRONZE_AUTOMATON_FLAIL);
+            bc.noOpRollMove();
+            break;
+
+        case MMID::BRONZE_ORB_BEAM:
+            attackPlayerHelper(bc, 8);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::BRONZE_ORB_STASIS:
+            stasisAction(bc);
+            miscInfo = 1;
+            rollMove(bc);
+            break;
+
+        case MMID::BRONZE_ORB_SUPPORT_BEAM:
+            bc.monsters.arr[1].addBlock(12);
+            rollMove(bc);
+            break;
+
+
+        // ************ BYRD ************
 
         case MMID::BYRD_CAW:
             buff<MS::STRENGTH>(1);
@@ -1436,6 +1506,31 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             break;
         }
 
+        case MonsterId::BRONZE_AUTOMATON: {
+            setMove(MonsterMoveId::BRONZE_AUTOMATON_SPAWN_ORBS);
+            break;
+        }
+
+        case MonsterId::BRONZE_ORB: { // todo bug with discarded cards - blind card not showing in discard pile
+            // 1 beam
+            // 2 support beam
+            // 3 stasis
+            const auto haveUsedStasis = miscInfo;
+            if (!haveUsedStasis && roll >= 25) {
+                setMove(MonsterMoveId::BRONZE_ORB_STASIS);
+
+            } else if (roll >= 70 && !lastTwoMoves(MonsterMoveId::BRONZE_ORB_SUPPORT_BEAM)) {
+                setMove(MonsterMoveId::BRONZE_ORB_SUPPORT_BEAM);
+
+            } else if (!lastTwoMoves(MonsterMoveId::BRONZE_ORB_BEAM)) {
+                setMove(MonsterMoveId::BRONZE_ORB_BEAM);
+
+            } else {
+                setMove(MonsterMoveId::BRONZE_ORB_SUPPORT_BEAM);
+            }
+            break;
+        }
+
         case MonsterId::BYRD: {
             // 1 peck
             // 2 fly
@@ -2185,7 +2280,6 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             break;
         }
 
-
         // RED MASK BOIS
 
         case MonsterId::BEAR: {
@@ -2284,6 +2378,121 @@ void Monster::slimeBossSplit(BattleContext &bc, const int hp) {
     bc.monsters.monsterCount = 3;
     bc.monsters.monstersAlive = 2;
     bc.monsterTurnIdx = 3;
+}
+
+void Monster::spawnBronzeOrbs(BattleContext &bc) {
+
+    auto &orb1 = bc.monsters.arr[0];
+    auto &orb2 = bc.monsters.arr[2];
+
+    orb1.construct(bc, MonsterId::BRONZE_ORB, 0);
+    orb2.construct(bc, MonsterId::BRONZE_ORB, 2);
+
+    orb1.buff<MS::MINION>();
+    orb2.buff<MS::MINION>();
+
+    if (bc.player.hasRelic<R::PHILOSOPHERS_STONE>()) {
+        orb1.buff<MS::STRENGTH>(1);
+        orb2.buff<MS::STRENGTH>(1);
+    }
+
+    orb1.rollMove(bc);
+    orb2.rollMove(bc);
+
+    bc.monsters.monstersAlive += 2;
+    ++bc.monsterTurnIdx;
+}
+
+
+struct StasisPair {
+    int groupIdx;
+    int idOrder;
+};
+
+// returns index of card to remove
+// list is guaranteed to not be empty
+template<typename ForwardIt>
+int stasisHelper(Random &rng, ForwardIt begin, ForwardIt end) {
+    int cardRarityCounts[6] {0,0,0,0,0,0};
+
+    for (auto it = begin; it != end; ++it) {
+        int rarity = static_cast<int>(getCardRarity(it->id));
+        ++cardRarityCounts[rarity];
+    }
+
+    CardRarity targetRarity;
+    if (cardRarityCounts[static_cast<int>(CardRarity::RARE)] != 0) {
+        targetRarity = CardRarity::RARE;
+
+    } else if (cardRarityCounts[static_cast<int>(CardRarity::UNCOMMON)] != 0) {
+        targetRarity = CardRarity::UNCOMMON;
+
+    } else if (cardRarityCounts[static_cast<int>(CardRarity::COMMON)] != 0) {
+        targetRarity = CardRarity::COMMON;
+
+    } else {
+        const int groupSize = end-begin;
+        return rng.random(groupSize-1);
+    }
+
+    fixed_list<StasisPair, CardManager::MAX_GROUP_SIZE> idxList;
+
+    int i = 0;
+    for (auto it = begin; it != end; ++it) {
+        if (getCardRarity(it->id) == targetRarity) {
+            StasisPair pair {i, cardSortedIdx[static_cast<int>(it->id)]};
+            idxList.push_back(pair);
+        }
+        ++i;
+    }
+
+    std::stable_sort(idxList.begin(), idxList.end(), [](auto p1, auto p2) { return p1.idOrder < p2.idOrder; } );
+
+    const auto idxListSelectIdx = rng.random(idxList.size()-1);
+    return idxList[idxListSelectIdx].groupIdx;
+}
+
+void Monster::stasisAction(BattleContext &bc) {
+    auto &cards = bc.cards;
+    if (cards.drawPile.empty() && cards.discardPile.empty()) {
+        return; // do nothing
+    }
+
+    CardInstance stasisCard;
+    if (cards.drawPile.empty()) {
+        const auto removeIdx = stasisHelper(
+                bc.cardRandomRng, cards.discardPile.begin(), cards.discardPile.end()
+                );
+
+        stasisCard = cards.discardPile[removeIdx];
+        cards.removeFromDiscard(removeIdx);
+
+    } else {
+        const auto removeIdx = stasisHelper(
+                bc.cardRandomRng, cards.drawPile.begin(), cards.drawPile.end()
+        );
+
+        stasisCard = cards.drawPile[removeIdx];
+        cards.removeFromDrawPileAtIdx(removeIdx);
+    }
+
+    cards.notifyRemoveFromCombat(stasisCard);
+    cards.stasisCards[std::min(1, idx)] = stasisCard;
+
+    buff<MS::STASIS>();
+}
+
+
+void Monster::returnStasisCard(BattleContext &bc) {
+    auto &stasisCard = bc.cards.stasisCards[std::min(idx,1)];
+
+#ifdef sts_asserts
+    assert(stasisCard.id != CardId::INVALID);
+#endif
+
+    bc.cards.notifyAddCardToCombat(stasisCard);
+    bc.moveToHandHelper(stasisCard);
+    stasisCard = {CardId::INVALID};
 }
 
 int Monster::getAliveGremlinCount(const BattleContext &bc) {

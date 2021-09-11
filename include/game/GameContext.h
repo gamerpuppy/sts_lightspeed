@@ -265,7 +265,6 @@ namespace sts {
         void enterBattle(MonsterEncounter encounter);
         void afterBattle();
 
-
         // actions
         void obtainKey(Key key);
         void obtainPotion(Potion p);

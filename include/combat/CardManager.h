@@ -22,18 +22,19 @@ namespace sts {
     struct CardManager {
 
         static constexpr int MAX_HAND_SIZE = 10;
-        static constexpr int MAX_DRAWPILE_SIZE = 64;
+        static constexpr int MAX_GROUP_SIZE = 64;
 
         int nextUniqueCardId = 0; // unique card ids that are less than the masterDeckSize are non-temporary
 
         int cardsInHand = 0;
         std::array<CardInstance, MAX_HAND_SIZE> hand;
         std::array<CardInstance, MAX_HAND_SIZE> limbo; // used only for end of turn during discard, for retained cards
+        std::array<CardInstance,2> stasisCards { CardId::INVALID, CardId::INVALID }; // for bronze automaton fight
 
 #ifdef sts_card_manager_use_fixed_list
-        fixed_list<CardInstance, MAX_DRAWPILE_SIZE> drawPile;
-        fixed_list<CardInstance, MAX_DRAWPILE_SIZE> discardPile;
-        fixed_list<CardInstance, MAX_DRAWPILE_SIZE> exhaustPile;
+        fixed_list<CardInstance, MAX_GROUP_SIZE> drawPile;
+        fixed_list<CardInstance, MAX_GROUP_SIZE> discardPile;
+        fixed_list<CardInstance, MAX_GROUP_SIZE> exhaustPile;
 #else
         std::vector<CardInstance> drawPile;
         std::vector<CardInstance> discardPile;

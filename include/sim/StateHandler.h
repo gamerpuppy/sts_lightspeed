@@ -48,7 +48,7 @@ namespace sts {
         fixed_list<BattleContextOperator, NORMAL_STATE_SIZE> optionFunctions;
 //        std::vector<std::string> optionFunctionDescs;
 
-        fixed_list<int, CardManager::MAX_DRAWPILE_SIZE> validCardIdxs;
+        fixed_list<int, CardManager::MAX_GROUP_SIZE> validCardIdxs;
         std::function <void (BattleContext&, int idx)> cardSelectFunction;
 //        std::string cardSelectFunctionDesc = "";
 

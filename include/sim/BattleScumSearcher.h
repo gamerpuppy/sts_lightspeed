@@ -14,6 +14,8 @@ namespace sts {
 
     struct StateValue {
         double score = 0;
+        int playerHp;
+        int combinedHp;
 
         bool operator<(const StateValue &rhs) const;
         bool operator>(const StateValue &rhs) const;
@@ -33,21 +35,31 @@ namespace sts {
 
     struct BattleScumSearcher {
         std::vector<SearchInfo> bestInfos;
+        std::int64_t nodesEvaluated = 0;
 
-        void search(const BattleContext &bc, int depth);
+        int maxMoveDepth = 5;
+        int minTurnLookahead = 1;
+
+        BattleScumSearcher(int maxMoveDepth, int minTurnLookahead);
+
+        void search(const BattleContext &bc);
         // ************
 
         static StateValue evaluateState(const BattleContext &bc);
     };
 
     struct ScumSearcherAgent {
+        bool print = false;
+        int searchDepth = 3;
+        int minTurnLookahead;
+
+
         std::default_random_engine rng;
         int choiceCount = 0;
-        bool print = false;
-        const int searchDepth = 6;
 
-        ScumSearcherAgent(const std::default_random_engine &rng) : rng(rng) {}
+        std::int64_t nodesEvaluated = 0;
 
+        explicit ScumSearcherAgent(const std::default_random_engine &rng, int searchDepth);
 
         void playout(GameContext &gc);
         void playoutBattle(BattleContext &gc);
