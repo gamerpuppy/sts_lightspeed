@@ -13,7 +13,7 @@ namespace sts {
     class fixed_list {
     private:
         int list_size = 0;
-        std::array<T,capacity> arr = {};
+        std::array<T,capacity> arr;
 
     public:
         typedef T* iterator;
@@ -74,11 +74,24 @@ namespace sts {
             return arr[list_size-1];
         }
 
+        T pop_back() noexcept {
+            return arr[--list_size];
+        }
+
+
         void insert(int idx, T t) {
             for (int i = list_size; i > idx; --i) {
                 arr[i] = arr[i-1];
             }
             arr[idx] = t;
+            list_size++;
+        }
+
+        void insert(iterator it, T t) {
+            for (T* i = arr.end()-1; i != it; --i) {
+                *i = *(i-1);
+            }
+            *it = t;
             list_size++;
         }
 
@@ -90,6 +103,14 @@ namespace sts {
             while (idx+1 < list_size) {
                 arr[idx] = arr[idx+1];
                 ++idx;
+            }
+            --list_size;
+        }
+
+        void erase(iterator it) {
+            while ((it+1) != end()) {
+                *it = *(it+1);
+                ++it;
             }
             --list_size;
         }

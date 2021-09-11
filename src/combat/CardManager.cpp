@@ -391,51 +391,50 @@ void CardManager::onTookDamage() {
     }
 }
 
-void upgradeRampage(CardInstance &c, std::int16_t upgradeAmount) {
+void upgrade(CardInstance &c, int upgradeAmount) {
     c.specialData += upgradeAmount;
 }
 
-void CardManager::findAndUpgradeRampage(const CardInstance &purgeCard) {
-    const auto upgradeAmount = static_cast<int16_t>(purgeCard.upgraded ? 8 : 5);
+// for ritual dagger, rampage
+void CardManager::findAndUpgradeSpecialData(const std::int16_t uniqueId, const int upgradeAmount) {
 
     // special checks for most common scenarios
-    if (!discardPile.empty() && discardPile.back().uniqueId == purgeCard.uniqueId) {
-        upgradeRampage(discardPile.back(), upgradeAmount);
+    if (!discardPile.empty() && discardPile.back().uniqueId == uniqueId) {
+        upgrade(discardPile.back(), upgradeAmount);
         return;
     }
-    if (!exhaustPile.empty() && exhaustPile.back().uniqueId == purgeCard.uniqueId) {
-        upgradeRampage(exhaustPile.back(), upgradeAmount);
+    if (!exhaustPile.empty() && exhaustPile.back().uniqueId == uniqueId) {
+        upgrade(exhaustPile.back(), upgradeAmount);
         return;
     }
 
     for (int i = static_cast<int>(discardPile.size())-2; i >= 0; --i) {
         auto &c = discardPile[i];
-        if (c.uniqueId == purgeCard.uniqueId) {
-            upgradeRampage(c, upgradeAmount);
+        if (c.uniqueId == uniqueId) {
+            upgrade(c, upgradeAmount);
             return;
         }
     }
 
     for (int i = static_cast<int>(exhaustPile.size())-2; i >= 0; --i) {
         auto &c = exhaustPile[i];
-        if (c.uniqueId == purgeCard.uniqueId) {
-            upgradeRampage(c, upgradeAmount);
+        if (c.uniqueId == uniqueId) {
+            upgrade(c, upgradeAmount);
             return;
         }
     }
 
-    for (int i = 0; i < drawPile.size(); ++i) {
-        auto &c = drawPile[i];
-        if (c.uniqueId == purgeCard.uniqueId) {
-            upgradeRampage(c, upgradeAmount);
+    for (auto & c : drawPile) {
+        if (c.uniqueId == uniqueId) {
+            upgrade(c, upgradeAmount);
             return;
         }
     }
 
     for (int i = 0; i < cardsInHand; ++i) {
         auto &c = hand[i];
-        if (c.uniqueId == purgeCard.uniqueId) {
-            upgradeRampage(c, upgradeAmount);
+        if (c.uniqueId == uniqueId) {
+            upgrade(c, upgradeAmount);
             return;
         }
     }

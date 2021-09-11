@@ -803,25 +803,28 @@ namespace sts {
         const std::string s = ", ";
 
         os << "\t" << "Relic Counters: "
-            << "" << "happyFlowerCounter: " << p.happyFlowerCounter
-            << s << "incenseBurnerCounter: " << p.incenseBurnerCounter
-            << s << "inkBottleCounter: " << p.inkBottleCounter
-            << s << "inserterCounter: " << p.inserterCounter
-            << s << "nunchakuCounter: " << p.nunchakuCounter
-            << s << "penNibCounter: " << p.penNibCounter
-            << s << "sundialCounter: " << p.sundialCounter
+            << "" << "happyFlowerCounter: " << static_cast<int>(p.happyFlowerCounter)
+            << s << "incenseBurnerCounter: " << static_cast<int>(p.incenseBurnerCounter)
+            << s << "inkBottleCounter: " << static_cast<int>(p.inkBottleCounter)
+            << s << "inserterCounter: " << static_cast<int>(p.inserterCounter)
+            << s << "nunchakuCounter: " << static_cast<int>(p.nunchakuCounter)
+            << s << "penNibCounter: " << static_cast<int>(p.penNibCounter)
+            << s << "sundialCounter: " << static_cast<int>(p.sundialCounter)
 
             << "\n\t" << "Status Counters: "
-            << "" << "combustHpLoss: " << p.combustHpLoss
-            << s << "devaFormEnergyPerTurn: " << p.devaFormEnergyPerTurn
-            << s << "echoFormCardsDoubled: " << p.echoFormCardsDoubled
-            << s << "panacheCounter: " << p.panacheCounter
-            << s << "TheBomb: { 1=" << p.bomb1 << ", 2=" << p.bomb2 << ", 3=" << p.bomb3 << " }"
+            << "" << "combustHpLoss: " << static_cast<int>(p.combustHpLoss)
+            << s << "devaFormEnergyPerTurn: " << static_cast<int>(p.devaFormEnergyPerTurn)
+            << s << "echoFormCardsDoubled: " << static_cast<int>(p.echoFormCardsDoubled)
+            << s << "panacheCounter: " << static_cast<int>(p.panacheCounter)
+            << s << "TheBomb: { 1=" << static_cast<int>(p.bomb1)
+                << ", 2=" << static_cast<int>(p.bomb2)
+                << ", 3=" << static_cast<int>(p.bomb3)
+                << " }"
 
             << "\n\t" << "Misc: "
-            << "" << "cardsPlayedThisTurn: " << p.cardsPlayedThisTurn
-            << s << "attacksPlayedThisTurn: " << p.attacksPlayedThisTurn
-            << s << "skillsPlayedThisTurn: " << p.skillsPlayedThisTurn;
+            << "" << "cardsPlayedThisTurn: " << static_cast<int>(p.cardsPlayedThisTurn)
+            << s << "attacksPlayedThisTurn: " << static_cast<int>(p.attacksPlayedThisTurn)
+            << s << "skillsPlayedThisTurn: " << static_cast<int>(p.skillsPlayedThisTurn);
 
 
             os << s << "orangePelletsCardTypesPlayed: {"
@@ -830,8 +833,8 @@ namespace sts {
                 << (p.orangePelletsCardTypesPlayed.test(2) ? "Power," : "")
                 << "}";
 
-            os << s << "cardsDiscardedThisTurn: " << p.cardsDiscardedThisTurn;
-            os << s << "gold: " << p.gold << '\n';
+            os << s << "cardsDiscardedThisTurn: " << static_cast<int>(p.cardsDiscardedThisTurn);
+            os << s << "gold: " << static_cast<int>(p.gold) << '\n';
     }
 
 
@@ -861,7 +864,7 @@ namespace sts {
         os << "Player: {\n";
 
         os << "\t" << "hp:(" << p.curHp << "/" << p.maxHp << ")"
-            << " energy:(" << p.energy << "/" << p.energyPerTurn
+            << " energy:(" << p.energy << "/" << static_cast<int>(p.energyPerTurn)
         << ") block:(" << p.block << ")\n";
 
         printStatusEffects(os, p);

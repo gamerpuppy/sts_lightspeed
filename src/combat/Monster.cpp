@@ -187,6 +187,10 @@ bool Monster::isAttacking() const {
     return isMoveAttack(moveHistory[0]);
 }
 
+void Monster::heal(int amount) {
+    curHp = std::min(maxHp, curHp + amount);
+}
+
 void Monster::addBlock(int amount) {
     block += amount;
 }
@@ -224,6 +228,7 @@ void Monster::die(BattleContext &bc, bool triggerRelics) {
 
     if (bc.player.hasRelic<RelicId::GREMLIN_HORN>()) {
         bc.addToBot( Actions::GainEnergy(1) );
+        bc.addToBot( Actions::DrawCards(1) );
     }
 
     if (bc.player.hasRelic<RelicId::THE_SPECIMEN>()) {
@@ -240,6 +245,9 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
 
     if (hasStatus<MS::PLATED_ARMOR>()) {
         decrementStatus<MS::PLATED_ARMOR>();
+        if(!hasStatus<MS::PLATED_ARMOR>() && id == MonsterId::SHELLED_PARASITE) {
+            setMove(MonsterMoveId::SHELLED_PARASITE_STUNNED);
+        }
     }
 
     if (bc.player.hasStatus<PS::ENVENOM>()) {
@@ -336,10 +344,6 @@ void Monster::attacked(BattleContext &bc, int damage) {
 }
 
 void Monster::damageUnblockedHelper(BattleContext &bc, int damage) {
-    if (hasStatus<MS::PLATED_ARMOR>()) {
-        decrementStatus<MS::PLATED_ARMOR>();
-    }
-
     if (hasStatus<MS::ASLEEP>()) {
         // lagavulin
         setHasStatus<MS::ASLEEP>(false);

@@ -6,7 +6,11 @@
 #define STS_LIGHTSPEED_STS_COMMON_H
 
 //#define sts_print_debug
-//#define sts_asserts
+#define sts_asserts
+
+//#define sts_action_queue_use_raw_array
+//#define sts_fixed_list_use_raw_array
+//#define sts_card_manager_use_fixed_list
 
 
 #include <cstdint>

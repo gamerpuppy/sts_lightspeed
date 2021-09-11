@@ -97,6 +97,21 @@ Action Actions::DamagePlayer(int damage, bool selfDamage) {
     }, false};
 }
 
+Action Actions::VampireAttack(int damage) {
+    return {[=] (BattleContext &bc) {
+        const auto mIdx = 0;
+        auto &m = bc.monsters.arr[mIdx]; // only used by shelled parasite so idx is 0
+        const auto playerHpBefore = bc.player.curHp;
+
+        bc.player.attacked(bc, mIdx, damage);
+
+        if (m.isAlive()) {
+            const auto playerHpLoss = playerHpBefore-bc.player.curHp;
+            m.heal(std::min(damage, playerHpLoss));
+        }
+    }, false};
+}
+
 Action Actions::PlayerLoseHp(int hp, bool selfDamage) { // TODO this doesn't take into account intangible or relics
     return {[=] (BattleContext &bc) {
         bc.player.loseHp(bc, hp, selfDamage);
@@ -360,8 +375,8 @@ Action Actions::MadnessAction() {
         }
 
         // always have 1 or more cards in hand here
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "EndlessLoop"
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "EndlessLoop"
         while (true) {
             const auto randomIdx = bc.cardRandomRng.random(bc.cards.cardsInHand-1);
             auto &c = bc.cards.hand[randomIdx];
@@ -386,7 +401,7 @@ Action Actions::MadnessAction() {
                 }
             }
         }
-#pragma clang diagnostic pop
+//#pragma clang diagnostic pop
 
     }};
 }
@@ -440,7 +455,7 @@ Action Actions::SummonGremlins() {
             newGremlinIdxs[openIdxCount++] = 2;
         }
         if (openIdxCount < 2 && bc.monsters.arr[0].isDying()) {
-            newGremlinIdxs[openIdxCount++];
+            newGremlinIdxs[openIdxCount++] = 0;
         }
 #ifdef sts_asserts
         assert(openIdxCount == 2);
@@ -868,7 +883,27 @@ Action Actions::RemovePlayerDebuffs() {
 }
 
 Action Actions::UpgradeRandomCardAction() {
-    return {};
+    return {[] (BattleContext &bc) {
+        fixed_list<int,10> upgradeableHandIdxs;
+        for (int i = 0; i < bc.cards.cardsInHand; ++i) {
+            if (bc.cards.hand[i].canUpgrade()) {
+                upgradeableHandIdxs.push_back(i);
+            }
+        }
+
+        if (upgradeableHandIdxs.empty()) {
+            return;
+        }
+
+        java::Collections::shuffle(
+                upgradeableHandIdxs.begin(),
+                upgradeableHandIdxs.end(),
+                java::Random(bc.shuffleRng.randomLong())
+        );
+
+        const auto upgradeIdx = upgradeableHandIdxs[0];
+        bc.cards.hand[upgradeIdx].upgrade();
+    }};
 }
 
 Action Actions::CodexAction() {
@@ -1032,8 +1067,14 @@ Action Actions::RitualDaggerAction(int idx, int damage) {
         }
         bc.monsters.arr[idx].attacked(bc, damage);
         if (!m.hasStatus<MS::MINION>() && !m.isAlive()) {
-            auto &dagger = bc.curCardQueueItem.card;
-            dagger.specialData += dagger.isUpgraded() ? 5 : 3;
+
+            auto &c = bc.curCardQueueItem.card;
+            const auto upgradeAmt = c.isUpgraded() ? 5 : 3;
+
+            if (bc.curCardQueueItem.purgeOnUse) {
+                bc.cards.findAndUpgradeSpecialData(c.uniqueId, upgradeAmt);
+            }
+            c.specialData += upgradeAmt;
         }
 
         bc.checkCombat();

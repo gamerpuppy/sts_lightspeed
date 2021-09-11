@@ -147,6 +147,7 @@ namespace sts {
 
         // ***********************
 
+        void heal(int amount);
         void addBlock(int amount);
         void die(BattleContext &bc, bool triggerRelics=true);
 

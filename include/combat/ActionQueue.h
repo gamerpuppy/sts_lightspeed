@@ -5,6 +5,8 @@
 #ifndef STS_LIGHTSPEED_ACTIONQUEUE_H
 #define STS_LIGHTSPEED_ACTIONQUEUE_H
 
+#include "sts_common.h"
+
 #include <bitset>
 #include <functional>
 #include <cassert>
@@ -29,14 +31,14 @@ namespace sts {
     template<int capacity>
     struct ActionQueue {
         friend BattleContext;
-        int size = 0;
-        int back = 0;
         int front = 0;
-        ActionFunction arr[capacity];
+        int back = 0;
+        int size = 0;
         std::bitset<capacity> bits; // for the shouldClear field
 
+#ifdef sts_action_queue_use_raw_array
+        ActionFunction arr[capacity];
         ActionQueue() = default;
-
         ActionQueue(const ActionQueue &rhs) : size(rhs.size), back(rhs.back), front(rhs.front), bits(rhs.bits) {
             int cur = rhs.front;
             for (int i = 0; i < rhs.size; ++i) {
@@ -46,16 +48,16 @@ namespace sts {
                 arr[cur] = rhs.arr[cur];
             }
         }
+#else
+        std::array<ActionFunction,capacity> arr;
+#endif
 
         void clear();
         void pushFront(Action a);
         void pushBack(Action a);
         bool isEmpty();
         ActionFunction popFront();
-
-        int getCapacity();
-//        ActionFunction popBack();
-//        void clearOnCombatVictory();
+        [[nodiscard]] int getCapacity() const;
     };
 
     template<int capacity>
@@ -113,7 +115,7 @@ namespace sts {
     }
 
     template<int capacity>
-    int ActionQueue<capacity>::getCapacity() {
+    int ActionQueue<capacity>::getCapacity() const {
         return capacity;
     }
 

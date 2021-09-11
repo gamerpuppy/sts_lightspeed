@@ -110,6 +110,16 @@ void GameContext::initFromSave(const SaveFile &s) {
     shopChance = s.shopChance;
     treasureChance = s.treasureChance;
 
+    if (s.has_emerald_key) {
+        obtainKey(Key::EMERALD_KEY);
+    }
+    if (s.has_ruby_key) {
+        obtainKey(Key::RUBY_KEY);
+    }
+    if (s.has_sapphire_key) {
+        obtainKey(Key::SAPPHIRE_KEY);
+    }
+
     // this is a game bug, the shrine list is not stored in the save file
     shrineList.clear();
     switch (act) {
@@ -288,6 +298,9 @@ bool GameContext::relicCanSpawn(RelicId relic, bool shopRoom) const {
                 return c.getType() == CardType::POWER;
             }, 1);
 
+        case RelicId::BLACK_BLOOD:
+            return relics.has(RelicId::BURNING_BLOOD);
+
         case RelicId::FROZEN_CORE:
             return hasRelic(RelicId::CRACKED_CORE);
 
@@ -299,9 +312,6 @@ bool GameContext::relicCanSpawn(RelicId relic, bool shopRoom) const {
 
         case RelicId::HOLY_WATER:
             return hasRelic(RelicId::PURE_WATER);
-
-        case RelicId::ECTOPLASM:
-            return act > 1;
 
         case RelicId::TINY_CHEST:
             return floorNum <= 35;
@@ -853,6 +863,10 @@ void GameContext::setupEvent() { // todo necronomicon event
     switch (curEvent) {
         case Event::BIG_FISH:
             info.hpAmount0 = fractionMaxHp(1/3.0f, FLOOR);
+            break;
+
+        case Event::BONFIRE_SPIRITS:
+            openCardSelectScreen(CardSelectScreenType::BONFIRE_SPIRITS, 1);
             break;
 
         case Event::DEAD_ADVENTURER: {
@@ -2364,7 +2378,7 @@ void GameContext::chooseEventOption(int idx) {
             chooseNeowOption(info.neowRewards[idx]);
             break;
 
-        case Event::ACCURSED_BLACKSMITH: { // Ominous Forge
+        case Event::OMINOUS_FORGE: { // Ominous Forge
             switch (idx) {
                 case 0:
                     openCardSelectScreen(CardSelectScreenType::UPGRADE, 1);
@@ -2469,11 +2483,6 @@ void GameContext::chooseEventOption(int idx) {
             }
             break;
         }
-
-        case Event::BONFIRE_ELEMENTALS: // todo just eliminate the first screen?
-            regainControl();
-            break;
-
 
         case Event::COLOSSEUM: // todo
             regainControl();
@@ -3585,6 +3594,41 @@ void GameContext::chooseSelectCardScreenOption(int idx) {
             break;
         }
 
+        case CardSelectScreenType::BONFIRE_SPIRITS: {
+            const SelectScreenCard &c = info.haveSelectedCards[0];
+            switch (c.card.getRarity()) {
+                case CardRarity::CURSE:
+                    obtainRelic(RelicId::SPIRIT_POOP);
+                    break;
+
+                case CardRarity::BASIC:
+                    break;
+
+                case CardRarity::COMMON:
+                case CardRarity::SPECIAL:
+                    playerHeal(5);
+                    break;
+
+                case CardRarity::UNCOMMON:
+                    playerHeal(10);
+                    break;
+
+                case CardRarity::RARE:
+                    playerIncreaseMaxHp(10);
+                    playerHeal(maxHp);
+                    break;
+
+                case CardRarity::INVALID:
+                default:
+                    assert(false);
+                    break;
+            }
+            deck.remove(*this, c.deckIdx);
+            screenState = ScreenState::MAP_SCREEN;
+            break;
+        }
+
+
         default:
             assert(false);
             break;
@@ -3692,6 +3736,8 @@ void GameContext::openCardSelectScreen(CardSelectScreenType type, int selectCoun
                 break;
 
             case CardSelectScreenType::REMOVE:
+
+            case CardSelectScreenType::BONFIRE_SPIRITS:
             case CardSelectScreenType::TRANSFORM:
                 for (int i = 0; i < deck.size(); ++i) {
                     const auto &c = deck.cards[i];
@@ -3708,6 +3754,8 @@ void GameContext::openCardSelectScreen(CardSelectScreenType type, int selectCoun
             case CardSelectScreenType::TRANSFORM_UPGRADE:
                 deck.addMatchingToSelectList(info.toSelectCards, [](auto c){ return c.canTransform(); });
                 break;
+
+
 
             default:
                 break;

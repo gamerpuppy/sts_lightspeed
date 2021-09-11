@@ -45,9 +45,7 @@ namespace sts {
     void printPotionInfo(std::ostream &os, const GameContext &gc);
     void printMonsterLists(std::ostream &os, const GameContext &gc);
 
-
     std::ostream& operator<<(std::ostream& os,  const GameContext &gc);
-
 
     void printBattleContextRng(std::ostream &os, const sts::BattleContext &bc);
 

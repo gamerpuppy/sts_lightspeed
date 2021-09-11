@@ -432,8 +432,7 @@ void BattleContext::initRelics(const GameContext &gc) {
                 break;
 
             case R::WARPED_TONGS:
-                // todo
-//                addToBot( Actions::SetState(InputState::SELECT_WARPED_TONGS_CARD) );
+                addToBot( Actions::UpgradeRandomCardAction() );
                 break;
 
             default:
@@ -738,6 +737,10 @@ void BattleContext::executeActions() {
             continue;
         }
 
+        if (outcome != Outcome::UNDECIDED) {
+            break;
+        }
+
         if (!cardQueue.isEmpty()) {
             // play a card queue item
             auto item = cardQueue.popFront();
@@ -931,7 +934,7 @@ void BattleContext::useAttackCard() {
 
         case CardId::ANGER:
             addToBot( Actions::AttackEnemy(t, calculateCardDamage(c, t, up ? 8 : 6)) );
-            addToBot( Actions::MakeTempCardInDiscard( CardInstance(CardId::ANGER), 1) );
+            addToBot( Actions::MakeTempCardInDiscard( CardInstance(CardId::ANGER, up), 1) );
             break;
 
         case CardId::BASH:
@@ -1063,7 +1066,7 @@ void BattleContext::useAttackCard() {
             addToBot( Actions::AttackEnemy(t, damage) );
 
             if (item.purgeOnUse) {
-                cards.findAndUpgradeRampage(c);
+                cards.findAndUpgradeSpecialData(c.uniqueId, up ? 8 : 5);
             }
             c.specialData += up ? 8 : 5;
 
@@ -1263,8 +1266,8 @@ void BattleContext::useSkillCard() {
             break;
 
         case CardId::FLAME_BARRIER:
-            addToBot( Actions::GainBlock(calculateCardBlock(12)) );
-            addToBot( Actions::BuffPlayer<PS::FLAME_BARRIER>(4) );
+            addToBot( Actions::GainBlock(calculateCardBlock(up ? 16 : 12)) );
+            addToBot( Actions::BuffPlayer<PS::FLAME_BARRIER>(up ? 6 : 4) );
             break;
 
         case CardId::FLEX:
@@ -1599,7 +1602,7 @@ void BattleContext::onUseAttackCard() {
 
     if (p.hasStatus<PS::PEN_NIB>()) {
         // todo does this need to be added to bot?
-        p.removeStatus<PS::PEN_NIB>();
+        addToBot( Actions::RemoveStatus<PS::PEN_NIB>() );
     }
 
     // ********* Relics onUseCard *********

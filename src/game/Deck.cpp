@@ -3,6 +3,8 @@
 //
 
 #include <cassert>
+#include <algorithm>
+
 #include "game/Deck.h"
 #include "game/Random.h"
 #include "game/GameContext.h"
@@ -239,10 +241,8 @@ void Deck::remove(GameContext &gc, int idx) {
         if (c.getId() == CardId::PARASITE) {
             gc.loseMaxHp(3);
         }
+        cards.remove(idx);
         return;
-
-    } else {
-
     }
 
     --transformableCount;

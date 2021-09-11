@@ -163,9 +163,9 @@ void MonsterGroup::createMonsters(BattleContext &bc, MonsterEncounter encounter)
             createWeakWildlife(bc);
             break;
 
-        case MonsterEncounter::AUTOMATON:
-            createMonster(bc, MonsterId::BRONZE_AUTOMATON);
-            break;
+//        case MonsterEncounter::AUTOMATON:
+////            createMonster(bc, MonsterId::BRONZE_AUTOMATON);
+//            break;
 
         case MonsterEncounter::AWAKENED_ONE:
             createMonster(bc, MonsterId::CULTIST);
@@ -186,6 +186,7 @@ void MonsterGroup::createMonsters(BattleContext &bc, MonsterEncounter encounter)
             createMonster(bc, MonsterId::MYSTIC);
             break;
 
+        case MonsterEncounter::AUTOMATON: // todo fix
         case MonsterEncounter::COLLECTOR:
             monsterCount = 2;
             createMonster(bc, MonsterId::THE_COLLECTOR);

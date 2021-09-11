@@ -8,6 +8,7 @@
 #include <vector>
 #include <array>
 
+#include "sts_common.h"
 
 #include "combat/CardInstance.h"
 #include "game/Random.h"
@@ -21,18 +22,23 @@ namespace sts {
     struct CardManager {
 
         static constexpr int MAX_HAND_SIZE = 10;
-        static constexpr int MAX_DRAWPILE_SIZE = 128;
+        static constexpr int MAX_DRAWPILE_SIZE = 64;
 
         int nextUniqueCardId = 0; // unique card ids that are less than the masterDeckSize are non-temporary
 
         int cardsInHand = 0;
         std::array<CardInstance, MAX_HAND_SIZE> hand;
+        std::array<CardInstance, MAX_HAND_SIZE> limbo; // used only for end of turn during discard, for retained cards
+
+#ifdef sts_card_manager_use_fixed_list
+        fixed_list<CardInstance, MAX_DRAWPILE_SIZE> drawPile;
+        fixed_list<CardInstance, MAX_DRAWPILE_SIZE> discardPile;
+        fixed_list<CardInstance, MAX_DRAWPILE_SIZE> exhaustPile;
+#else
         std::vector<CardInstance> drawPile;
         std::vector<CardInstance> discardPile;
         std::vector<CardInstance> exhaustPile;
-        std::array<CardInstance, MAX_HAND_SIZE> limbo; // used only for end of turn during discard, for retained cards
-
-
+#endif
         int handNormalityCount = 0;
         int handPainCount = 0;
         int strikeCount = 0;
@@ -86,9 +92,8 @@ namespace sts {
         // special helpers
         void draw(BattleContext &bc, int amount);
         void onTookDamage(); // update blood for blood, masterful stab
-        void findAndUpgradeRampage(const CardInstance &purgeCard);
+        void findAndUpgradeSpecialData(std::int16_t uniqueId, int amount);
         void onBuffCorruption();
-
     };
 
     std::ostream &operator <<(std::ostream &os, const CardManager &c);

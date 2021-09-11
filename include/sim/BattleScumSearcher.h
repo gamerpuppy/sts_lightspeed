@@ -12,7 +12,6 @@
 
 namespace sts {
 
-
     struct StateValue {
         double score = 0;
 

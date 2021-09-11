@@ -556,27 +556,31 @@ void ConsoleSimulator::printCardSelectScreenActions(std::ostream &os) const {
     switch (gc->info.selectScreenType) {
 
         case CardSelectScreenType::BOTTLE:
-            os << "Bottle";
+            os << "Bottle.";
             break;
 
         case CardSelectScreenType::TRANSFORM_UPGRADE:
-            os << "Transform and Upgrade";
+            os << "Transform and Upgrade.";
             break;
 
         case CardSelectScreenType::TRANSFORM:
-            os << "Transform";
+            os << "Transform.";
             break;
 
         case CardSelectScreenType::UPGRADE:
-            os << "Upgrade";
+            os << "Upgrade.";
             break;
 
         case CardSelectScreenType::REMOVE:
-            os << "Remove";
+            os << "Remove.";
             break;
 
         case CardSelectScreenType::OBTAIN:
-            os << "Obtain";
+            os << "Obtain.";
+            break;
+
+        case CardSelectScreenType::BONFIRE_SPIRITS:
+            os << "Offer to the spirits.";
             break;
 
         default:
@@ -610,7 +614,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             break;
         }
 
-        case Event::ACCURSED_BLACKSMITH: { // Ominous Forge
+        case Event::OMINOUS_FORGE: { // Ominous Forge
             if (gc->deck.getUpgradeableCount() > 0) {
                 os << "0: [Forge] Upgrade a card.\n";
             }
@@ -647,10 +651,11 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             break;
         }
 
-        case Event::BONFIRE_ELEMENTALS: { // Bonfire Spirits
-            os << "0: [Offer] Choose a card in your cards and offer it to the spirits.\n";
-            break;
-        }
+        // goes straight to card select screen
+//        case Event::BONFIRE_SPIRITS: { // Bonfire Spirits
+//            os << "0: [Offer] Choose a card in your cards and offer it to the spirits.\n";
+//            break;
+//        }
 
         case Event::COLOSSEUM: { // The Colosseum
             if (gc->info.eventData == 0) {

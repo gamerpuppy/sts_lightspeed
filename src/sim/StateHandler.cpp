@@ -323,7 +323,7 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             pushOptions(0, 4);
             break;
 
-        case Event::ACCURSED_BLACKSMITH:
+        case Event::OMINOUS_FORGE:
             if (gc.deck.getUpgradeableCount() > 0) {
                 pushOption(0);
             } else {
@@ -346,10 +346,6 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
 
         case Event::BIG_FISH:
             pushOptions(0, 3);
-
-        case Event::BONFIRE_ELEMENTALS:
-            pushOption(0);
-            break;
 
         case Event::COLOSSEUM:
             if (gc.info.eventData == 0) {

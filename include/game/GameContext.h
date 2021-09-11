@@ -51,6 +51,7 @@ namespace sts {
         DUPLICATE,
         OBTAIN,
         BOTTLE,
+        BONFIRE_SPIRITS,
     };
 
     enum class ScreenState {
@@ -239,6 +240,7 @@ namespace sts {
 
         [[nodiscard]] bool hasLessThanTwoCampfireRelics() const;
         [[nodiscard]] bool relicCanSpawn(RelicId relic, bool shopRoom) const;
+
         [[nodiscard]] bool canAddOneTimeEvent(Event shrine) const;
         [[nodiscard]] bool canAddEvent(Event event) const;
 

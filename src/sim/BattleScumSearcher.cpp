@@ -108,7 +108,8 @@ void ScumSearcherAgent::playout(GameContext &gc) {
     BattleContext bc;
     const auto seedStr = std::string(SeedHelper::getString(gc.seed));
 
-    while (gc.outcome == GameOutcome::UNDECIDED && gc.act == 1) {
+
+    while (gc.outcome == GameOutcome::UNDECIDED && gc.act < 3) {
         if (gc.screenState == ScreenState::BATTLE) {
             bc = BattleContext();
             bc.init(gc);
@@ -140,17 +141,17 @@ void ScumSearcherAgent::playoutBattle(BattleContext &bc) {
 
         const auto &bestInfo = searcher.bestInfos.at(0);
 
-//        if (print) {
-//            std::cout << choiceCount
-//                      << " choice: " << bestInfo.optionIdx
-//                      << " turn: " << bc.turn
-//                      << " energy: " << bc.player.energy
-//                      << " cardsPlayedThisTurn: " << bc.player.cardsPlayedThisTurn
-//                      << " state: " << (bc.inputState == InputState::PLAYER_NORMAL ? "normal" : " probably card select")
-//                      << std::endl;
-//
-//            std::cout << bc << '\n';
-//        }
+        if (print) {
+            std::cout << choiceCount
+                      << " choice: " << bestInfo.optionIdx
+                      << " turn: " << bc.turn
+                      << " energy: " << bc.player.energy
+                      << " cardsPlayedThisTurn: " << bc.player.cardsPlayedThisTurn
+                      << " state: " << (bc.inputState == InputState::PLAYER_NORMAL ? "normal" : " probably card select")
+                      << std::endl;
+
+            std::cout << bc << '\n';
+        }
 
 
         bestInfo.handler.chooseOption(bc, bestInfo.optionIdx);
@@ -183,7 +184,7 @@ void ScumSearcherAgent::pickGoodEventOutcome(GameContext &gc) {
 
                 case Event::NOTE_FOR_YOURSELF:
                 case Event::FOUNTAIN_OF_CLEANSING:
-                case Event::ACCURSED_BLACKSMITH:
+                case Event::OMINOUS_FORGE:
                 case Event::BIG_FISH:
                     gc.chooseEventOption(0);
                     break;

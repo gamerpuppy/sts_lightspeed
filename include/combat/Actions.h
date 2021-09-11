@@ -57,6 +57,9 @@ namespace sts {
 
         static Action AttackPlayer(int idx, int damage);
         static Action DamagePlayer(int damage, bool selfDamage=false);
+        
+        static Action VampireAttack(int damage); // only used by shelled parasite
+        
         static Action PlayerLoseHp(int hp, bool selfDamage=false);
         static Action HealPlayer(int amount);
 
@@ -112,7 +115,6 @@ namespace sts {
         static Action MadnessAction();
         static Action RandomizeHandCost();
         static Action UpgradeRandomCardAction(); // Warped Tongs Relic
-
 
         static Action CodexAction(); // Nilrys Codex onPlayerEndTurn
         static Action FiendFireAction(int targetIdx, int calculatedDamage); // Fiend Fire Car

@@ -65,7 +65,7 @@ namespace sts {
         bool turnHasEnded = false;
         bool skipMonsterTurn = false;
 
-        ActionQueue<25> actionQueue;
+        ActionQueue<40> actionQueue;
         CardQueue cardQueue;
 
         int potionCount = 0;

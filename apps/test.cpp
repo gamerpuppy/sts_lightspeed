@@ -343,7 +343,7 @@ void playRandom3(PlayRandomInfo *info) {
         RandomAgent agent( (std::default_random_engine(seed)) );
         agent.print = false;
 
-        GameContext gc(seed, CharacterClass::IRONCLAD, 0);
+        GameContext gc(seed, CharacterClass::IRONCLAD, 20);
         agent.playoutWithBattles(gc);
 
         if (gc.act == 2) {
@@ -363,13 +363,14 @@ void playRandom3(PlayRandomInfo *info) {
 
 void playRandom4(PlayRandomInfo *info) {
     for (std::uint64_t seed = info->startSeed + info->seedOffset; seed < info->endSeed; seed += info->seedIncrement) {
+        //        std::cout << seed << std::endl;
         ScumSearcherAgent agent((std::default_random_engine(seed)));
         agent.print = false;
 
         GameContext gc(seed, CharacterClass::IRONCLAD, 0);
         agent.playout(gc);
 
-        if (gc.act == 2) {
+        if (gc.act == 3) {
             ++info->winCount;
 //            std::cout << gc << std::endl;
 
@@ -377,10 +378,7 @@ void playRandom4(PlayRandomInfo *info) {
             ++info->lossCount;
         }
         info->floorSum += gc.floorNum;
-
-
     }
-
 //        ScumSearcherAgent agent( (std::default_random_engine(seed)) );
 //        agent.print = true;
 //

@@ -6,6 +6,7 @@
 #define STS_LIGHTSPEED_MAP_H
 
 #include <array>
+#include <string>
 
 #include "constants/Rooms.h"
 
