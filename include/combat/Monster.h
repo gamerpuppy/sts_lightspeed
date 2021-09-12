@@ -57,6 +57,7 @@ namespace sts {
         // champ phase2
         // bronze orb have used stasis
         // bronze automaton lastBoostWasFlail
+        // spiker thorn buff count
         int miscInfo = 0;
 
         // Lagavulin asleep
@@ -121,7 +122,8 @@ namespace sts {
 
         void heal(int amount);
         void addBlock(int amount);
-        void die(BattleContext &bc, bool triggerRelics=true);
+        void die(BattleContext &bc);
+        void suicideAction(BattleContext &bc);
 
         void attackedUnblockedHelper(BattleContext &bc, int damage);
         void attacked(BattleContext &bc, int damage);

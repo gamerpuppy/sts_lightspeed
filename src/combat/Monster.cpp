@@ -108,6 +108,10 @@ void Monster::applyEndOfRoundPowers(BattleContext &bc) {
         }
     }
 
+    if (hasStatus<MS::GENERIC_STRENGTH_UP>()) {
+        buff<MS::STRENGTH>(getStatus<MS::GENERIC_STRENGTH_UP>());
+    }
+
 }
 
 void Monster::construct(BattleContext &bc, MonsterId monsterId, int monsterIdx) {
@@ -191,7 +195,7 @@ void Monster::addBlock(int amount) {
     block += amount;
 }
 
-void Monster::die(BattleContext &bc, bool triggerRelics) {
+void Monster::die(BattleContext &bc) {
     //todo implement trigger relics
     --bc.monsters.monstersAlive;
     if (!hasStatus<MS::MINION>()) {
@@ -230,8 +234,14 @@ void Monster::die(BattleContext &bc, bool triggerRelics) {
     if (bc.player.hasRelic<RelicId::THE_SPECIMEN>()) {
         bc.addToBot( Actions::SetState(InputState::SELECT_ENEMY_THE_SPECIMEN_APPLY_POISON) );
     }
+}
 
-    // todo exhaust cards in limbo
+void Monster::suicideAction(BattleContext &bc) {
+    --bc.monsters.monstersAlive;
+    curHp = 0;
+    if (bc.monsters.monstersAlive == 0) {
+        bc.outcome = Outcome::PLAYER_VICTORY;
+    }
 }
 
 void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, is this supposed to be only damage > 0 ????

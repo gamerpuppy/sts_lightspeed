@@ -866,9 +866,7 @@ Action Actions::IncreaseOrbSlots(int count) {
 Action Actions::SuicideAction(int monsterIdx, bool triggerRelics) {
     return {[=] (BattleContext &bc) {
         // game sets gold of monster to zero here but this isn't ever done on looter / mugger
-        bc.monsters.arr[monsterIdx].curHp = 0;
-        bc.monsters.arr[monsterIdx].die(bc, triggerRelics);
-        bc.checkCombat(); // todo is this here
+        bc.monsters.arr[monsterIdx].suicideAction(bc);
     }};
 }
 

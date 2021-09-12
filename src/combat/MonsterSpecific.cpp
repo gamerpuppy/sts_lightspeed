@@ -348,18 +348,18 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
 
         case MMID::BEAR_BEAR_HUG:
             bc.player.debuff<PS::DEXTERITY>(asc17 ? -4 : -2);
-            setMove(MonsterMoveId::BEAR_LUNGE);
+            setMove(MMID::BEAR_LUNGE);
             break;
 
         case MMID::BEAR_LUNGE:
             attackPlayerHelper(bc, asc2 ? 10 : 9);
             bc.addToBot( Actions::MonsterGainBlock(idx, 9) );
-            setMove(MonsterMoveId::BEAR_MAUL);
+            setMove(MMID::BEAR_MAUL);
             break;
 
         case MMID::BEAR_MAUL:
             attackPlayerHelper(bc, asc2 ? 20 : 18);
-            setMove(MonsterMoveId::BEAR_LUNGE);
+            setMove(MMID::BEAR_LUNGE);
             break;
 
         case MMID::POINTY_ATTACK:
@@ -369,16 +369,16 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
         case MMID::ROMEO_AGONIZING_SLASH:
             attackPlayerHelper(bc, asc2 ? 12 : 10);
             bc.addToBot( Actions::DebuffPlayer<PS::WEAK>(asc17 ? 3 : 2, true) );
-            setMove(MonsterMoveId::ROMEO_CROSS_SLASH);
+            setMove(MMID::ROMEO_CROSS_SLASH);
             break;
 
         case MMID::ROMEO_CROSS_SLASH:
             attackPlayerHelper(bc, asc2 ? 17 : 15);
-            setMove(MonsterMoveId::ROMEO_AGONIZING_SLASH);
+            setMove(MMID::ROMEO_AGONIZING_SLASH);
             break;
 
         case MMID::ROMEO_MOCK: // 2
-            setMove(MonsterMoveId::ROMEO_AGONIZING_SLASH);
+            setMove(MMID::ROMEO_AGONIZING_SLASH);
             break;
 
         // ************ BLUE SLAVER ************
@@ -417,10 +417,10 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             addBlock(asc4 ? 12 : 9);
             auto &lastBoostWasFlail = miscInfo;
             if (lastBoostWasFlail) {
-                setMove(MonsterMoveId::BRONZE_AUTOMATON_HYPER_BEAM);
+                setMove(MMID::BRONZE_AUTOMATON_HYPER_BEAM);
                 lastBoostWasFlail = false;
             } else {
-                setMove(MonsterMoveId::BRONZE_AUTOMATON_FLAIL);
+                setMove(MMID::BRONZE_AUTOMATON_FLAIL);
                 lastBoostWasFlail = true;
             }
             bc.noOpRollMove();
@@ -429,16 +429,16 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
 
         case MMID::BRONZE_AUTOMATON_FLAIL: // 1
             attackPlayerHelper(bc, asc4 ? 8 : 7, 2);
-            setMove(MonsterMoveId::BRONZE_AUTOMATON_BOOST);
+            setMove(MMID::BRONZE_AUTOMATON_BOOST);
             bc.noOpRollMove();
             break;
 
         case MMID::BRONZE_AUTOMATON_HYPER_BEAM: // 2
             attackPlayerHelper(bc, asc4 ? 50 : 45);
             if (asc19) {
-                setMove(MonsterMoveId::BRONZE_AUTOMATON_BOOST);
+                setMove(MMID::BRONZE_AUTOMATON_BOOST);
             } else {
-                setMove(MonsterMoveId::BRONZE_AUTOMATON_STUNNED);
+                setMove(MMID::BRONZE_AUTOMATON_STUNNED);
             }
             bc.noOpRollMove();
             break;
@@ -450,7 +450,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             break;
 
         case MMID::BRONZE_AUTOMATON_STUNNED: // 3
-            setMove(MonsterMoveId::BRONZE_AUTOMATON_FLAIL);
+            setMove(MMID::BRONZE_AUTOMATON_FLAIL);
             bc.noOpRollMove();
             break;
 
@@ -947,6 +947,19 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             break;
         }
 
+        case MMID::ORB_WALKER_CLAW: // 2
+            attackPlayerHelper(bc, asc2 ? 16 : 15);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::ORB_WALKER_LASER: { // 1
+            attackPlayerHelper(bc, asc2 ? 11 : 10);
+            bc.addToBot( Actions::ShuffleTempCardIntoDrawPile(CardId::BURN, 1) );
+            bc.addToBot( Actions::MakeTempCardInDiscard({CardId::BURN}) );
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+        }
+
         // ************ RED LOUSE ************
 
         case MMID::RED_LOUSE_BITE:
@@ -1006,7 +1019,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             break;
 
         case MMID::SHELLED_PARASITE_STUNNED: // 4
-            setMove(MonsterMoveId::SHELLED_PARASITE_FELL);
+            setMove(MMID::SHELLED_PARASITE_FELL);
             rollMove(bc);
             break;
 
@@ -1314,6 +1327,106 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             attackPlayerHelper(bc, 7);
             break;
 
+
+
+        // ************ SHAPES ************
+
+        case MMID::EXPLODER_EXPLODE:
+            bc.addToBot( Actions::DamagePlayer(30) );
+            bc.addToBot( Actions::SuicideAction(idx, false) );
+            die(bc);
+            bc.noOpRollMove();
+            break;
+
+        case MMID::EXPLODER_SLAM: // 1
+            attackPlayerHelper(bc, asc2 ? 9 : 7);
+            if (lastTwoMoves(MMID::EXPLODER_SLAM)) {
+                setMove(MMID::EXPLODER_EXPLODE);
+            }
+            bc.noOpRollMove();
+            break;
+
+        case MMID::REPULSOR_BASH: // 2
+            attackPlayerHelper(bc, asc2 ? 13 : 11);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::REPULSOR_REPULSE: // 1
+            Actions::ShuffleTempCardIntoDrawPile(CardId::DAZED, 2).actFunc(bc);
+            rollMove(bc);
+            break;
+
+        case MMID::SPIKER_CUT: // 1
+            attackPlayerHelper(bc, asc2 ? 9 : 7);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::SPIKER_SPIKE: // 2
+            ++miscInfo; // used thorns count
+            buff<MS::THORNS>(2);
+            rollMove(bc);
+            break;
+
+
+        // ************ THE MAW ************
+
+        case MMID::THE_MAW_DROOL: // 4
+            buff<MS::STRENGTH>(asc17 ? 5 : 3);
+            rollMove(bc);
+            break;
+
+        case MMID::THE_MAW_NOM: { // 5
+            const auto t = (bc.getMonsterTurnNumber() + 1) / 2;
+            attackPlayerHelper(bc, 5, t);
+            setMove(MMID::THE_MAW_DROOL);
+            bc.noOpRollMove();
+            break;
+        }
+
+        case MMID::THE_MAW_ROAR: { // 2
+            bc.player.debuff<PS::WEAK>(asc17 ? 5 : 3, true);
+            bc.player.debuff<PS::FRAIL>(asc17 ? 5 : 3, true);
+            rollMove(bc);
+            break;
+        }
+
+        case MMID::THE_MAW_SLAM: // 3
+            attackPlayerHelper(bc, asc17 ? 30 : 25);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        // ************ DARKLING ************
+
+        case MMID::DARKLING_CHOMP:
+            attackPlayerHelper(bc, asc2 ? 9 : 8);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::DARKLING_HARDEN:
+            addBlock(12);
+            if (asc17) {
+                buff<MS::STRENGTH>(2);
+            }
+            rollMove(bc);
+            break;
+
+        case MMID::DARKLING_NIP: {
+            const auto damage = miscInfo + (asc2 ? 2 : 0); // todo maybe make d part of the miscInfo at prebattle
+            attackPlayerHelper(bc, damage);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+        }
+
+        case MMID::DARKLING_REGROW:
+            // do nothing
+            rollMove(bc);
+            break;
+
+        case MMID::DARKLING_REINCARNATE:
+            // revive with 50% hp
+            break;
+
+
         case MMID::INVALID:
 #ifdef sts_asserts
         {
@@ -1507,7 +1620,7 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
         }
 
         case MonsterId::BRONZE_AUTOMATON: {
-            setMove(MonsterMoveId::BRONZE_AUTOMATON_SPAWN_ORBS);
+            setMove(MMID::BRONZE_AUTOMATON_SPAWN_ORBS);
             break;
         }
 
@@ -1517,16 +1630,16 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 3 stasis
             const auto haveUsedStasis = miscInfo;
             if (!haveUsedStasis && roll >= 25) {
-                setMove(MonsterMoveId::BRONZE_ORB_STASIS);
+                setMove(MMID::BRONZE_ORB_STASIS);
 
-            } else if (roll >= 70 && !lastTwoMoves(MonsterMoveId::BRONZE_ORB_SUPPORT_BEAM)) {
-                setMove(MonsterMoveId::BRONZE_ORB_SUPPORT_BEAM);
+            } else if (roll >= 70 && !lastTwoMoves(MMID::BRONZE_ORB_SUPPORT_BEAM)) {
+                setMove(MMID::BRONZE_ORB_SUPPORT_BEAM);
 
-            } else if (!lastTwoMoves(MonsterMoveId::BRONZE_ORB_BEAM)) {
-                setMove(MonsterMoveId::BRONZE_ORB_BEAM);
+            } else if (!lastTwoMoves(MMID::BRONZE_ORB_BEAM)) {
+                setMove(MMID::BRONZE_ORB_BEAM);
 
             } else {
-                setMove(MonsterMoveId::BRONZE_ORB_SUPPORT_BEAM);
+                setMove(MMID::BRONZE_ORB_SUPPORT_BEAM);
             }
             break;
         }
@@ -1659,7 +1772,6 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 5 poke
 
             if (asc17) {
-
                 if (firstTurn()) {
                     setMove(MMID::CHOSEN_HEX);
 
@@ -1672,13 +1784,15 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 
                 } else if (roll < 40) {
                     setMove(MMID::CHOSEN_ZAP);
+
                 } else {
                     setMove(MMID::CHOSEN_POKE);
-                }
 
+                }
                 break;
             }
 
+            // Ascension < 17
             if (firstTurn()) {
                 setMove(MMID::CHOSEN_POKE);
 
@@ -1958,6 +2072,21 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             setMove(MMID::MUGGER_MUG);
             break;
 
+        case MonsterId::ORB_WALKER: {
+            if (roll < 40) {
+                if (!lastTwoMoves(MMID::ORB_WALKER_CLAW)) {
+                    setMove(MMID::ORB_WALKER_CLAW);
+                } else {
+                    setMove(MMID::ORB_WALKER_LASER);
+                }
+            } else if (!lastTwoMoves(MMID::ORB_WALKER_LASER)) {
+                setMove(MMID::ORB_WALKER_LASER);
+            } else {
+                setMove(MMID::ORB_WALKER_CLAW);
+            }
+            break;
+        }
+
         case MonsterId::RED_LOUSE: {
             if (roll < 25) {
                 if (lastMove(MMID::RED_LOUSE_GROW) && (asc17 || lastTwoMoves(MMID::RED_LOUSE_GROW))) {
@@ -2022,10 +2151,10 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
                 }
 
             } else if (!lastTwoMoves(MMID::SHELLED_PARASITE_SUCK)) {
-                setMove(MonsterMoveId::SHELLED_PARASITE_SUCK);
+                setMove(MMID::SHELLED_PARASITE_SUCK);
 
             } else {
-                setMove(MonsterMoveId::SHELLED_PARASITE_DOUBLE_STRIKE);
+                setMove(MMID::SHELLED_PARASITE_DOUBLE_STRIKE);
             }
             break;
         }
@@ -2174,7 +2303,7 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
         }
 
         case MonsterId::TASKMASTER: {
-            setMove(MonsterMoveId::TASKMASTER_SCOURING_WHIP);
+            setMove(MMID::TASKMASTER_SCOURING_WHIP);
             break;
         }
 
@@ -2283,21 +2412,70 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
         // RED MASK BOIS
 
         case MonsterId::BEAR: {
-            setMove(MonsterMoveId::BEAR_BEAR_HUG);
+            setMove(MMID::BEAR_BEAR_HUG);
             break;
         }
 
         case MonsterId::ROMEO: {
-            setMove(MonsterMoveId::ROMEO_MOCK);
+            setMove(MMID::ROMEO_MOCK);
             break;
         }
 
         case MonsterId::POINTY: {
-            setMove(MonsterMoveId::POINTY_ATTACK);
+            setMove(MMID::POINTY_ATTACK);
             break;
         }
 
+        // SHAPES
 
+        case MonsterId::EXPLODER: {
+            // first turn only
+            setMove(MMID::EXPLODER_SLAM);
+            break;
+        }
+
+        case MonsterId::REPULSOR: {
+            if (roll < 20 && !lastMove(MMID::REPULSOR_BASH)) {
+                setMove(MMID::REPULSOR_BASH);
+            } else {
+                setMove(MMID::REPULSOR_REPULSE);
+            }
+            break;
+        }
+
+        case MonsterId::SPIKER: {
+            // times used thorns > 5
+            if (miscInfo > 5 || roll < 50 && !lastMove(MMID::SPIKER_CUT)) {
+                setMove(MMID::SPIKER_SPIKE);
+            } else {
+                setMove(MMID::SPIKER_CUT);
+            }
+            break;
+        }
+
+        case MonsterId::THE_MAW: {
+            if (firstTurn()) {
+                setMove(MonsterMoveId::THE_MAW_ROAR);
+
+            } else if (roll < 50 && !lastMove(MonsterMoveId::THE_MAW_NOM)) {
+                setMove(MonsterMoveId::THE_MAW_NOM);
+
+            } else if (!lastMove(MonsterMoveId::THE_MAW_SLAM)) {
+                // dont include not last move nom condition, because it can't be, we handle in the move logic
+                setMove(MonsterMoveId::THE_MAW_SLAM);
+
+            } else {
+                setMove(MonsterMoveId::THE_MAW_DROOL);
+            }
+            break;
+        }
+
+        case MonsterId::DARKLING: {
+
+
+
+            break;
+        }
 
         // just setting in collector spawn move
 //        case MonsterId::TORCH_HEAD: {
