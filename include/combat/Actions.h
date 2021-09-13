@@ -115,8 +115,10 @@ namespace sts {
         static Action RandomizeHandCost();
         static Action UpgradeRandomCardAction(); // Warped Tongs Relic
 
+
         static Action CodexAction(); // Nilrys Codex onPlayerEndTurn
-        static Action FiendFireAction(int targetIdx, int calculatedDamage); // Fiend Fire Car
+        static Action ToolboxAction();
+        static Action FiendFireAction(int targetIdx, int calculatedDamage); // Fiend Fire Card
         static Action SwordBoomerangAction(); // Sword Boomerang
 
         static Action PutRandomCardsInDrawPile(CardType type, int count); // used by chrysalis and metamorphosis

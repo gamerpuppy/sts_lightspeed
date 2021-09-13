@@ -368,8 +368,7 @@ void BattleContext::initRelics(const GameContext &gc) {
                 break;
 
             case R::TOOLBOX:
-                // todo
-//                addToBot( Actions::SetState(InputState::CHOOSE_TOOLBOX_COLORLESS_CARD) );
+                addToBot( Actions::ToolboxAction() );
                 break;
 
             default:

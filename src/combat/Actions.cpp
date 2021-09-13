@@ -919,6 +919,16 @@ Action Actions::CodexAction() {
     }};
 }
 
+Action Actions::ToolboxAction() {
+    return {[] (BattleContext &bc) {
+        bc.inputState = InputState::CARD_SELECT;
+        bc.cardSelectInfo.cardSelectTask = CardSelectTask::DISCOVERY;
+        bc.cardSelectInfo.discovery_CopyCount() = 1;
+        bc.cardSelectInfo.discovery_Cards() =
+                generateDiscoveryCards(bc.cardRandomRng, bc.player.cc, CardType::STATUS); // status is mapped to colorless
+    }};
+}
+
 Action Actions::DualityAction() {
     return {[](BattleContext &bc) {
         bc.player.buff<PS::DEXTERITY>(1);
