@@ -28,7 +28,6 @@ namespace sts {
     struct Actions {
         static Action SetState(InputState state);
 
-
         // implemented in BattleContext.h because of template
         template <PlayerStatus s> static Action BuffPlayer(int amount=1);
         template <PlayerStatus s> static Action DebuffPlayer(int amount=1, bool isSourceMonster=true);
@@ -36,7 +35,7 @@ namespace sts {
         template <PlayerStatus s> static Action DecrementStatus(int amount=1);
         template <PlayerStatus s> static Action RemoveStatus();
 
-        template <MonsterStatus> static Action BuffEnemy(int idx, int amount);
+        template <MonsterStatus> static Action BuffEnemy(int idx, int amount=1);
         template <MonsterStatus> static Action DebuffEnemy(int idx, int amount, bool isSourceMonster=true);
         template <MonsterStatus> static Action DebuffAllEnemy(int amount, bool isSourceMonster=true);
 

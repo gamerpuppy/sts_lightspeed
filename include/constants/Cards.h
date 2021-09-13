@@ -775,6 +775,7 @@ namespace sts {
             case CardId::SHOCKWAVE:
             case CardId::THE_BOMB:
             case CardId::UPPERCUT:
+            case CardId::SEARING_BLOW:
                 return 2;
 
             case CardId::BARRICADE:

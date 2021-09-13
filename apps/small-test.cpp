@@ -3,6 +3,8 @@
 //
 
 #include "game/SaveFile.h"
+#include "game/GameContext.h"
+#include "game/Game.h"
 #include "constants/Cards.h"
 
 #include <vector>
@@ -39,10 +41,25 @@ void printCardIdOrder() {
     std::cout << "};\n";
 }
 
+//
+//void findShovelSeed() {
+//    for (std::uint64_t seed = 0; seed < 100000; ++seed) {
+//        GameContext g(seed, CharacterClass::IRONCLAD, 20);
+//        if (g.info.neowRewards[2].r == sts::Neow::Bonus::ONE_RARE_RELIC) {
+//            g.chooseNeowOption(g.info.neowRewards[2]);
+//            if (g.hasRelic(sts::RelicId::SHOVEL)) {
+//                std::cout << SeedHelper::getString(seed) << "\n";
+//            }
+//        }
+//
+//
+//    }
+//}
 
 
 int main(int argc, const char *argv[]) {
     printCardIdOrder();
+//    findShovelSeed();
 //    std::cout << sts::Base64::encode(argv[1]);
 
     return 0;

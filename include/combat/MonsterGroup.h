@@ -22,6 +22,7 @@ namespace sts {
         std::array<Monster, 5> arr;
 
         std::bitset<5> extraRollMoveOnTurn;
+        std::bitset<5> skipTurn;
 
         [[nodiscard]] bool areMonstersBasicallyDead() const;
         [[nodiscard]] int getAliveCount() const;

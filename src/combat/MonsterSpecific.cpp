@@ -30,7 +30,7 @@ void Monster::initHp(Random &hpRng, int ascension) {
             break;
 
         case MonsterId::ORB_WALKER:
-            setRandomHp(hpRng, ascension >= 7); // first call is discarded by game
+            hpRng.random(90, 96);// first call is discarded by game
             setRandomHp(hpRng, ascension >= 7);
             break;
 
@@ -95,10 +95,17 @@ void Monster::initHp(Random &hpRng, int ascension) {
         case MonsterId::GREMLIN_NOB:
         case MonsterId::LAGAVULIN:
         case MonsterId::NEMESIS:
-        case MonsterId::REPTOMANCER:
         case MonsterId::SENTRY:
         case MonsterId::SPIRE_SHIELD:
         case MonsterId::SPIRE_SPEAR:
+            setRandomHp(hpRng, ascension >= 8);
+            break;
+
+
+
+
+        case MonsterId::REPTOMANCER:
+            hpRng.random(180, 190);
             setRandomHp(hpRng, ascension >= 8);
             break;
 
@@ -108,7 +115,7 @@ void Monster::initHp(Random &hpRng, int ascension) {
             break;
 
 
-        case MonsterId::TASKMASTER: // bug in game
+        case MonsterId::TASKMASTER:
             hpRng.random(54, 60);
             setRandomHp(hpRng, ascension >= 8);
             break;
@@ -136,6 +143,7 @@ void Monster::preBattleAction(BattleContext &bc) {
 
     switch (id) {
         case MonsterId::DARKLING:       // game adds regrow power
+            buff<MS::REGROW>();
             break;
 
         case MonsterId::MAD_GREMLIN:
@@ -146,7 +154,11 @@ void Monster::preBattleAction(BattleContext &bc) {
         case MonsterId::GIANT_HEAD:     // game adds slow power
         case MonsterId::REPTOMANCER:    // game adds MinionPower to all daggers
         case MonsterId::GREMLIN_LEADER: // game adds MinionPower to all gremlins
+            break;
+
         case MonsterId::TRANSIENT:      // game adds ShiftingPower
+            buff<MS::SHIFTING>();
+            buff<MS::FADING>(asc17 ? 6 : 5);
             break;
 
         case MonsterId::BOOK_OF_STABBING:    // game adds PainfulStabsPower
@@ -1333,15 +1345,16 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
 
         case MMID::EXPLODER_EXPLODE:
             bc.addToBot( Actions::DamagePlayer(30) );
-            bc.addToBot( Actions::SuicideAction(idx, false) );
-            die(bc);
+            bc.addToBot( Actions::SuicideAction(idx, true) );
             bc.noOpRollMove();
             break;
 
         case MMID::EXPLODER_SLAM: // 1
-            attackPlayerHelper(bc, asc2 ? 9 : 7);
+            attackPlayerHelper(bc, asc2 ? 11 : 9);
             if (lastTwoMoves(MMID::EXPLODER_SLAM)) {
                 setMove(MMID::EXPLODER_EXPLODE);
+            } else {
+                setMove(MonsterMoveId::EXPLODER_SLAM);
             }
             bc.noOpRollMove();
             break;
@@ -1424,8 +1437,153 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
 
         case MMID::DARKLING_REINCARNATE:
             // revive with 50% hp
+            // todo does it heep its buffs and debuffs?
+            curHp = maxHp / 2;
+            halfDead = false;
+            ++bc.monsters.monstersAlive;
+
+            buff<MS::REGROW>();
+            if (bc.player.hasRelic<R::PHILOSOPHERS_STONE>()) {
+                buff<MS::STRENGTH>(1);
+            }
+
+            rollMove(bc);
             break;
 
+        // ************ SPIRE GROWTH ************
+
+        case MMID::SPIRE_GROWTH_QUICK_TACKLE: // 1
+            attackPlayerHelper(bc, asc2 ? 18 : 16);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::SPIRE_GROWTH_SMASH: // 3
+            attackPlayerHelper(bc, asc2 ? 25 : 22);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::SPIRE_GROWTH_CONSTRICT: // 2
+            bc.player.debuff<PS::CONSTRICTED>(asc17 ? 12 : 10);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        // ************ TRANSIENT ************
+
+        case MMID::TRANSIENT_ATTACK: {
+            const auto damage = (asc2 ? 40 : 30) + 10*(bc.getMonsterTurnNumber()-1);
+            attackPlayerHelper(bc, damage);
+            if (getStatus<MS::FADING>() == 1) {
+                bc.addToBot( Actions::SuicideAction(idx, false) );
+            }
+            bc.noOpRollMove();
+            break;
+        }
+
+        // ************ WRITHING MASS ************
+
+        case MMID::WRITHING_MASS_FLAIL: // 2
+            attackPlayerHelper(bc, asc2 ? 16 : 15);
+            bc.addToBot( Actions::MonsterGainBlock(idx, asc2 ? 18 : 16) );
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::WRITHING_MASS_IMPLANT: // 4
+            miscInfo = true;
+            if (!bc.player.hasRelic<R::OMAMORI>()) {
+                if (bc.player.hasRelic<R::DARKSTONE_PERIAPT>()) {
+                    bc.player.increaseMaxHp(6);
+                }
+            }
+            rollMove(bc);
+            break;
+
+        case MMID::WRITHING_MASS_MULTI_STRIKE: // 1
+            attackPlayerHelper(bc, asc2 ? 9 : 7);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::WRITHING_MASS_STRONG_STRIKE: // 0
+            attackPlayerHelper(bc, asc2 ? 16 : 15);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::WRITHING_MASS_WITHER: // 3
+            attackPlayerHelper(bc, asc2 ? 12 : 10);
+            bc.addToBot( Actions::DebuffPlayer<PS::WEAK>(2, true) );
+            bc.addToBot( Actions::DebuffPlayer<PS::VULNERABLE>(2, true) );
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::GIANT_HEAD_COUNT: // 3
+            attackPlayerHelper(bc, 13);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::GIANT_HEAD_GLARE: // 1
+            bc.player.debuff<PS::WEAK>(1, true);
+            rollMove(bc);
+            break;
+
+        case MMID::GIANT_HEAD_IT_IS_TIME: { // 2
+            const auto t = std::min(bc.getMonsterTurnNumber()-5, 6) * 5;
+            const auto damage = (asc3 ? 40 : 30) + t;
+            attackPlayerHelper(bc, damage); // todo this can be done immediately
+            bc.noOpRollMove();
+            break;
+        }
+
+        case MMID::NEMESIS_ATTACK:
+            attackPlayerHelper(bc, asc3 ? 7 : 6, 3);
+            bc.addToBot( Actions::RollMove(idx) );
+            if (!hasStatus<MS::INTANGIBLE>()) {
+                bc.addToBot( Actions::BuffEnemy<MS::INTANGIBLE>(idx, 2) );
+            }
+            break;
+
+        case MMID::NEMESIS_DEBUFF:
+            Actions::MakeTempCardInDiscard({CardId::BURN}, asc3 ? 5 : 3).actFunc(bc);
+            rollMove(bc);
+            if (!hasStatus<MS::INTANGIBLE>()) {
+                buff<MS::INTANGIBLE>(2);
+            }
+            break;
+
+        case MMID::NEMESIS_SCYTHE:
+            attackPlayerHelper(bc, 45);
+            bc.addToBot( Actions::RollMove(idx) );
+            if (!hasStatus<MS::INTANGIBLE>()) {
+                bc.addToBot( Actions::BuffEnemy<MS::INTANGIBLE>(idx, 2) );
+            }
+            break;
+
+        case MMID::REPTOMANCER_BIG_BITE: // 3
+            attackPlayerHelper(bc, asc3 ? 34 : 30);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::REPTOMANCER_SNAKE_STRIKE: // 1
+            attackPlayerHelper(bc, asc3 ? 16 : 13, 2);
+            bc.addToBot( Actions::DebuffPlayer<PS::WEAK>(1, true) );
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::REPTOMANCER_SUMMON: // 2
+            reptomancerSummon(bc);
+            rollMove(bc);
+            break;
+
+        case MMID::DAGGER_STAB:
+            attackPlayerHelper(bc, 9);
+            bc.addToBot( Actions::MakeTempCardInDiscard(CardId::WOUND) );
+            setMove(MMID::DAGGER_EXPLODE);
+            bc.noOpRollMove();
+            break;
+
+        case MMID::DAGGER_EXPLODE:
+            attackPlayerHelper(bc, 25);
+            bc.addToBot( Actions::SuicideAction(idx, true) );
+            bc.noOpRollMove();
+            break;
 
         case MMID::INVALID:
 #ifdef sts_asserts
@@ -1444,7 +1602,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
     }
 }
 
-void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
+MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll) const {
     const bool asc17 = bc.ascension >= 17;
     const bool asc18 = bc.ascension >= 18;
     const bool asc19 = bc.ascension >= 19;
@@ -1453,11 +1611,14 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 
         case MonsterId::ACID_SLIME_S: {
             if (asc17) {
-                setMove(MMID::ACID_SLIME_S_LICK);
+                return (MMID::ACID_SLIME_S_LICK);
+
             } else if (bc.aiRng.randomBoolean()) {
-                setMove(MMID::ACID_SLIME_S_TACKLE);
+                return (MMID::ACID_SLIME_S_TACKLE);
+
             } else {
-                setMove(MMID::ACID_SLIME_S_LICK);
+                return (MMID::ACID_SLIME_S_LICK);
+
             }
             break;
         }
@@ -1471,66 +1632,66 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
                 if (roll < 40) {
                     if (lastTwoMoves(MMID::ACID_SLIME_M_CORROSIVE_SPIT)) {
                         if (bc.aiRng.randomBoolean()) {
-                            setMove(MMID::ACID_SLIME_M_TACKLE);
+                            return (MMID::ACID_SLIME_M_TACKLE);
                         } else {
-                            setMove(MMID::ACID_SLIME_M_LICK);
+                            return (MMID::ACID_SLIME_M_LICK);
                         }
                     } else {
-                        setMove(MMID::ACID_SLIME_M_CORROSIVE_SPIT);
+                        return (MMID::ACID_SLIME_M_CORROSIVE_SPIT);
                     }
 
                 } else if (roll < 80) {
                     if (lastTwoMoves(MMID::ACID_SLIME_M_TACKLE)) {
                         if (bc.aiRng.randomBoolean(0.5f)) {
-                            setMove(MMID::ACID_SLIME_M_CORROSIVE_SPIT);
+                            return (MMID::ACID_SLIME_M_CORROSIVE_SPIT);
                         } else {
-                            setMove(MMID::ACID_SLIME_M_LICK);
+                            return (MMID::ACID_SLIME_M_LICK);
                         }
                     } else {
-                        setMove(MMID::ACID_SLIME_M_TACKLE);
+                        return (MMID::ACID_SLIME_M_TACKLE);
                     }
 
                 } else if (lastMove(MMID::ACID_SLIME_M_LICK)) {
                     if (bc.aiRng.randomBoolean(0.4F)) {
-                        setMove(MMID::ACID_SLIME_M_CORROSIVE_SPIT);
+                        return (MMID::ACID_SLIME_M_CORROSIVE_SPIT);
                     } else {
-                        setMove(MMID::ACID_SLIME_M_TACKLE);
+                        return (MMID::ACID_SLIME_M_TACKLE);
                     }
                 } else {
-                    setMove(MMID::ACID_SLIME_M_LICK);
+                    return (MMID::ACID_SLIME_M_LICK);
                 }
                 // END ASCENSION 17
 
             } else if (roll < 30) {
                 if (lastTwoMoves(MMID::ACID_SLIME_M_CORROSIVE_SPIT)) {
                     if (bc.aiRng.randomBoolean()) {
-                        setMove(MMID::ACID_SLIME_M_TACKLE);
+                        return (MMID::ACID_SLIME_M_TACKLE);
                     } else {
-                        setMove(MMID::ACID_SLIME_M_LICK);
+                        return (MMID::ACID_SLIME_M_LICK);
                     }
                 } else {
-                    setMove(MMID::ACID_SLIME_M_CORROSIVE_SPIT);
+                    return (MMID::ACID_SLIME_M_CORROSIVE_SPIT);
                 }
 
             } else if (roll < 70) {
                 if (lastMove(MMID::ACID_SLIME_M_TACKLE)) {
                     if (bc.aiRng.randomBoolean(0.4f)) {
-                        setMove(MMID::ACID_SLIME_M_CORROSIVE_SPIT);
+                        return (MMID::ACID_SLIME_M_CORROSIVE_SPIT);
                     } else {
-                        setMove(MMID::ACID_SLIME_M_LICK);
+                        return (MMID::ACID_SLIME_M_LICK);
                     }
                 } else {
-                    setMove(MMID::ACID_SLIME_M_TACKLE);
+                    return (MMID::ACID_SLIME_M_TACKLE);
                 }
 
             } else if (lastTwoMoves(MMID::ACID_SLIME_M_LICK)) {
                 if (bc.aiRng.randomBoolean(0.4F)) {
-                    setMove(MMID::ACID_SLIME_M_CORROSIVE_SPIT);
+                    return (MMID::ACID_SLIME_M_CORROSIVE_SPIT);
                 } else {
-                    setMove(MMID::ACID_SLIME_M_TACKLE);
+                    return (MMID::ACID_SLIME_M_TACKLE);
                 }
             } else {
-                setMove(MMID::ACID_SLIME_M_LICK);
+                return (MMID::ACID_SLIME_M_LICK);
             }
             break;
         }
@@ -1545,82 +1706,82 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
                 if (roll < 40) {
                     if (lastTwoMoves(MMID::ACID_SLIME_M_CORROSIVE_SPIT)) {
                         if (bc.aiRng.randomBoolean(0.6F)) {
-                            setMove(MMID::ACID_SLIME_L_TACKLE);
+                            return (MMID::ACID_SLIME_L_TACKLE);
                         } else {
-                            setMove(MMID::ACID_SLIME_L_LICK);
+                            return (MMID::ACID_SLIME_L_LICK);
                         }
                     } else {
-                        setMove(MMID::ACID_SLIME_L_CORROSIVE_SPIT);
+                        return (MMID::ACID_SLIME_L_CORROSIVE_SPIT);
                     }
 
                 } else if (roll < 70) {
                     if (lastTwoMoves(MMID::ACID_SLIME_L_TACKLE)) {
                         if (bc.aiRng.randomBoolean(0.6F)) {
-                            setMove(MMID::ACID_SLIME_L_CORROSIVE_SPIT);
+                            return (MMID::ACID_SLIME_L_CORROSIVE_SPIT);
                         } else {
-                            setMove(MMID::ACID_SLIME_L_LICK);
+                            return (MMID::ACID_SLIME_L_LICK);
                         }
                     } else {
-                        setMove(MMID::ACID_SLIME_L_TACKLE);
+                        return (MMID::ACID_SLIME_L_TACKLE);
                     }
                 } else if (lastMove(MMID::ACID_SLIME_L_LICK)) {
                     if (bc.aiRng.randomBoolean(0.4F)) {
-                        setMove(MMID::ACID_SLIME_L_CORROSIVE_SPIT);
+                        return (MMID::ACID_SLIME_L_CORROSIVE_SPIT);
                     } else {
-                        setMove(MMID::ACID_SLIME_L_TACKLE);
+                        return (MMID::ACID_SLIME_L_TACKLE);
                     }
                 } else {
-                    setMove(MMID::ACID_SLIME_L_LICK);
+                    return (MMID::ACID_SLIME_L_LICK);
                 }
 
             } else if (roll < 30) {
                 if (lastTwoMoves(MMID::ACID_SLIME_L_CORROSIVE_SPIT)) {
                     if (bc.aiRng.randomBoolean()) {
-                        setMove(MMID::ACID_SLIME_L_TACKLE);
+                        return (MMID::ACID_SLIME_L_TACKLE);
                     } else {
-                        setMove(MMID::ACID_SLIME_L_LICK);
+                        return (MMID::ACID_SLIME_L_LICK);
                     }
                 } else {
-                    setMove(MMID::ACID_SLIME_L_CORROSIVE_SPIT);
+                    return (MMID::ACID_SLIME_L_CORROSIVE_SPIT);
                 }
             } else if (roll < 70) {
                 if (lastMove(MMID::ACID_SLIME_L_TACKLE)) {
                     if (bc.aiRng.randomBoolean(0.4F)) {
-                        setMove(MMID::ACID_SLIME_L_CORROSIVE_SPIT);
+                        return (MMID::ACID_SLIME_L_CORROSIVE_SPIT);
                     } else {
-                        setMove(MMID::ACID_SLIME_L_LICK);
+                        return (MMID::ACID_SLIME_L_LICK);
                     }
                 } else {
-                    setMove(MMID::ACID_SLIME_L_TACKLE);
+                    return (MMID::ACID_SLIME_L_TACKLE);
                 }
             } else if (lastTwoMoves(MMID::ACID_SLIME_L_LICK)) {
                 if (bc.aiRng.randomBoolean(0.4F)) {
-                    setMove(MMID::ACID_SLIME_L_CORROSIVE_SPIT);
+                    return (MMID::ACID_SLIME_L_CORROSIVE_SPIT);
                 } else {
-                    setMove(MMID::ACID_SLIME_L_TACKLE);
+                    return (MMID::ACID_SLIME_L_TACKLE);
                 }
             } else {
-                setMove(MMID::ACID_SLIME_L_LICK);
+                return (MMID::ACID_SLIME_L_LICK);
             }
             break;
         }
 
         case MonsterId::BLUE_SLAVER: {
             if (roll >= 40 && !lastTwoMoves(MMID::BLUE_SLAVER_STAB)) {
-                setMove(MMID::BLUE_SLAVER_STAB);
+                return (MMID::BLUE_SLAVER_STAB);
 
             } else if ( !lastTwoMoves(MMID::BLUE_SLAVER_RAKE) ||
                 (asc17 && !lastMove(MMID::BLUE_SLAVER_RAKE)) ) {
-                setMove(MMID::BLUE_SLAVER_RAKE);
+                return (MMID::BLUE_SLAVER_RAKE);
 
             } else {
-                setMove(MMID::BLUE_SLAVER_STAB);
+                return (MMID::BLUE_SLAVER_STAB);
             }
             break;
         }
 
         case MonsterId::BRONZE_AUTOMATON: {
-            setMove(MMID::BRONZE_AUTOMATON_SPAWN_ORBS);
+            return (MMID::BRONZE_AUTOMATON_SPAWN_ORBS);
             break;
         }
 
@@ -1630,16 +1791,16 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 3 stasis
             const auto haveUsedStasis = miscInfo;
             if (!haveUsedStasis && roll >= 25) {
-                setMove(MMID::BRONZE_ORB_STASIS);
+                return (MMID::BRONZE_ORB_STASIS);
 
             } else if (roll >= 70 && !lastTwoMoves(MMID::BRONZE_ORB_SUPPORT_BEAM)) {
-                setMove(MMID::BRONZE_ORB_SUPPORT_BEAM);
+                return (MMID::BRONZE_ORB_SUPPORT_BEAM);
 
             } else if (!lastTwoMoves(MMID::BRONZE_ORB_BEAM)) {
-                setMove(MMID::BRONZE_ORB_BEAM);
+                return (MMID::BRONZE_ORB_BEAM);
 
             } else {
-                setMove(MMID::BRONZE_ORB_SUPPORT_BEAM);
+                return (MMID::BRONZE_ORB_SUPPORT_BEAM);
             }
             break;
         }
@@ -1654,15 +1815,15 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 
             // handled during turn
 //            if (!hasStatus<MS::FLIGHT>()) {
-//                setMove(MMID::BYRD_HEADBUTT);
+//                return (MMID::BYRD_HEADBUTT);
 //                break;
 //            }
 
             if (firstTurn()) {
                 if (bc.aiRng.randomBoolean(0.375f)) {
-                    setMove(MMID::BYRD_CAW);
+                    return (MMID::BYRD_CAW);
                 } else {
-                    setMove(MMID::BYRD_PECK);
+                    return (MMID::BYRD_PECK);
                 }
                 break;
             }
@@ -1670,12 +1831,12 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             if (roll < 50) {
                 if (lastTwoMoves(MMID::BYRD_PECK)) {
                     if (bc.aiRng.randomBoolean(0.4f)) {
-                        setMove(MMID::BYRD_SWOOP);
+                        return (MMID::BYRD_SWOOP);
                     } else {
-                        setMove(MMID::BYRD_CAW);
+                        return (MMID::BYRD_CAW);
                     }
                 } else {
-                    setMove(MMID::BYRD_PECK);
+                    return (MMID::BYRD_PECK);
                 }
                 break;
             }
@@ -1683,24 +1844,24 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             if (roll < 70) {
                 if (lastMove(MMID::BYRD_SWOOP)) {
                     if (bc.aiRng.randomBoolean(0.375f)) {
-                        setMove(MMID::BYRD_CAW);
+                        return (MMID::BYRD_CAW);
                     } else {
-                        setMove(MMID::BYRD_PECK);
+                        return (MMID::BYRD_PECK);
                     }
                 } else {
-                    setMove(MMID::BYRD_SWOOP);
+                    return (MMID::BYRD_SWOOP);
                 }
                 break;
             }
 
             if (lastMove(MMID::BYRD_CAW)) {
                 if (bc.aiRng.randomBoolean(0.2857f)) {
-                    setMove(MMID::BYRD_SWOOP);
+                    return (MMID::BYRD_SWOOP);
                 } else {
-                    setMove(MMID::BYRD_PECK);
+                    return (MMID::BYRD_PECK);
                 }
             } else {
-                setMove(MMID::BYRD_CAW);
+                return (MMID::BYRD_CAW);
             }
             break;
         }
@@ -1717,22 +1878,22 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
                 && !lastTwoMoves(MMID::CENTURION_FURY))
             {
                 if (mysticAlive) {
-                    setMove(MMID::CENTURION_DEFEND);
+                    return (MMID::CENTURION_DEFEND);
                 } else {
-                    setMove(MMID::CENTURION_FURY);
+                    return (MMID::CENTURION_FURY);
                 }
                 break;
             }
 
             if (!lastTwoMoves(MMID::CENTURION_SLASH)) {
-                setMove(MMID::CENTURION_SLASH);
+                return (MMID::CENTURION_SLASH);
                 break;
             }
 
             if (mysticAlive) {
-                setMove(MMID::CENTURION_DEFEND);
+                return (MMID::CENTURION_DEFEND);
             } else {
-                setMove(MMID::CENTURION_FURY);
+                return (MMID::CENTURION_FURY);
             }
             break;
         }
@@ -1746,20 +1907,20 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             const auto &knight = bc.monsters.arr[0];
 
             if (maxHp-curHp >= healNeedAmt || knight.isAlive() && knight.maxHp-knight.curHp >= healNeedAmt) {
-                setMove(MMID::MYSTIC_HEAL);
+                return (MMID::MYSTIC_HEAL);
                 break;
             }
 
             if (roll >= 40 && (asc17 ? !lastMove(MMID::MYSTIC_ATTACK_DEBUFF) : !lastTwoMoves(MMID::MYSTIC_ATTACK_DEBUFF))) {
-                setMove(MMID::MYSTIC_ATTACK_DEBUFF);
+                return (MMID::MYSTIC_ATTACK_DEBUFF);
                 break;
             }
 
             if (!lastTwoMoves(MMID::MYSTIC_BUFF)) {
-                setMove(MMID::MYSTIC_BUFF);
+                return (MMID::MYSTIC_BUFF);
 
             } else {
-                setMove(MMID::MYSTIC_ATTACK_DEBUFF);
+                return (MMID::MYSTIC_ATTACK_DEBUFF);
             }
             break;
         }
@@ -1773,20 +1934,20 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 
             if (asc17) {
                 if (firstTurn()) {
-                    setMove(MMID::CHOSEN_HEX);
+                    return (MMID::CHOSEN_HEX);
 
                 } else if (!lastMove(MMID::CHOSEN_DEBILITATE) && !lastMove(MMID::CHOSEN_DRAIN)) {
                     if (roll < 50) {
-                        setMove(MMID::CHOSEN_DEBILITATE);
+                        return (MMID::CHOSEN_DEBILITATE);
                     } else {
-                        setMove(MMID::CHOSEN_DRAIN);
+                        return (MMID::CHOSEN_DRAIN);
                     }
 
                 } else if (roll < 40) {
-                    setMove(MMID::CHOSEN_ZAP);
+                    return (MMID::CHOSEN_ZAP);
 
                 } else {
-                    setMove(MMID::CHOSEN_POKE);
+                    return (MMID::CHOSEN_POKE);
 
                 }
                 break;
@@ -1794,21 +1955,21 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 
             // Ascension < 17
             if (firstTurn()) {
-                setMove(MMID::CHOSEN_POKE);
+                return (MMID::CHOSEN_POKE);
 
             } else if (lastMoveBefore(MMID::INVALID)) {
-                setMove(MMID::CHOSEN_HEX);
+                return (MMID::CHOSEN_HEX);
 
             } else if (!lastMove(MMID::CHOSEN_DEBILITATE) && !lastMove(MMID::CHOSEN_DRAIN)) {
                 if (roll < 50) {
-                    setMove(MMID::CHOSEN_DEBILITATE);
+                    return (MMID::CHOSEN_DEBILITATE);
                 } else {
-                    setMove(MMID::CHOSEN_DRAIN);
+                    return (MMID::CHOSEN_DRAIN);
                 }
             } else if (roll < 40) {
-                setMove(MMID::CHOSEN_ZAP);
+                return (MMID::CHOSEN_ZAP);
             } else {
-                setMove(MMID::CHOSEN_POKE);
+                return (MMID::CHOSEN_POKE);
             }
             break;
         }
@@ -1816,40 +1977,40 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
         case MonsterId::BOOK_OF_STABBING: {
             // 1 multi stab
             // 2 single stab
-            auto &stabCount = miscInfo;
+            auto &stabCount = monsterData;
             if (roll < 15) {
                 if (lastMove(MMID::BOOK_OF_STABBING_SINGLE_STAB)) {
                     ++stabCount;
-                    setMove(MMID::BOOK_OF_STABBING_MULTI_STAB);
+                    return (MMID::BOOK_OF_STABBING_MULTI_STAB);
                 } else {
-                    setMove(MMID::BOOK_OF_STABBING_SINGLE_STAB);
+                    return (MMID::BOOK_OF_STABBING_SINGLE_STAB);
                     if (asc18) {
                         ++stabCount;
                     }
                 }
             } else if (lastTwoMoves(MMID::BOOK_OF_STABBING_MULTI_STAB)) {
-                setMove(MMID::BOOK_OF_STABBING_SINGLE_STAB);
+                return (MMID::BOOK_OF_STABBING_SINGLE_STAB);
                 if (asc18) {
                     ++stabCount;
                 }
             } else {
                 ++stabCount;
-                setMove(MMID::BOOK_OF_STABBING_MULTI_STAB);
+                return (MMID::BOOK_OF_STABBING_MULTI_STAB);
             }
             break;
         }
 
         case MonsterId::CULTIST: {
             if (lastMove(MMID::INVALID)) {
-                setMove(MMID::CULTIST_INCANTATION);
+                return (MMID::CULTIST_INCANTATION);
             } else {
-                setMove(MMID::CULTIST_DARK_STRIKE);
+                return (MMID::CULTIST_DARK_STRIKE);
             }
             break;
         }
 
         case MonsterId::FAT_GREMLIN: {
-            setMove(MMID::FAT_GREMLIN_SMASH);
+            return (MMID::FAT_GREMLIN_SMASH);
             break;
         }
 
@@ -1858,16 +2019,16 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 2 FUNGI_BEAST_GROW
             if (roll < 60) {
                 if (lastTwoMoves(MMID::FUNGI_BEAST_BITE)) {
-                    setMove(MMID::FUNGI_BEAST_GROW);
+                    return (MMID::FUNGI_BEAST_GROW);
                 } else {
-                    setMove(MMID::FUNGI_BEAST_BITE);
+                    return (MMID::FUNGI_BEAST_BITE);
                 }
 
             } else if (lastMove(MMID::FUNGI_BEAST_GROW)) {
-                setMove(MMID::FUNGI_BEAST_BITE);
+                return (MMID::FUNGI_BEAST_BITE);
 
             } else {
-                setMove(MMID::FUNGI_BEAST_GROW);
+                return (MMID::FUNGI_BEAST_GROW);
             }
             break;
         }
@@ -1875,16 +2036,16 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
         case MonsterId::GREEN_LOUSE: {
             if (roll < 25) {
                 if (lastMove(MMID::GREEN_LOUSE_SPIT_WEB) && (asc17 || lastTwoMoves(MMID::GREEN_LOUSE_SPIT_WEB))) {
-                    setMove(MMID::GREEN_LOUSE_BITE);
+                    return (MMID::GREEN_LOUSE_BITE);
                 } else  {
-                    setMove(MMID::GREEN_LOUSE_SPIT_WEB);
+                    return (MMID::GREEN_LOUSE_SPIT_WEB);
                 }
 
             } else if (lastTwoMoves(MMID::GREEN_LOUSE_BITE)) {
-                setMove(MMID::GREEN_LOUSE_SPIT_WEB);
+                return (MMID::GREEN_LOUSE_SPIT_WEB);
 
             } else {
-                setMove(MMID::GREEN_LOUSE_BITE);
+                return (MMID::GREEN_LOUSE_BITE);
             }
             break;
         }
@@ -1898,14 +2059,14 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 
                 if (roll < 75) {
                     if (lastMove(MMID::GREMLIN_LEADER_RALLY)) {
-                        setMove(MMID::GREMLIN_LEADER_STAB);
+                        return (MMID::GREMLIN_LEADER_STAB);
                     } else {
-                        setMove(MMID::GREMLIN_LEADER_RALLY);
+                        return (MMID::GREMLIN_LEADER_RALLY);
                     }
                 } else if (lastMove(MMID::GREMLIN_LEADER_STAB)) {
-                    setMove(MMID::GREMLIN_LEADER_RALLY);
+                    return (MMID::GREMLIN_LEADER_RALLY);
                 } else {
-                    setMove(MMID::GREMLIN_LEADER_STAB);
+                    return (MMID::GREMLIN_LEADER_STAB);
                 }
 
             } else if (numAliveGremlins == 1) {
@@ -1914,47 +2075,47 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
                     if (lastMove(MMID::GREMLIN_LEADER_RALLY)) {
                         const auto roll2 = bc.aiRng.random(50, 99);
                         if (roll2 < 80) {
-                            setMove(MMID::GREMLIN_LEADER_ENCOURAGE);
+                            return (MMID::GREMLIN_LEADER_ENCOURAGE);
                         } else {
-                            setMove(MMID::GREMLIN_LEADER_STAB);
+                            return (MMID::GREMLIN_LEADER_STAB);
                         }
                     } else {
-                        setMove(MMID::GREMLIN_LEADER_RALLY);
+                        return (MMID::GREMLIN_LEADER_RALLY);
                     }
 
                 } else if (roll < 80) {
                     if (lastMove(MMID::GREMLIN_LEADER_ENCOURAGE)) {
-                        setMove(MMID::GREMLIN_LEADER_STAB);
+                        return (MMID::GREMLIN_LEADER_STAB);
                     } else {
-                        setMove(MMID::GREMLIN_LEADER_ENCOURAGE);
+                        return (MMID::GREMLIN_LEADER_ENCOURAGE);
                     }
 
                 } else if (lastMove(MMID::GREMLIN_LEADER_STAB)) {
                     const auto roll2 = bc.aiRng.random(0, 80);
                     if (roll2 < 50) {
-                        setMove(MMID::GREMLIN_LEADER_RALLY);
+                        return (MMID::GREMLIN_LEADER_RALLY);
                     } else {
-                        setMove(MMID::GREMLIN_LEADER_ENCOURAGE);
+                        return (MMID::GREMLIN_LEADER_ENCOURAGE);
                     }
 
                 } else {
-                    setMove(MMID::GREMLIN_LEADER_STAB);
+                    return (MMID::GREMLIN_LEADER_STAB);
                 }
 
             } else { // alive gremlins > 1
 
                 if (roll < 66) {
                     if (lastMove(MMID::GREMLIN_LEADER_ENCOURAGE)) {
-                        setMove(MMID::GREMLIN_LEADER_STAB);
+                        return (MMID::GREMLIN_LEADER_STAB);
                     } else {
-                        setMove(MMID::GREMLIN_LEADER_ENCOURAGE);
+                        return (MMID::GREMLIN_LEADER_ENCOURAGE);
                     }
 
                 } else if (lastMove(MMID::GREMLIN_LEADER_STAB)) {
-                    setMove(MMID::GREMLIN_LEADER_ENCOURAGE);
+                    return (MMID::GREMLIN_LEADER_ENCOURAGE);
 
                 } else {
-                    setMove(MMID::GREMLIN_LEADER_STAB);
+                    return (MMID::GREMLIN_LEADER_STAB);
                 }
 
             }
@@ -1967,37 +2128,37 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 3 BELLOW
 
             if (lastMove(MMID::INVALID)) {
-                setMove(MMID::GREMLIN_NOB_BELLOW);
+                return (MMID::GREMLIN_NOB_BELLOW);
                 break;
             }
 
             if (asc18) {
                 if (!lastTwoMoves(MMID::GREMLIN_NOB_SKULL_BASH)) {
-                    setMove(MMID::GREMLIN_NOB_RUSH);
+                    return (MMID::GREMLIN_NOB_RUSH);
                     break;
                 }
 
                 if (lastTwoMoves(MMID(MMID::GREMLIN_NOB_RUSH))) {
-                    setMove(MMID::GREMLIN_NOB_SKULL_BASH);
+                    return (MMID::GREMLIN_NOB_SKULL_BASH);
 
                 } else {
-                    setMove(MMID::GREMLIN_NOB_RUSH);
+                    return (MMID::GREMLIN_NOB_RUSH);
                 }
                 break;
             }
 
             if (roll < 33 || lastTwoMoves(MMID::GREMLIN_NOB_RUSH)) {
-                setMove(MMID::GREMLIN_NOB_SKULL_BASH);
+                return (MMID::GREMLIN_NOB_SKULL_BASH);
 
             } else {
-                setMove(MMID::GREMLIN_NOB_RUSH);
+                return (MMID::GREMLIN_NOB_RUSH);
             }
             break;
         }
 
         case MonsterId::GREMLIN_WIZARD: {
-            miscInfo = 1; // gremlin wizard charge
-            setMove(MMID::GREMLIN_WIZARD_CHARGING);
+            monsterData = 1; // gremlin wizard charge
+            return (MMID::GREMLIN_WIZARD_CHARGING);
             break;
         }
 
@@ -2005,84 +2166,139 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 #ifdef sts_asserts
             assert(firstTurn());
 #endif
-            setMove(MMID::HEXAGHOST_ACTIVATE);
+            return (MMID::HEXAGHOST_ACTIVATE);
             break;
         }
 
         case MonsterId::JAW_WORM: {
             if (firstTurn()) {
-                setMove(MMID::JAW_WORM_CHOMP);
+                return (MMID::JAW_WORM_CHOMP);
                 break;
             }
 
             if (roll < 25) {
                 if (lastMove(MMID::JAW_WORM_CHOMP)) {
                     if (bc.aiRng.randomBoolean(0.5625f)) {
-                        setMove(MMID::JAW_WORM_BELLOW);
+                        return (MMID::JAW_WORM_BELLOW);
                     } else {
-                        setMove(MMID::JAW_WORM_THRASH);
+                        return (MMID::JAW_WORM_THRASH);
                     }
 
                 } else {
-                    setMove(MMID::JAW_WORM_CHOMP);
+                    return (MMID::JAW_WORM_CHOMP);
                 }
 
             } else if (roll < 55) {
                 if (lastTwoMoves(MMID::JAW_WORM_THRASH)) {
                     if (bc.aiRng.randomBoolean(0.357f)) {
-                        setMove(MMID::JAW_WORM_CHOMP);
+                        return (MMID::JAW_WORM_CHOMP);
                     } else {
-                        setMove(MMID::JAW_WORM_BELLOW);
+                        return (MMID::JAW_WORM_BELLOW);
                     }
 
                 } else {
-                    setMove(MMID::JAW_WORM_THRASH);
+                    return (MMID::JAW_WORM_THRASH);
                 }
 
             } else if (lastMove(MMID::JAW_WORM_BELLOW)) {
                 if (bc.aiRng.randomBoolean(0.416f)) {
-                    setMove(MMID::JAW_WORM_CHOMP);
+                    return (MMID::JAW_WORM_CHOMP);
                 } else {
-                    setMove(MMID::JAW_WORM_THRASH);
+                    return (MMID::JAW_WORM_THRASH);
                 }
 
             } else {
-                setMove(MMID::JAW_WORM_BELLOW);
+                return (MMID::JAW_WORM_BELLOW);
             }
             break;
         }
 
         case MonsterId::LAGAVULIN: // called first turn only
             if (hasStatus<MS::ASLEEP>()) {
-                setMove(MMID::LAGAVULIN_SLEEP);
+                return (MMID::LAGAVULIN_SLEEP);
             } else {
-                setMove(MMID::LAGAVULIN_SIPHON_SOUL);
+                return (MMID::LAGAVULIN_SIPHON_SOUL);
             }
             break;
 
         case MonsterId::LOOTER: // called first turn only
-            setMove(MMID::LOOTER_MUG);
+            return (MMID::LOOTER_MUG);
             break;
 
         case MonsterId::MAD_GREMLIN:
-            setMove(MMID::MAD_GREMLIN_SCRATCH);
+            return (MMID::MAD_GREMLIN_SCRATCH);
             break;
 
         case MonsterId::MUGGER: // called first turn only
-            setMove(MMID::MUGGER_MUG);
+            return (MMID::MUGGER_MUG);
             break;
+
+        case MonsterId::NEMESIS: {
+            // 2 attack
+            // 3 scythe
+            // 4 debuff
+
+            if (firstTurn()) {
+                if (roll < 50) {
+                    return MMID::NEMESIS_ATTACK;
+                } else {
+                    return MMID::NEMESIS_DEBUFF;
+                }
+            }
+
+            if (roll < 30) {
+                if (!eitherLastTwo(MMID::NEMESIS_SCYTHE)) {
+                    return MMID::NEMESIS_SCYTHE;
+
+                } else if (bc.aiRng.randomBoolean()) {
+                    if (!lastTwoMoves(MMID::NEMESIS_ATTACK)) {
+                        return MMID::NEMESIS_ATTACK;
+                    } else {
+                        return MMID::NEMESIS_DEBUFF;
+                    }
+
+                } else if (!lastMove(MMID::NEMESIS_DEBUFF)) {
+                    return MMID::NEMESIS_DEBUFF;
+
+                } else {
+                    return MMID::NEMESIS_ATTACK;
+                }
+            }
+
+            if (roll < 65) {
+                if (!lastTwoMoves(MMID::NEMESIS_ATTACK)) {
+                    return MMID::NEMESIS_ATTACK;
+
+                } else if (!bc.aiRng.randomBoolean() || eitherLastTwo(MMID::NEMESIS_SCYTHE)) {
+                    return MMID::NEMESIS_DEBUFF;
+
+                } else {
+                    return MMID::NEMESIS_SCYTHE;
+                }
+            }
+
+            if (!lastMove(MMID::NEMESIS_DEBUFF)) {
+                return MMID::NEMESIS_DEBUFF;
+            }
+
+            if (bc.aiRng.randomBoolean() && !eitherLastTwo(MMID::NEMESIS_SCYTHE)) {
+                return MMID::NEMESIS_SCYTHE;
+            }
+
+            return MMID::NEMESIS_ATTACK;
+        }
 
         case MonsterId::ORB_WALKER: {
             if (roll < 40) {
                 if (!lastTwoMoves(MMID::ORB_WALKER_CLAW)) {
-                    setMove(MMID::ORB_WALKER_CLAW);
+                    return (MMID::ORB_WALKER_CLAW);
                 } else {
-                    setMove(MMID::ORB_WALKER_LASER);
+                    return (MMID::ORB_WALKER_LASER);
                 }
             } else if (!lastTwoMoves(MMID::ORB_WALKER_LASER)) {
-                setMove(MMID::ORB_WALKER_LASER);
+                return (MMID::ORB_WALKER_LASER);
             } else {
-                setMove(MMID::ORB_WALKER_CLAW);
+                return (MMID::ORB_WALKER_CLAW);
             }
             break;
         }
@@ -2090,26 +2306,68 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
         case MonsterId::RED_LOUSE: {
             if (roll < 25) {
                 if (lastMove(MMID::RED_LOUSE_GROW) && (asc17 || lastTwoMoves(MMID::RED_LOUSE_GROW))) {
-                    setMove(MMID::RED_LOUSE_BITE);
+                    return (MMID::RED_LOUSE_BITE);
                 } else  {
-                    setMove(MMID::RED_LOUSE_GROW);
+                    return (MMID::RED_LOUSE_GROW);
                 }
 
             } else if (lastTwoMoves(MMID::RED_LOUSE_BITE)) {
-                setMove(MMID::RED_LOUSE_GROW);
+                return (MMID::RED_LOUSE_GROW);
 
             } else {
-                setMove(MMID::RED_LOUSE_BITE);
+                return (MMID::RED_LOUSE_BITE);
             }
             break;
+        }
+
+        case MonsterId::REPTOMANCER: {
+            // 1 snake strike
+            // 2 summon
+            // 3 big bite
+            if (firstTurn()) {
+                return MMID::REPTOMANCER_SUMMON;
+            }
+
+            while (true) {
+                int myRoll = roll;
+                const bool canSpawn = bc.monsters.monstersAlive < 4;
+
+                if (myRoll < 33) {
+                    if (!lastMove(MMID::REPTOMANCER_SNAKE_STRIKE)) {
+                        return MMID::REPTOMANCER_SNAKE_STRIKE;
+                    } else {
+                        myRoll = bc.aiRng.random(33, 99);
+                    }
+                }
+
+                if (myRoll < 66) {
+                    if (!lastTwoMoves(MMID::REPTOMANCER_SUMMON) && canSpawn) {
+                        return MMID::REPTOMANCER_SUMMON;
+                    } else {
+                        return MMID::REPTOMANCER_SNAKE_STRIKE;
+                    }
+                }
+
+                if (!lastMove(MMID::REPTOMANCER_BIG_BITE)) {
+                    return MMID::REPTOMANCER_BIG_BITE;
+                }
+
+                // getMove(0-65)
+                // could probably unroll this but would be big
+                myRoll = bc.aiRng.random(0, 65);
+            }
+        }
+
+        case MonsterId::DAGGER: {
+            return MMID::DAGGER_STAB;
         }
 
         case MonsterId::SENTRY: {
             if (firstTurn()) {
                 if (idx % 2 == 0) {
-                    setMove(MMID::SENTRY_BOLT);
+                    return (MMID::SENTRY_BOLT);
                 } else {
-                    setMove(MMID::SENTRY_BEAM);
+                    return (MMID::SENTRY_BEAM);
                 }
             }
             break;
@@ -2122,12 +2380,12 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 4 stunned
             if (firstTurn()) {
                 if (asc17) {
-                    setMove(MMID::SHELLED_PARASITE_FELL);
+                    return (MMID::SHELLED_PARASITE_FELL);
                 } else {
                     if (bc.aiRng.randomBoolean()) {
-                        setMove(MMID::SHELLED_PARASITE_DOUBLE_STRIKE);
+                        return (MMID::SHELLED_PARASITE_DOUBLE_STRIKE);
                     } else {
-                        setMove(MMID::SHELLED_PARASITE_SUCK);
+                        return (MMID::SHELLED_PARASITE_SUCK);
                     }
                 }
                 break;
@@ -2137,7 +2395,7 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 
             if (roll < 20) {
                 if (!lastMove(MMID::SHELLED_PARASITE_FELL)) {
-                    setMove(MMID::SHELLED_PARASITE_FELL);
+                    return (MMID::SHELLED_PARASITE_FELL);
                     break;
                 }
                 roll2 = bc.aiRng.random(20,99);
@@ -2145,22 +2403,22 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 
             if (roll < 60 || roll2 < 60) {
                 if (!lastTwoMoves(MMID::SHELLED_PARASITE_DOUBLE_STRIKE)) {
-                    setMove(MMID::SHELLED_PARASITE_DOUBLE_STRIKE);
+                    return (MMID::SHELLED_PARASITE_DOUBLE_STRIKE);
                 } else {
-                    setMove(MMID::SHELLED_PARASITE_SUCK);
+                    return (MMID::SHELLED_PARASITE_SUCK);
                 }
 
             } else if (!lastTwoMoves(MMID::SHELLED_PARASITE_SUCK)) {
-                setMove(MMID::SHELLED_PARASITE_SUCK);
+                return (MMID::SHELLED_PARASITE_SUCK);
 
             } else {
-                setMove(MMID::SHELLED_PARASITE_DOUBLE_STRIKE);
+                return (MMID::SHELLED_PARASITE_DOUBLE_STRIKE);
             }
             break;
         }
 
         case MonsterId::SHIELD_GREMLIN: {
-            setMove(MMID::SHIELD_GREMLIN_PROTECT);
+            return (MMID::SHIELD_GREMLIN_PROTECT);
             break;
         }
 
@@ -2170,7 +2428,7 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 3 SLIME_BOSS_SPLIT
             // 4 SLIME_BOSS_GOOP_SPRAY
             if (firstTurn()) {
-                setMove(MMID::SLIME_BOSS_GOOP_SPRAY);
+                return (MMID::SLIME_BOSS_GOOP_SPRAY);
             }
             break;
         }
@@ -2181,34 +2439,34 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             if (asc17) {
                 if (roll < 65) {
                     if (lastTwoMoves(MMID::SNAKE_PLANT_CHOMP)) {
-                        setMove(MMID::SNAKE_PLANT_ENFEEBLING_SPORES);
+                        return (MMID::SNAKE_PLANT_ENFEEBLING_SPORES);
                     } else {
-                        setMove(MMID::SNAKE_PLANT_CHOMP);
+                        return (MMID::SNAKE_PLANT_CHOMP);
                     }
                 } else if (!lastTwoMoves(MMID::SNAKE_PLANT_ENFEEBLING_SPORES)) {
-                    setMove(MMID::SNAKE_PLANT_ENFEEBLING_SPORES);
+                    return (MMID::SNAKE_PLANT_ENFEEBLING_SPORES);
                 } else {
-                    setMove(MMID::SNAKE_PLANT_CHOMP);
+                    return (MMID::SNAKE_PLANT_CHOMP);
                 }
                 break;
             }
 
             if (roll < 65) {
                 if (lastTwoMoves(MMID::SNAKE_PLANT_CHOMP)) {
-                    setMove(MMID::SNAKE_PLANT_ENFEEBLING_SPORES);
+                    return (MMID::SNAKE_PLANT_ENFEEBLING_SPORES);
                 } else {
-                    setMove(MMID::SNAKE_PLANT_CHOMP);
+                    return (MMID::SNAKE_PLANT_CHOMP);
                 }
             } else if (lastMove(MMID::SNAKE_PLANT_ENFEEBLING_SPORES)) {
-                setMove(MMID::SNAKE_PLANT_CHOMP);
+                return (MMID::SNAKE_PLANT_CHOMP);
             } else {
-                setMove(MMID::SNAKE_PLANT_ENFEEBLING_SPORES);
+                return (MMID::SNAKE_PLANT_ENFEEBLING_SPORES);
             }
             break;
         }
 
         case MonsterId::SNEAKY_GREMLIN:
-            setMove(MMID::SNEAKY_GREMLIN_PUNCTURE);
+            return (MMID::SNEAKY_GREMLIN_PUNCTURE);
             break;
 
         case MonsterId::SNECKO: {
@@ -2216,26 +2474,26 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 2 bite
             // 3 tail whip
             if (firstTurn()) {
-                setMove(MMID::SNECKO_PERPLEXING_GLARE);
+                return (MMID::SNECKO_PERPLEXING_GLARE);
 
             } else if (roll < 40) {
-                setMove(MMID::SNECKO_TAIL_WHIP);
+                return (MMID::SNECKO_TAIL_WHIP);
 
             } else if (lastTwoMoves(MMID::SNECKO_BITE)) {
-                setMove(MMID::SNECKO_TAIL_WHIP);
+                return (MMID::SNECKO_TAIL_WHIP);
 
             } else {
-                setMove(MMID::SNECKO_BITE);
+                return (MMID::SNECKO_BITE);
             }
             break;
         }
 
         case MonsterId::SPHERIC_GUARDIAN: // called first turn only
-            setMove(MMID::SPHERIC_GUARDIAN_ACTIVATE);
+            return (MMID::SPHERIC_GUARDIAN_ACTIVATE);
             break;
 
         case MonsterId::SPIKE_SLIME_S:
-            setMove(MMID::SPIKE_SLIME_S_TACKLE);
+            return (MMID::SPIKE_SLIME_S_TACKLE);
             break;
 
         case MonsterId::RED_SLAVER: {
@@ -2245,19 +2503,19 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             const bool usedEntangle = miscInfo;
 
             if (lastMove(MMID::INVALID)) {
-                setMove(MMID::RED_SLAVER_STAB);
+                return (MMID::RED_SLAVER_STAB);
 
             } else if (roll >= 75 && !usedEntangle) {
-                setMove(MMID::RED_SLAVER_ENTANGLE);
+                return (MMID::RED_SLAVER_ENTANGLE);
 
             } else if (roll >= 50 && usedEntangle && !lastTwoMoves(MMID::RED_SLAVER_STAB)) {
-                setMove(MMID::RED_SLAVER_STAB);
+                return (MMID::RED_SLAVER_STAB);
 
             } else if (!lastTwoMoves(MMID::RED_SLAVER_SCRAPE) || (asc17 && !lastMove(MMID::RED_SLAVER_SCRAPE))) {
-                setMove(MMID::RED_SLAVER_SCRAPE);
+                return (MMID::RED_SLAVER_SCRAPE);
 
             } else {
-                setMove(MMID::RED_SLAVER_STAB);
+                return (MMID::RED_SLAVER_STAB);
 
             }
             break;
@@ -2270,16 +2528,16 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 4 lick
            if (roll < 30) {
                 if (lastTwoMoves(MMID::SPIKE_SLIME_L_FLAME_TACKLE)) {
-                    setMove(MMID::SPIKE_SLIME_L_LICK);
+                    return (MMID::SPIKE_SLIME_L_LICK);
                 } else {
-                    setMove(MMID::SPIKE_SLIME_L_FLAME_TACKLE);
+                    return (MMID::SPIKE_SLIME_L_FLAME_TACKLE);
                 }
 
             } else if (lastTwoMoves(MMID::SPIKE_SLIME_L_LICK) || (asc17 && lastMove(MMID::SPIKE_SLIME_L_LICK)) ) {
-                setMove(MMID::SPIKE_SLIME_L_FLAME_TACKLE);
+                return (MMID::SPIKE_SLIME_L_FLAME_TACKLE);
 
             } else {
-                setMove(MMID::SPIKE_SLIME_L_LICK);
+                return (MMID::SPIKE_SLIME_L_LICK);
 
             }
             break;
@@ -2290,20 +2548,20 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 4 SPIKE_SLIME_M_LICK
             if (roll < 30) {
                 if (lastTwoMoves(MMID::SPIKE_SLIME_M_FLAME_TACKLE)) {
-                    setMove(MMID::SPIKE_SLIME_M_LICK);
+                    return (MMID::SPIKE_SLIME_M_LICK);
                 } else {
-                    setMove(MMID::SPIKE_SLIME_M_FLAME_TACKLE);
+                    return (MMID::SPIKE_SLIME_M_FLAME_TACKLE);
                 }
             } else if (lastTwoMoves(MMID::SPIKE_SLIME_M_LICK) || (asc17 && lastMove(MMID::SPIKE_SLIME_M_LICK))) {
-                setMove(MMID::SPIKE_SLIME_M_FLAME_TACKLE);
+                return (MMID::SPIKE_SLIME_M_FLAME_TACKLE);
             } else {
-                setMove(MMID::SPIKE_SLIME_M_LICK);
+                return (MMID::SPIKE_SLIME_M_LICK);
             }
             break;
         }
 
         case MonsterId::TASKMASTER: {
-            setMove(MMID::TASKMASTER_SCOURING_WHIP);
+            return (MMID::TASKMASTER_SCOURING_WHIP);
             break;
         }
 
@@ -2317,20 +2575,20 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
             // 7 Anger
 
             // is in phase2
-            if (miscInfo & 0x4) {
+            if (monsterData & 0x4) {
                 if (!lastMove(MMID::THE_CHAMP_EXECUTE) && !lastMoveBefore(MMID::THE_CHAMP_EXECUTE)) {
-                    setMove(MMID::THE_CHAMP_EXECUTE);
+                    return (MMID::THE_CHAMP_EXECUTE);
                     break;
                 }
 
             } else {
                 if (curHp < maxHp / 2) {
-                    miscInfo |= 0x4;
-                    setMove(MMID::THE_CHAMP_ANGER);
+                    monsterData |= 0x4;
+                    return (MMID::THE_CHAMP_ANGER);
                     break;
 
                 } else if ((bc.getMonsterTurnNumber()+1) % 4 == 0) {
-                    setMove(MMID::THE_CHAMP_TAUNT);
+                    return (MMID::THE_CHAMP_TAUNT);
                     break;
                 }
             }
@@ -2343,22 +2601,22 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
                 && !lastMove(MMID::THE_CHAMP_DEFENSIVE_STANCE)
                 && defensiveStanceUseCount < 2)
             {
-                ++miscInfo;
-                setMove(MMID::THE_CHAMP_DEFENSIVE_STANCE);
+                ++monsterData;
+                return (MMID::THE_CHAMP_DEFENSIVE_STANCE);
                 break;
             }
 
             if (roll <= 30 && !lastMove(MMID::THE_CHAMP_GLOAT) && !lastMove(MMID::THE_CHAMP_DEFENSIVE_STANCE)) {
-                setMove(MMID::THE_CHAMP_GLOAT);
+                return (MMID::THE_CHAMP_GLOAT);
 
             } else if (roll <= 55 && !lastMove(MMID::THE_CHAMP_FACE_SLAP)) {
-                setMove(MMID::THE_CHAMP_FACE_SLAP);
+                return (MMID::THE_CHAMP_FACE_SLAP);
 
             } else if (!lastMove(MMID::THE_CHAMP_HEAVY_SLASH)) {
-                setMove(MMID::THE_CHAMP_HEAVY_SLASH);
+                return (MMID::THE_CHAMP_HEAVY_SLASH);
 
             } else {
-                setMove(MMID::THE_CHAMP_FACE_SLAP);
+                return (MMID::THE_CHAMP_FACE_SLAP);
             }
             break;
         }
@@ -2372,13 +2630,13 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 
             // first turn always spawn
             if (firstTurn()) {
-                setMove(MMID::THE_COLLECTOR_SPAWN);
+                return (MMID::THE_COLLECTOR_SPAWN);
                 break;
             }
 
             // always uses mega debuff turn 4
             if (bc.getMonsterTurnNumber() == 3) {
-                setMove(MMID::THE_COLLECTOR_MEGA_DEBUFF);
+                return (MMID::THE_COLLECTOR_MEGA_DEBUFF);
                 break;
             }
 
@@ -2386,43 +2644,43 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
                     && !lastMove(MMID::THE_COLLECTOR_SPAWN);
 
             if (roll <= 25 && canUseSpawn) {
-                setMove(MMID::THE_COLLECTOR_SPAWN);
+                return (MMID::THE_COLLECTOR_SPAWN);
                 break;
             }
 
             if (roll <= 70 && !lastTwoMoves(MMID::THE_COLLECTOR_FIREBALL)) {
-                setMove(MMID::THE_COLLECTOR_FIREBALL);
+                return (MMID::THE_COLLECTOR_FIREBALL);
                 break;
             }
 
             if (lastMove(MMID::THE_COLLECTOR_BUFF)) {
-                setMove(MMID::THE_COLLECTOR_FIREBALL);
+                return (MMID::THE_COLLECTOR_FIREBALL);
 
             } else {
-                setMove(MMID::THE_COLLECTOR_BUFF);
+                return (MMID::THE_COLLECTOR_BUFF);
             }
             break;
         }
 
         case MonsterId::THE_GUARDIAN: {
-            setMove(MMID::THE_GUARDIAN_CHARGING_UP);
+            return (MMID::THE_GUARDIAN_CHARGING_UP);
             break;
         }
 
         // RED MASK BOIS
 
         case MonsterId::BEAR: {
-            setMove(MMID::BEAR_BEAR_HUG);
+            return (MMID::BEAR_BEAR_HUG);
             break;
         }
 
         case MonsterId::ROMEO: {
-            setMove(MMID::ROMEO_MOCK);
+            return (MMID::ROMEO_MOCK);
             break;
         }
 
         case MonsterId::POINTY: {
-            setMove(MMID::POINTY_ATTACK);
+            return (MMID::POINTY_ATTACK);
             break;
         }
 
@@ -2430,15 +2688,14 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
 
         case MonsterId::EXPLODER: {
             // first turn only
-            setMove(MMID::EXPLODER_SLAM);
-            break;
+            return (MMID::EXPLODER_SLAM);
         }
 
         case MonsterId::REPULSOR: {
             if (roll < 20 && !lastMove(MMID::REPULSOR_BASH)) {
-                setMove(MMID::REPULSOR_BASH);
+                return (MMID::REPULSOR_BASH);
             } else {
-                setMove(MMID::REPULSOR_REPULSE);
+                return (MMID::REPULSOR_REPULSE);
             }
             break;
         }
@@ -2446,35 +2703,204 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
         case MonsterId::SPIKER: {
             // times used thorns > 5
             if (miscInfo > 5 || roll < 50 && !lastMove(MMID::SPIKER_CUT)) {
-                setMove(MMID::SPIKER_SPIKE);
+                return (MMID::SPIKER_CUT);
             } else {
-                setMove(MMID::SPIKER_CUT);
+                return (MMID::SPIKER_SPIKE);
             }
-            break;
         }
 
         case MonsterId::THE_MAW: {
             if (firstTurn()) {
-                setMove(MonsterMoveId::THE_MAW_ROAR);
+                return (MMID::THE_MAW_ROAR);
 
-            } else if (roll < 50 && !lastMove(MonsterMoveId::THE_MAW_NOM)) {
-                setMove(MonsterMoveId::THE_MAW_NOM);
+            } else if (roll < 50 && !lastMove(MMID::THE_MAW_NOM)) {
+                return (MMID::THE_MAW_NOM);
 
-            } else if (!lastMove(MonsterMoveId::THE_MAW_SLAM)) {
+            } else if (!lastMove(MMID::THE_MAW_SLAM)) {
                 // dont include not last move nom condition, because it can't be, we handle in the move logic
-                setMove(MonsterMoveId::THE_MAW_SLAM);
+                return (MMID::THE_MAW_SLAM);
 
             } else {
-                setMove(MonsterMoveId::THE_MAW_DROOL);
+                return (MMID::THE_MAW_DROOL);
             }
             break;
         }
 
         case MonsterId::DARKLING: {
+            // 1 chomp
+            // 2 harden
+            // 3 nip
+            // 4 regrow
+            // 5 reincarnate
+            auto myRoll = roll;
 
+            if (firstTurn()) {
+                if (myRoll < 50) {
+                    return MMID::DARKLING_HARDEN;
+                } else {
+                    return MMID::DARKLING_NIP;
+                }
+            }
 
+            if (halfDead) {
+                return MMID::DARKLING_REINCARNATE;
+            }
 
+            if (myRoll < 40) {
+                if (!lastMove(MMID::DARKLING_CHOMP) && idx != 1) {
+                    return MMID::DARKLING_CHOMP;
+                } else {
+                    myRoll = bc.aiRng.random(40, 99);
+                }
+            }
+
+            if (myRoll < 70) {
+                if (!lastMove(MMID::DARKLING_HARDEN)) {
+                    return MMID::DARKLING_HARDEN;
+                } else {
+                    return MMID::DARKLING_NIP;
+                }
+            }
+
+            if (!lastTwoMoves(MMID::DARKLING_NIP)) {
+                return MMID::DARKLING_NIP;
+
+            } else {
+                // one of last two moves was darkling nip
+                return getMoveForRoll(bc, monsterData, bc.aiRng.random(0, 99));
+            }
+        }
+
+        case MonsterId::SPIRE_GROWTH: {
+            const auto useConstrict = !bc.player.hasStatus<PS::CONSTRICTED>()
+                                      && !lastMove(MMID::SPIRE_GROWTH_CONSTRICT)
+                                      && (asc17 || roll >= 50);
+            if (useConstrict) {
+                return (MMID::SPIRE_GROWTH_CONSTRICT);
+
+            } else if (roll < 50 && !lastTwoMoves(MMID::SPIRE_GROWTH_QUICK_TACKLE)) {
+                return (MMID::SPIRE_GROWTH_QUICK_TACKLE);
+
+            } else if (!lastTwoMoves(MMID::SPIRE_GROWTH_SMASH)) {
+                return (MMID::SPIRE_GROWTH_SMASH);
+
+            } else {
+                return (MMID::SPIRE_GROWTH_QUICK_TACKLE);
+
+            }
             break;
+        }
+
+        case MonsterId::TRANSIENT: {
+            return (MMID::TRANSIENT_ATTACK);
+        }
+
+        case MonsterId::WRITHING_MASS: {
+            // 0 strong strike
+            // 1 multi strike
+            // 2 flail
+            // 3 wither
+            // 4 implant
+            const bool haveUsedImplant = miscInfo;
+            auto myRoll = roll;
+
+            if (bc.getMonsterTurnNumber() == 1) {
+                if (roll < 33) {
+                    return (MMID::WRITHING_MASS_MULTI_STRIKE);
+
+                } else if (roll << 66) {
+                    return (MMID::WRITHING_MASS_FLAIL);
+
+                } else {
+                    return (MMID::WRITHING_MASS_WITHER);
+                }
+            }
+
+            if (myRoll < 10) {
+                if (!lastMove(MMID::WRITHING_MASS_STRONG_STRIKE)) {
+                    return (MMID::WRITHING_MASS_STRONG_STRIKE);
+                }
+                myRoll = bc.aiRng.random(10, 99);
+            }
+
+            if (myRoll < 20) {
+                if (!haveUsedImplant && !lastMove(MMID::WRITHING_MASS_IMPLANT)) {
+                    return (MMID::WRITHING_MASS_IMPLANT);
+
+                } else if (bc.aiRng.randomBoolean(0.1f)) {
+                    return (MMID::WRITHING_MASS_STRONG_STRIKE);
+                }
+                myRoll = bc.aiRng.random(20, 99);
+            }
+
+            if (myRoll < 40) {
+                if (!lastMove(MMID::WRITHING_MASS_WITHER)) {
+                    return MMID::WRITHING_MASS_WITHER;
+                }
+
+                // last move was wither
+                if (bc.aiRng.randomBoolean(0.4f)) {
+                    myRoll = bc.aiRng.random(0, 19);
+                    if (myRoll < 10) {
+                        return (MMID::WRITHING_MASS_STRONG_STRIKE);
+
+                    } else {
+                        if (!haveUsedImplant) {
+                            return (MMID::WRITHING_MASS_IMPLANT);
+
+                        } else if (bc.aiRng.randomBoolean(0.1f)) {
+                            return (MMID::WRITHING_MASS_STRONG_STRIKE);
+
+                        } else {
+                            return getMoveForRoll(bc, monsterData, bc.aiRng.random(20, 99));
+                        }
+                    }
+                }
+                myRoll = bc.aiRng.random(40, 99);
+            }
+
+            if (myRoll < 70) {
+                if (!lastMove(MMID::WRITHING_MASS_MULTI_STRIKE)) {
+                    return MMID::WRITHING_MASS_MULTI_STRIKE;
+
+                } else if (bc.aiRng.randomBoolean(0.3f)) {
+                    return MMID::WRITHING_MASS_FLAIL;
+
+                } else {
+                    return getMoveForRoll(bc, monsterData, bc.aiRng.random(0, 39));
+                }
+            }
+
+            if (!lastMove(MMID::WRITHING_MASS_FLAIL)) {
+                return MMID::WRITHING_MASS_FLAIL;
+
+            } else {
+                return (MMID::WRITHING_MASS_WITHER);
+            }
+        }
+
+        case MonsterId::GIANT_HEAD: {
+            // 1 glare
+            // 2 it is time
+            // 3 count
+            if (bc.getMonsterTurnNumber() >= 4) {
+                return MMID::GIANT_HEAD_IT_IS_TIME;
+            }
+
+            if (roll < 50) {
+                if (!lastTwoMoves(MMID::GIANT_HEAD_GLARE)) {
+                    return MMID::GIANT_HEAD_GLARE;
+                } else {
+                    return MMID::GIANT_HEAD_COUNT;
+                }
+            }
+
+            // roll >= 50
+            if (!lastTwoMoves(MMID::GIANT_HEAD_COUNT)) {
+                return MMID::GIANT_HEAD_COUNT;
+            } else {
+                return MMID::GIANT_HEAD_GLARE;
+            }
         }
 
         // just setting in collector spawn move
@@ -2486,9 +2912,12 @@ void Monster::setMoveFromRoll(BattleContext &bc, const int roll) {
         default:
             break;
     }
-
+#ifdef sts_asserts
+    std::cerr << "getMove did not return a value " << bc.seed << " " << static_cast<int>(id) << std::endl;
+    assert(false);
+#endif
+    return MMID::INVALID;
 }
-
 
 void Monster::initSpawnedMonster(BattleContext &bc, const MonsterId monsterId, const int monsterIdx, const int hp) {
     idx = monsterIdx;
@@ -2673,6 +3102,46 @@ void Monster::returnStasisCard(BattleContext &bc) {
     stasisCard = {CardId::INVALID};
 }
 
+void reptoSummonHelper(const BattleContext &bc, int daggerIdxs[2]) {
+    constexpr int searchOrder[4] = {4, 1, 3, 0};
+
+    int openSlotsFound = 0;
+    for (int i = 0; i < 4; ++i) {
+        const auto mIdx = searchOrder[i];
+        const auto &m = bc.monsters.arr[mIdx];
+
+        if (!m.isAlive()) {
+            daggerIdxs[openSlotsFound++] = mIdx;
+        }
+
+        if (openSlotsFound == 2) {
+            return;
+        }
+    }
+
+#ifdef sts_asserts
+    assert(false); // should always return first
+#endif
+}
+
+void Monster::reptomancerSummon(BattleContext &bc) {
+    int daggerIdxs[2];
+    reptoSummonHelper(bc, daggerIdxs);
+
+    for (int daggerIdx : daggerIdxs) {
+        auto &dagger = bc.monsters.arr[daggerIdx];
+        dagger = Monster();
+        dagger.construct(bc, MonsterId::DAGGER, daggerIdx);
+        ++bc.monsters.monstersAlive;
+        dagger.setMove(MMID::DAGGER_STAB);
+
+        bc.noOpRollMove();
+        bc.monsters.skipTurn.set(daggerIdx, true);
+    }
+
+//    std::cout << "repto summon: " << daggerIdxs[0] << " " << daggerIdxs[1] << '\n';
+}
+
 int Monster::getAliveGremlinCount(const BattleContext &bc) {
     int count = 0;
     for (int i = 0; i < 3; ++i) {
@@ -2683,8 +3152,3 @@ int Monster::getAliveGremlinCount(const BattleContext &bc) {
     }
     return count;
 }
-
-
-
-
-

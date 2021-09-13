@@ -133,7 +133,6 @@ namespace sts {
 
         std::vector<RelicId> relics;
         std::vector<int> relic_counters;
-
         std::vector<Save::CombatReward> combat_rewards;
 
         std::vector<RelicId> boss_relics;

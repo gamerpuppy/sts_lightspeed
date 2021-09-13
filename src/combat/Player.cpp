@@ -75,6 +75,8 @@ void Player::gainBlock(BattleContext &bc, int amount) {
     if (hasStatus<PS::JUGGERNAUT>()) {
         bc.addToBot(Actions::DamageRandomEnemy(getStatus<PS::JUGGERNAUT>()));
     }
+
+    // todo watcher weak power
 }
 
 void Player::gainGold(BattleContext &bc, int amount) {
@@ -494,7 +496,9 @@ void Player::applyStartOfTurnRelics(BattleContext &bc) {
     if (hasRelic<R::BRIMSTONE>()) {
         buff<PS::STRENGTH>(2);
         for (int i = 0; i < bc.monsters.monsterCount; i++) {
-            bc.monsters.arr[i].buff<MS::STRENGTH>(1);
+            if (bc.monsters.arr[i].isTargetable()) {
+                bc.monsters.arr[i].buff<MS::STRENGTH>(1);
+            }
         }
     }
 

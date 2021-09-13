@@ -608,7 +608,7 @@ namespace sts {
         {Event::LIVING_WALL, "Living Wall"},
         {Event::MASKED_BANDITS, "Masked Bandits"},
         {Event::MATCH_AND_KEEP, "Match and Keep"},
-        {Event::MINDBLOOM, "Mindbloom"},
+        {Event::MINDBLOOM, "MindBloom"},
         {Event::MUSHROOMS, "Mushrooms"},
         {Event::MYSTERIOUS_SPHERE, "Mysterious Sphere"},
         {Event::NEST, "Nest"},

@@ -447,6 +447,17 @@ void BattleContext::initRelics(const GameContext &gc) {
 }
 
 void BattleContext::exitBattle(GameContext &g) const {
+    // do this first so that darkstone periapt is overridden by curHp and maxHp are set afterwards
+    const auto &m = monsters.arr[0];
+    if (m.id == MonsterId::WRITHING_MASS && m.miscInfo) {
+        if (player.hasRelic<R::OMAMORI>()) {
+            --g.relics.getRelicValueRef(RelicId::OMAMORI);
+        } else {
+            g.deck.obtain(g, CardId::PARASITE);
+
+        }
+    }
+
     g.potionCount = potionCount;
     g.potions = potions;
 
@@ -462,9 +473,8 @@ void BattleContext::exitBattle(GameContext &g) const {
     g.maxHp = player.maxHp;
     g.gold = player.gold;
 
+
     // todo lesson learned bitset
-    // todo parasite from monster
-    // todo stolen gold
 
     // relic counters
     updateRelicsOnExit(g);
@@ -478,8 +488,8 @@ void BattleContext::exitBattle(GameContext &g) const {
             const auto &m = monsters.arr[i];
 
             const bool canHaveStolenGold = m.id == MonsterId::LOOTER || m.id == MonsterId::MUGGER;
-            const bool escaped = m.curHp > 0 && (m.moveHistory[0] == MonsterMoveId::LOOTER_ESCAPE ||
-            m.moveHistory[0] == MonsterMoveId::MUGGER_ESCAPE);
+            const bool escaped = m.curHp > 0 && (m.moveHistory[0] == MMID::LOOTER_ESCAPE ||
+                                                 m.moveHistory[0] == MMID::MUGGER_ESCAPE);
 
             if (canHaveStolenGold && !escaped) {
                 g.info.stolenGold += m.miscInfo;
@@ -523,12 +533,6 @@ void BattleContext::updateRelicsOnExit(GameContext &g) const {
 
             case RelicId::NUNCHAKU:
                 r.data = player.nunchakuCounter;
-                break;
-
-            case RelicId::OMAMORI:
-                if (r.data > 0 && player.cursedWithParasite) {
-                    --r.data;
-                }
                 break;
 
             case RelicId::PEN_NIB:
@@ -773,6 +777,7 @@ void BattleContext::executeActions() {
             monsters.doMonsterTurn(*this);
             continue;
         }
+        monsters.skipTurn.reset();
 
         if (turnHasEnded && !monsters.areMonstersBasicallyDead()) {
             // after all monster turns
@@ -1042,8 +1047,7 @@ void BattleContext::useAttackCard() {
 
         case CardId::PERFECTED_STRIKE: {
             // hack because we calculate strikeCount while non purge cards are still in hand.
-            const int strikeCount = item.purgeOnUse ? cards.strikeCount+1 : cards.strikeCount;
-            const int strikeDmg = strikeCount * (up ? 3 : 2);
+            const int strikeDmg = cards.strikeCount * (up ? 3 : 2);
             const int baseDamage = 6 + strikeDmg;
             addToBot( Actions::AttackEnemy(t, calculateCardDamage(c, t, baseDamage)) );
             break;
@@ -2621,7 +2625,7 @@ int BattleContext::calculateCardDamage(const CardInstance &card, int targetIdx, 
     }
 
     if (player.hasStatus<PS::WEAK>()) {
-        damage *= .75;
+        damage *= .75f;
     }
 
     // ****** Stance AtDamageGive ******

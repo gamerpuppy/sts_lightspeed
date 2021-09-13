@@ -59,8 +59,6 @@ namespace sts {
         std::uint64_t relicBits1 = 0;
 
         // special info
-        bool cursedWithParasite = false; // if have omamori this indicates a charge on it was used, have omamori is initialized to false if it is out of charges
-
         int8_t  happyFlowerCounter = 0;
         int8_t  incenseBurnerCounter = 0;
         int8_t  inkBottleCounter = 0;

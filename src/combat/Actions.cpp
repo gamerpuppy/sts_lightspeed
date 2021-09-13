@@ -497,7 +497,7 @@ Action Actions::SpawnTorchHeads() {
             torchHead = Monster();
             torchHead.construct(bc, MonsterId::TORCH_HEAD, idx);
             torchHead.initHp(bc.monsterHpRng, bc.ascension); // bug somewhere in game
-            torchHead.setMove(MonsterMoveId::TORCH_HEAD_TACKLE);
+            torchHead.setMove(MMID::TORCH_HEAD_TACKLE);
             torchHead.buff<MS::MINION>();
 
             if (bc.player.hasRelic<R::PHILOSOPHERS_STONE>()) {
@@ -865,8 +865,14 @@ Action Actions::IncreaseOrbSlots(int count) {
 
 Action Actions::SuicideAction(int monsterIdx, bool triggerRelics) {
     return {[=] (BattleContext &bc) {
-        // game sets gold of monster to zero here but this isn't ever done on looter / mugger
-        bc.monsters.arr[monsterIdx].suicideAction(bc);
+        auto &m = bc.monsters.arr[monsterIdx];
+        if (triggerRelics) {
+            if (m.isAlive()) {
+                m.damage(bc, m.curHp);
+            }
+        } else {
+            bc.monsters.arr[monsterIdx].suicideAction(bc);
+        }
     }};
 }
 
@@ -992,7 +998,12 @@ Action Actions::FeedAction(int idx, int damage, bool upgraded) {
             return;
         }
         bc.monsters.arr[idx].attacked(bc, damage);
-        if (!m.hasStatus<MS::MINION>() && !m.isAlive()) {
+
+        const bool effectTriggered = !m.hasStatus<MS::MINION>()
+                                   && !m.isAlive()
+                                   && !(m.hasStatus<MS::REGROW>() && bc.monsters.monstersAlive > 0);
+
+        if (effectTriggered) {
             bc.player.increaseMaxHp(upgraded ? 4 : 3);
         }
 
@@ -1019,7 +1030,11 @@ Action Actions::HandOfGreedAction(int idx, int damage, bool upgraded) {
             return;
         }
         bc.monsters.arr[idx].damage(bc, damage);
-        if (!m.hasStatus<MS::MINION>() && !m.isAlive()) {
+
+        const bool effectTriggered = !m.hasStatus<MS::MINION>()
+                                     && !m.isAlive()
+                                     && !(m.hasStatus<MS::REGROW>() && bc.monsters.monstersAlive > 0);
+        if (effectTriggered) {
             bc.player.gainGold(bc, upgraded ? 25 : 20);
         }
 
@@ -1064,8 +1079,11 @@ Action Actions::RitualDaggerAction(int idx, int damage) {
             return;
         }
         bc.monsters.arr[idx].attacked(bc, damage);
-        if (!m.hasStatus<MS::MINION>() && !m.isAlive()) {
 
+        const bool shouldUpgrade = !m.hasStatus<MS::MINION>()
+                                   && !m.isAlive()
+                                   && !(m.hasStatus<MS::REGROW>() && bc.monsters.monstersAlive > 0);
+        if (shouldUpgrade) {
             auto &c = bc.curCardQueueItem.card;
             const auto upgradeAmt = c.isUpgraded() ? 5 : 3;
 

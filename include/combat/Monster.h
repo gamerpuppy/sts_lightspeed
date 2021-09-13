@@ -31,8 +31,8 @@ namespace sts {
 
         int idx = -1;
         MonsterId id = MonsterId::INVALID;
-        int curHp = -1;
-        int maxHp = -1;
+        int curHp = 0;
+        int maxHp = 0;
 
         bool isEscapingB = false;
 //        bool isDyingB = false;
@@ -46,7 +46,7 @@ namespace sts {
         std::uint64_t statusBits = 0;
         std::map<MonsterStatus, std::int16_t> statusMap;
 
-        MonsterMoveId moveHistory[2] = { MonsterMoveId::INVALID, MonsterMoveId::INVALID };
+        MMID moveHistory[2] = {MMID::INVALID, MMID::INVALID };
 
         // Shield Gremlin target
         // GreenLouse / RedLouse D
@@ -58,6 +58,8 @@ namespace sts {
         // bronze orb have used stasis
         // bronze automaton lastBoostWasFlail
         // spiker thorn buff count
+        // writhing mass used implant
+        // darkling d
         int miscInfo = 0;
 
         // Lagavulin asleep
@@ -85,7 +87,6 @@ namespace sts {
         void preBattleAction(BattleContext &bc);
 
         void applyStartOfTurnPowers(BattleContext &bc);
-        void applyTurnPowers(BattleContext &bc);
         void applyEndOfTurnTriggers(BattleContext &bc);
         void applyEndOfRoundPowers(BattleContext &bc);
 
@@ -112,7 +113,6 @@ namespace sts {
         [[nodiscard]] bool isDeadOrEscaped() const;
         [[nodiscard]] bool isHalfDead() const;
         [[nodiscard]] bool doesEscapeNext() const;
-
         [[nodiscard]] bool isAttacking() const;
 
         template <MonsterStatus> [[nodiscard]] bool hasStatus() const;
@@ -130,17 +130,21 @@ namespace sts {
         void damageUnblockedHelper(BattleContext &bc, int damage);
         void damage(BattleContext &bc, int damage);
         void onHpLost(BattleContext &bc, int amount);
-
         void removeDebuffs();
 
+        void resetAllStatusEffects();
+
         void setMove(MonsterMoveId moveId);
-        [[nodiscard]] bool firstTurn(); // only to be called in rollMove() before any moves are set
-        [[nodiscard]] bool lastMove(MonsterMoveId moveId);
-        [[nodiscard]] bool lastMoveBefore(MonsterMoveId moveId);
-        [[nodiscard]] bool lastTwoMoves(MonsterMoveId moveId);
+        [[nodiscard]] bool firstTurn() const; // only to be called in rollMove() before any moves are set
+        [[nodiscard]] bool lastMove(MonsterMoveId moveId) const;
+        [[nodiscard]] bool lastMoveBefore(MonsterMoveId moveId) const;
+        [[nodiscard]] bool lastTwoMoves(MonsterMoveId moveId) const;
+        [[nodiscard]] bool eitherLastTwo(MonsterMoveId moveId) const;
 
         void rollMove(BattleContext &bc);
-        void setMoveFromRoll(BattleContext &bc, int roll);
+
+        // todo make monsterData const as well and move logic to move actions
+        [[nodiscard]] MMID getMoveForRoll(BattleContext &bc, int &monsterData, int roll) const;
 
         [[nodiscard]] int calculateDamageToPlayer(const BattleContext &bc, int baseDamage) const;
         void attackPlayerHelper(BattleContext &bc, int baseDamage, int times=1);
@@ -153,6 +157,7 @@ namespace sts {
         void spawnBronzeOrbs(BattleContext &bc); // Bronze Automaton
         void stasisAction(BattleContext &bc); // Bronze Orb
         void returnStasisCard(BattleContext &bc);
+        void reptomancerSummon(BattleContext &bc);
 
         [[nodiscard]] static int getAliveGremlinCount(const BattleContext &bc);
 
@@ -271,8 +276,14 @@ namespace sts {
 
     template <MonsterStatus s>
     void Monster::buff(int amount) {
+        // boolean powers
         if (s == MonsterStatus::BARRICADE
             || s == MonsterStatus::MINION
+            || s == MonsterStatus::REGROW
+            || s == MonsterStatus::ASLEEP
+            || s == MonsterStatus::REACTIVE
+            || s == MonsterStatus::SHIFTING
+            || s == MonsterStatus::STASIS
         ) {
             setHasStatus<s>(true);
             return;

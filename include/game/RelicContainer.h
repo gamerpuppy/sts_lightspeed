@@ -15,7 +15,6 @@ namespace sts {
     struct RelicInstance {
         RelicId id;
         int data;
-
     };
 
     class GameContext;

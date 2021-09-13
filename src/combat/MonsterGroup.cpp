@@ -267,7 +267,19 @@ void MonsterGroup::createMonsters(BattleContext &bc, MonsterEncounter encounter)
             createMonster(bc, MonsterId::JAW_WORM);
             createMonster(bc, MonsterId::JAW_WORM);
             createMonster(bc, MonsterId::JAW_WORM);
-            // todo buff str
+
+            const auto strBuff = bc.ascension >= 17 ? 5 : (bc.ascension >= 2 ? 4 : 3);
+            const auto blockBuff = bc.ascension >= 17 ? 9 : (bc.ascension >= 2 ? 6 : 5);
+            for (int i = 0; i < 3; ++i) {
+                auto &m = bc.monsters.arr[i];
+                m.buff<MS::STRENGTH>(strBuff);
+                m.addBlock(blockBuff);
+
+                const auto firstMove = MMID::DARKLING_REGROW;
+                m.moveHistory[0] = firstMove; // it doesn't matter what this is as long as it is not invalid
+                static_assert(firstMove != MonsterMoveId::INVALID);
+            }
+
             break;
         }
 
@@ -318,8 +330,10 @@ void MonsterGroup::createMonsters(BattleContext &bc, MonsterEncounter encounter)
             break;
 
         case MonsterEncounter::REPTOMANCER:
+            ++monsterCount;
             createMonster(bc, MonsterId::DAGGER);
             createMonster(bc, MonsterId::REPTOMANCER);
+            ++monsterCount;
             createMonster(bc, MonsterId::DAGGER);
             break;
 
@@ -549,14 +563,21 @@ MonsterId MonsterGroup::getSlaver(Random &miscRng) {
 
 void MonsterGroup::doMonsterTurn(BattleContext &bc) {
     auto &m = arr[bc.monsterTurnIdx];
-    if (!m.isDeadOrEscaped() || m.isHalfDead()) {
-        m.takeTurn(bc);
-        //m.applyTurnPowers(bc);
+    if ((!m.isDeadOrEscaped() || m.isHalfDead())
+        && !skipTurn[bc.monsterTurnIdx])
+    {
+        if (skipTurn[bc.monsterTurnIdx]) {
+            skipTurn.set(bc.monsterTurnIdx, false);
+        } else {
+            m.takeTurn(bc);
+        }
     }
+
     if (extraRollMoveOnTurn.test(bc.monsterTurnIdx)) {
         bc.noOpRollMove();
         extraRollMoveOnTurn.set(bc.monsterTurnIdx, false);
     }
+
     ++bc.monsterTurnIdx;
 }
 

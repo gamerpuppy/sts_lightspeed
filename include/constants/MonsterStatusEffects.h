@@ -48,12 +48,13 @@ namespace sts {
         CURIOSITY,
         CURL_UP,
         ENRAGE,
-        EXPLOSIVE,
         FADING,
         FLIGHT,
-        INTANGIBLE,
+        INTANGIBLE, // does not work quite like game, always decrements at end of round
         INVINCIBLE,
         MODE_SHIFT,
+        REACTIVE,
+        REGROW,
         RITUAL,
         SHARP_HIDE,
         SHIFTING,
@@ -66,9 +67,8 @@ namespace sts {
 
     typedef MonsterStatus MS;
 
-    // todo
     static constexpr const char* const enemyStatusStrings[]{
-            "Vulnerable","Weak","Block Return","Choked","Corpse Explosion","Lock On","Mark","Poison","Shackled","Slow","Strength Down","Stunned","Artifact","Generic Strength Up","End of Turn Gain Strength","Malleable","Metallicize","Minion","Painful Stabs","Plated Armor","Regen","Strength","Thievery","Angry","Asleep","Barricade","Beat Of Death","Curiosity","Curl Up","Enrage","Explosive","Fading","Flight","Intangible","Invincible","Mode Shift","Ritual","Sharp Hide","Shifting","Spore Cloud","Stasis","Thorns","Time Warp",
+            "Vulnerable","Weak","Block Return","Choked","Corpse Explosion","Lock On","Mark","Poison","Shackled","Slow","Strength Down","Stunned","Artifact","Generic Strength Up","End of Turn Gain Strength","Malleable","Metallicize","Minion","Painful Stabs","Plated Armor","Regen","Strength","Thievery","Angry","Asleep","Barricade","Beat Of Death","Curiosity","Curl Up","Enrage","Fading","Flight","Intangible","Invincible","Mode Shift","Reactive","Regrow","Ritual","Sharp Hide","Shifting","Spore Cloud","Stasis","Thorns","Time Warp",
     };
 
 }

@@ -38,17 +38,6 @@ void Monster::applyStartOfTurnPowers(BattleContext &bc) {
     }
 }
 
-void Monster::applyTurnPowers(BattleContext &bc) {
-    // Monster Powers duringTurn()
-    if (getStatus<MS::EXPLOSIVE>() == 1 && !isDying()) {
-        bc.addToBot(Actions::SuicideAction(idx, true));
-    }
-
-    if (getStatus<MS::FADING>()) {
-        bc.addToBot(Actions::SuicideAction(idx, true));
-    }
-}
-
 void Monster::applyEndOfTurnTriggers(BattleContext &bc) {
     // Monster Powers atEndOfTurnPreEndTurnCards and atEndOfTurn
     if (hasStatus<MS::METALLICIZE>()) {
@@ -59,12 +48,8 @@ void Monster::applyEndOfTurnTriggers(BattleContext &bc) {
         addBlock(getStatus<MS::PLATED_ARMOR>());
     }
 
-    if (getStatus<MS::INTANGIBLE>()) {
-        if (wasJustApplied<MS::INTANGIBLE>()) {
-            setJustApplied<MS::INTANGIBLE>(false);
-        } else {
-            decrementStatus<MS::INTANGIBLE>();
-        }
+    if (hasStatus<MS::INTANGIBLE>()) {
+        decrementStatus<MS::INTANGIBLE>();
     }
 
     if (hasStatus<MS::END_OF_TURN_GAIN_STRENGTH>()) {
@@ -196,20 +181,24 @@ void Monster::addBlock(int amount) {
 }
 
 void Monster::die(BattleContext &bc) {
-    //todo implement trigger relics
-    --bc.monsters.monstersAlive;
-    if (!hasStatus<MS::MINION>()) {
-        const bool isMinionLeader =
+    const bool isMinionLeader =
             id == MonsterId::BRONZE_AUTOMATON ||
             id == MonsterId::GREMLIN_LEADER ||
             id == MonsterId::REPTOMANCER ||
             id == MonsterId::THE_COLLECTOR;
-        if (bc.monsters.monstersAlive == 0 || isMinionLeader)
-        {
-            bc.cleanCardQueue(); // todo should this really return like this.
-            bc.outcome = Outcome::PLAYER_VICTORY;
-            return;
-        }
+
+    //todo implement trigger relics
+    --bc.monsters.monstersAlive;
+    if (bc.monsters.monstersAlive == 0 || isMinionLeader) {
+        bc.cleanCardQueue(); // todo should this really return like this.
+        bc.outcome = Outcome::PLAYER_VICTORY;
+        return;
+    }
+
+    if (hasStatus<MS::REGROW>()) {
+        resetAllStatusEffects();
+        setMove(MMID::DARKLING_REGROW);
+        halfDead = true;
     }
 
     if (hasStatus<MS::SPORE_CLOUD>()) {
@@ -237,6 +226,10 @@ void Monster::die(BattleContext &bc) {
 }
 
 void Monster::suicideAction(BattleContext &bc) {
+    if (!isAlive()) {
+        return;
+    }
+
     --bc.monsters.monstersAlive;
     curHp = 0;
     if (bc.monsters.monstersAlive == 0) {
@@ -249,10 +242,14 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
         damage = 5;
     }
 
+    if (hasStatus<MS::REACTIVE>()) {
+        bc.addToBot( Actions::RollMove(idx) );
+    }
+
     if (hasStatus<MS::PLATED_ARMOR>()) {
         decrementStatus<MS::PLATED_ARMOR>();
         if(!hasStatus<MS::PLATED_ARMOR>() && id == MonsterId::SHELLED_PARASITE) {
-            setMove(MonsterMoveId::SHELLED_PARASITE_STUNNED);
+            setMove(MMID::SHELLED_PARASITE_STUNNED);
         }
     }
 
@@ -268,7 +265,7 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
     if (hasStatus<MS::FLIGHT>() && damage > 0) {
         auto flight = getStatus<MS::FLIGHT>();
         if (flight == 1) {
-            setMove(MonsterMoveId::BYRD_STUNNED);
+            setMove(MMID::BYRD_STUNNED);
         }
         setStatus<MS::FLIGHT>(flight-1);
         // todo add to bot change enemy action to grounded?
@@ -281,7 +278,11 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
     }
 
     if (hasStatus<MS::SHIFTING>()) {
-        // todo addToBot roll move
+        addDebuff<MS::STRENGTH>(-damage);
+
+        setStatus<MS::END_OF_TURN_GAIN_STRENGTH>(
+                getStatus<MS::END_OF_TURN_GAIN_STRENGTH>()+damage
+        );
     }
 
     if (hasStatus<MS::THORNS>()) {
@@ -354,6 +355,14 @@ void Monster::damageUnblockedHelper(BattleContext &bc, int damage) {
         decrementStatus<MS::METALLICIZE>(8);
     }
 
+    if (hasStatus<MS::SHIFTING>()) {
+        addDebuff<MS::STRENGTH>(-damage);
+
+        setStatus<MS::END_OF_TURN_GAIN_STRENGTH>(
+                getStatus<MS::END_OF_TURN_GAIN_STRENGTH>()+damage
+        );
+    }
+
     curHp = std::max(0, curHp-damage);
     if (curHp == 0) {
         die(bc);
@@ -410,19 +419,19 @@ void Monster::onHpLost(BattleContext &bc, int amount) {
     switch (id) {
         case MonsterId::ACID_SLIME_L:
             if (atOrBelowHalf) {
-                moveHistory[0] = MonsterMoveId::ACID_SLIME_L_SPLIT;
+                moveHistory[0] = MMID::ACID_SLIME_L_SPLIT;
             }
             break;
 
         case MonsterId::SLIME_BOSS:
             if (atOrBelowHalf) {
-                moveHistory[0] = MonsterMoveId::SLIME_BOSS_SPLIT;
+                moveHistory[0] = MMID::SLIME_BOSS_SPLIT;
             }
             break;
 
         case MonsterId::SPIKE_SLIME_L:
             if (atOrBelowHalf) {
-                moveHistory[0] = MonsterMoveId::SPIKE_SLIME_L_SPLIT;
+                moveHistory[0] = MMID::SPIKE_SLIME_L_SPLIT;
             }
             break;
 
@@ -431,7 +440,7 @@ void Monster::onHpLost(BattleContext &bc, int amount) {
                 const int newModeShiftAmount = getStatus<MS::MODE_SHIFT>() - amount;
                 if (newModeShiftAmount <= 0) {
                     removeStatus<MS::MODE_SHIFT>();
-                    setMove(MonsterMoveId::THE_GUARDIAN_DEFENSIVE_MODE);
+                    setMove(MMID::THE_GUARDIAN_DEFENSIVE_MODE);
                     bc.addToBot( Actions::MonsterGainBlock(idx, 20) );
                 } else {
                     setStatus<MS::MODE_SHIFT>(newModeShiftAmount);
@@ -458,6 +467,13 @@ void Monster::removeDebuffs() {
 //    removeStatus<MS::CORPSE_EXPLOSION>();
 //    removeStatus<MS::LOCK_ON>();
 
+}
+
+void Monster::resetAllStatusEffects() {
+    justAppliedBits = 0;
+    statusBits = 0;
+    strength = 0;
+    block = 0;
 }
 
 // this is calculated at the player when the damage occurs in game, consider testing whether there are any scenarios when it can't be done before
@@ -502,27 +518,36 @@ void Monster::attackPlayerHelper(BattleContext &bc, int baseDamage, int times) {
     }
 }
 
-bool Monster::firstTurn() {
-    return moveHistory[0] == MonsterMoveId::INVALID;
+bool Monster::firstTurn() const {
+    return moveHistory[0] == MMID::INVALID;
 }
 
-bool Monster::lastMove(MonsterMoveId moveId) {
+bool Monster::lastMove(MMID moveId) const {
     return moveHistory[0] == moveId;
 }
 
-bool Monster::lastMoveBefore(MonsterMoveId moveId) {
+bool Monster::lastMoveBefore(MMID moveId) const {
     return moveHistory[1] == moveId;
 }
 
-bool Monster::lastTwoMoves(MonsterMoveId moveId) {
+bool Monster::lastTwoMoves(MMID moveId) const {
     return moveHistory[0] == moveId && moveHistory[1] == moveId;
 }
 
-void Monster::rollMove(BattleContext &bc) {
-    setMoveFromRoll(bc, bc.aiRng.random(99));
+bool Monster::eitherLastTwo(MonsterMoveId moveId) const {
+    return moveHistory[0] == moveId || moveHistory[1] == moveId;
 }
 
-void Monster::setMove(MonsterMoveId moveId) {
+void Monster::rollMove(BattleContext &bc) {
+    auto miscInfoCopy = miscInfo;
+
+    const auto move = getMoveForRoll(bc, miscInfoCopy, bc.aiRng.random(99));
+
+    miscInfo = miscInfoCopy;
+    setMove(move);
+}
+
+void Monster::setMove(MMID moveId) {
     moveHistory[1] = moveHistory[0];
     moveHistory[0] = moveId;
 }
