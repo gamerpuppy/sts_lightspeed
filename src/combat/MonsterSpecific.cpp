@@ -101,9 +101,6 @@ void Monster::initHp(Random &hpRng, int ascension) {
             setRandomHp(hpRng, ascension >= 8);
             break;
 
-
-
-
         case MonsterId::REPTOMANCER:
             hpRng.random(180, 190);
             setRandomHp(hpRng, ascension >= 8);
@@ -113,7 +110,6 @@ void Monster::initHp(Random &hpRng, int ascension) {
             hpRng.random(52, 58);
             setRandomHp(hpRng, ascension >= 9);
             break;
-
 
         case MonsterId::TASKMASTER:
             hpRng.random(54, 60);
@@ -133,6 +129,7 @@ void Monster::initHp(Random &hpRng, int ascension) {
 }
 
 void Monster::preBattleAction(BattleContext &bc) {
+    const bool asc4 = bc.ascension >= 4;
     const bool asc7 = bc.ascension >= 7;
     const bool asc9 = bc.ascension >= 9;
     const bool asc17 = bc.ascension >= 17;
@@ -142,6 +139,10 @@ void Monster::preBattleAction(BattleContext &bc) {
     const int hallwayDiffIdx = getTriIdx(bc.ascension, 2, 17);
 
     switch (id) {
+        case MonsterId::DAGGER:
+            buff<MS::MINION>();
+            break;
+
         case MonsterId::DARKLING:       // game adds regrow power
             buff<MS::REGROW>();
             break;
@@ -152,8 +153,9 @@ void Monster::preBattleAction(BattleContext &bc) {
 
         case MonsterId::EXPLODER:       // game adds explosive power
         case MonsterId::GIANT_HEAD:     // game adds slow power
-        case MonsterId::REPTOMANCER:    // game adds MinionPower to all daggers
+
         case MonsterId::GREMLIN_LEADER: // game adds MinionPower to all gremlins
+            buff<MS::MINION_LEADER>();
             break;
 
         case MonsterId::TRANSIENT:      // game adds ShiftingPower
@@ -171,12 +173,16 @@ void Monster::preBattleAction(BattleContext &bc) {
             break;
 
         case MonsterId::AWAKENED_ONE:
-            // game adds curiosity power
+            // buff minion leader only in stage 2
+            if (asc4) {
+                buff<MS::STRENGTH>(2);
+            }
+            buff<MS::CURIOSITY>(asc19 ? 2 : 1);
             buff<MS::REGEN>(asc19 ? 15 : 10);
             break;
 
-        case MonsterId::DONU:
         case MonsterId::DECA:
+        case MonsterId::DONU:
             buff<MS::ARTIFACT>(asc19 ? 3 : 2);
             break;
 
@@ -197,6 +203,7 @@ void Monster::preBattleAction(BattleContext &bc) {
         }
 
         case MonsterId::BRONZE_AUTOMATON: {
+            buff<MS::MINION_LEADER>();
             buff<MS::ARTIFACT>(3);
             break;
         }
@@ -212,10 +219,13 @@ void Monster::preBattleAction(BattleContext &bc) {
         }
 
         case MonsterId::LOOTER:
-        case MonsterId::MUGGER: {
-//            buff<MS::THIEVERY>(asc17 ? 20 : 15);
+        case MonsterId::MUGGER:
+            buff<MS::THIEVERY>(asc17 ? 20 : 15);
             break;
-        }
+
+        case MonsterId::REPTOMANCER:
+            buff<MS::MINION_LEADER>();
+            break;
 
         case MonsterId::SHELLED_PARASITE: {
             buff<MS::PLATED_ARMOR>(14);
@@ -252,6 +262,11 @@ void Monster::preBattleAction(BattleContext &bc) {
             buff<MS::ARTIFACT>(asc18 ? 2 : 1);
             break;
         }
+
+        case MonsterId::THE_COLLECTOR:
+            buff<MS::MINION_LEADER>();
+            break;
+
 
             // handle in MonsterGroup instead
 //        case MonsterId::JAW_WORM: {
@@ -881,7 +896,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
         }
 
         case MMID::LOOTER_LUNGE: {// 4
-            stealGoldFromPlayer(bc, asc17 ? 20 : 15);
+            stealGoldFromPlayer(bc, getStatus<MS::THIEVERY>());
             attackPlayerHelper(bc, asc2 ? 14 : 12);
             setMove(MMID::LOOTER_SMOKE_BOMB);
             break;
@@ -891,7 +906,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             if (bc.getMonsterTurnNumber() == 1) {
                 bc.aiRng.randomBoolean(0.6f); // for a dialog message in game
             }
-            stealGoldFromPlayer(bc, asc17 ? 20 : 15);
+            stealGoldFromPlayer(bc, getStatus<MS::THIEVERY>());
             attackPlayerHelper(bc, asc2 ? 11 : 10);
             if (bc.getMonsterTurnNumber() == 1) {
                 setMove(MMID::LOOTER_MUG);
@@ -927,7 +942,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
 
         case MMID::MUGGER_LUNGE: { // 4
             bc.aiRng.random(2); // for a dialog message in gam
-            stealGoldFromPlayer(bc, asc17 ? 20 : 15);
+            stealGoldFromPlayer(bc, getStatus<MS::THIEVERY>());
             attackPlayerHelper(bc, asc2 ? 18 : 16);
             setMove(MMID::MUGGER_SMOKE_BOMB);
             break;
@@ -938,7 +953,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             if (bc.getMonsterTurnNumber() == 2) {
                 bc.aiRng.randomBoolean(0.6f); // for a dialog message in game
             }
-            stealGoldFromPlayer(bc, asc17 ? 20 : 15);
+            stealGoldFromPlayer(bc, getStatus<MS::THIEVERY>());
             attackPlayerHelper(bc, asc2 ? 11 : 10);
 
             if (bc.getMonsterTurnNumber() == 2) {
@@ -1618,6 +1633,66 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             }
             rollMove(bc);
             break;
+
+        case MMID::DONU_BEAM:
+            attackPlayerHelper(bc, asc4 ? 12 : 10, 2);
+            setMove(MonsterMoveId::DONU_CIRCLE_OF_POWER);
+            break;
+
+        case MMID::DONU_CIRCLE_OF_POWER:
+            bc.monsters.arr[0].buff<MS::STRENGTH>(3); // shouldn't matter if deca is dead
+            buff<MS::STRENGTH>(3);
+            setMove(MonsterMoveId::DONU_BEAM);
+            break;
+
+        case MMID::DECA_BEAM:
+            attackPlayerHelper(bc, asc4 ? 12 : 10, 2);
+            bc.addToBot( Actions::MakeTempCardInDiscard(CardId::DAZED, 2) );
+            setMove(MonsterMoveId::DECA_SQUARE_OF_PROTECTION);
+            break;
+
+        case MMID::DECA_SQUARE_OF_PROTECTION: {
+            auto &deca = *this;
+            auto &donu = bc.monsters.arr[1];
+            deca.addBlock(16);
+            donu.addBlock(16);
+            if (asc19) {
+                deca.buff<MS::PLATED_ARMOR>(3);
+                donu.buff<MS::PLATED_ARMOR>(3);
+            }
+            setMove(MonsterMoveId::DECA_BEAM);
+            break;
+        }
+
+        case MMID::AWAKENED_ONE_DARK_ECHO:
+            attackPlayerHelper(bc, 40);
+            bc.addToBot( Actions::RollMove(1) );
+            break;
+
+        case MMID::AWAKENED_ONE_REBIRTH:
+
+
+
+        case MMID::AWAKENED_ONE_SLASH:
+            attackPlayerHelper(bc, 20);
+            bc.addToBot( Actions::RollMove(1) );
+            break;
+
+        case MMID::AWAKENED_ONE_SLUDGE:
+
+
+
+        case MMID::AWAKENED_ONE_SOUL_STRIKE:
+            attackPlayerHelper(bc, 6, 4);
+            bc.addToBot( Actions::RollMove(1) );
+            break;
+
+
+        case MMID::AWAKENED_ONE_TACKLE:
+            attackPlayerHelper(bc, 10, 3);
+            bc.addToBot( Actions::RollMove(1) );
+            break;
+
 
         case MMID::INVALID:
 #ifdef sts_asserts
@@ -2719,7 +2794,6 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
         }
 
         // SHAPES
-
         case MonsterId::EXPLODER: {
             // first turn only
             return (MMID::EXPLODER_SLAM);
@@ -2820,9 +2894,7 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
 
             } else {
                 return (MMID::SPIRE_GROWTH_QUICK_TACKLE);
-
             }
-            break;
         }
 
         case MonsterId::TRANSIENT: {
@@ -2835,9 +2907,6 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             // 2 flail
             // 3 wither
             // 4 implant
-            const bool haveUsedImplant = miscInfo;
-            auto myRoll = roll;
-
             if (bc.getMonsterTurnNumber() == 1) {
                 if (roll < 33) {
                     return (MMID::WRITHING_MASS_MULTI_STRIKE);
@@ -2850,66 +2919,73 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
                 }
             }
 
-            if (myRoll < 10) {
-                if (!lastMove(MMID::WRITHING_MASS_STRONG_STRIKE)) {
-                    return (MMID::WRITHING_MASS_STRONG_STRIKE);
-                }
-                myRoll = bc.aiRng.random(10, 99);
-            }
+            const bool haveUsedImplant = miscInfo;
+            auto myRoll = roll;
+            while (true) {
 
-            if (myRoll < 20) {
-                if (!haveUsedImplant && !lastMove(MMID::WRITHING_MASS_IMPLANT)) {
-                    return (MMID::WRITHING_MASS_IMPLANT);
-
-                } else if (bc.aiRng.randomBoolean(0.1f)) {
-                    return (MMID::WRITHING_MASS_STRONG_STRIKE);
-                }
-                myRoll = bc.aiRng.random(20, 99);
-            }
-
-            if (myRoll < 40) {
-                if (!lastMove(MMID::WRITHING_MASS_WITHER)) {
-                    return MMID::WRITHING_MASS_WITHER;
-                }
-
-                // last move was wither
-                if (bc.aiRng.randomBoolean(0.4f)) {
-                    myRoll = bc.aiRng.random(0, 19);
-                    if (myRoll < 10) {
+                if (myRoll < 10) {
+                    if (!lastMove(MMID::WRITHING_MASS_STRONG_STRIKE)) {
                         return (MMID::WRITHING_MASS_STRONG_STRIKE);
+                    }
+                    myRoll = bc.aiRng.random(10, 99);
+                }
 
-                    } else {
-                        if (!haveUsedImplant) {
-                            return (MMID::WRITHING_MASS_IMPLANT);
+                if (myRoll < 20) {
+                    if (!haveUsedImplant && !lastMove(MMID::WRITHING_MASS_IMPLANT)) {
+                        return (MMID::WRITHING_MASS_IMPLANT);
 
-                        } else if (bc.aiRng.randomBoolean(0.1f)) {
+                    } else if (bc.aiRng.randomBoolean(0.1f)) {
+                        return (MMID::WRITHING_MASS_STRONG_STRIKE);
+                    }
+                    myRoll = bc.aiRng.random(20, 99);
+                }
+
+                if (myRoll < 40) {
+                    if (!lastMove(MMID::WRITHING_MASS_WITHER)) {
+                        return MMID::WRITHING_MASS_WITHER;
+                    }
+
+                    // last move was wither
+                    if (bc.aiRng.randomBoolean(0.4f)) {
+                        myRoll = bc.aiRng.random(0, 19);
+                        if (myRoll < 10) {
                             return (MMID::WRITHING_MASS_STRONG_STRIKE);
 
                         } else {
-                            return getMoveForRoll(bc, monsterData, bc.aiRng.random(20, 99));
+                            if (!haveUsedImplant) {
+                                return (MMID::WRITHING_MASS_IMPLANT);
+
+                            } else if (bc.aiRng.randomBoolean(0.1f)) {
+                                return (MMID::WRITHING_MASS_STRONG_STRIKE);
+
+                            } else {
+                                myRoll= bc.aiRng.random(20, 99);
+                                continue;
+                            }
                         }
                     }
+                    myRoll = bc.aiRng.random(40, 99);
                 }
-                myRoll = bc.aiRng.random(40, 99);
-            }
 
-            if (myRoll < 70) {
-                if (!lastMove(MMID::WRITHING_MASS_MULTI_STRIKE)) {
-                    return MMID::WRITHING_MASS_MULTI_STRIKE;
+                if (myRoll < 70) {
+                    if (!lastMove(MMID::WRITHING_MASS_MULTI_STRIKE)) {
+                        return MMID::WRITHING_MASS_MULTI_STRIKE;
 
-                } else if (bc.aiRng.randomBoolean(0.3f)) {
+                    } else if (bc.aiRng.randomBoolean(0.3f)) {
+                        return MMID::WRITHING_MASS_FLAIL;
+
+                    } else {
+                        myRoll= bc.aiRng.random(0, 39);
+                        continue;
+                    }
+                }
+
+                if (!lastMove(MMID::WRITHING_MASS_FLAIL)) {
                     return MMID::WRITHING_MASS_FLAIL;
 
                 } else {
-                    return getMoveForRoll(bc, monsterData, bc.aiRng.random(0, 39));
+                    return (MMID::WRITHING_MASS_WITHER);
                 }
-            }
-
-            if (!lastMove(MMID::WRITHING_MASS_FLAIL)) {
-                return MMID::WRITHING_MASS_FLAIL;
-
-            } else {
-                return (MMID::WRITHING_MASS_WITHER);
             }
         }
 
@@ -2976,6 +3052,19 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             }
 
             return MonsterMoveId::TIME_EATER_RIPPLE;
+        }
+
+        case MonsterId::DECA: {
+            return MonsterMoveId::DECA_BEAM;
+        }
+
+        case MonsterId::DONU: {
+            return MonsterMoveId::DONU_CIRCLE_OF_POWER;
+        }
+
+        case MonsterId::AWAKENED_ONE: {
+
+
         }
 
         // just setting in collector spawn move

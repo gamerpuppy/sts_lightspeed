@@ -25,7 +25,7 @@ namespace sts {
         CHARONS_ASHES,
         CHEMICAL_X,
         CLOAK_CLASP,
-        DARKSTONE_PERIAPT, // todo in battle maxhp increase
+        DARKSTONE_PERIAPT,
         DEAD_BRANCH,
         DUALITY,
         ECTOPLASM,

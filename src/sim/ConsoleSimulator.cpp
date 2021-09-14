@@ -100,6 +100,9 @@ void ConsoleSimulator::handleInputLine(const std::string &line, std::ostream &os
         if (battleSim.isBattleComplete()) {
             battleSim.exitBattle(*gc);
             battleSim.initialized = false;
+            if (gc->screenState == ScreenState::BATTLE) {
+                battleSim.initBattle(*gc);
+            }
         }
         return;
     }

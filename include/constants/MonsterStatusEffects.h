@@ -26,8 +26,6 @@ namespace sts {
 
         // unique powers : two of these can't be on the same monster
         ANGRY,
-        ASLEEP,
-        BARRICADE,
         BEAT_OF_DEATH,
         CURIOSITY,
         CURL_UP,
@@ -38,21 +36,26 @@ namespace sts {
         INTANGIBLE, // differs from the game in that it always decrements at end of round
         MALLEABLE,
         MODE_SHIFT,
-        REACTIVE,
-        REGROW,
         RITUAL, // todo just merge this with orb walker strength up
-        SHIFTING,
         SLOW, // this should be set just to
         SPORE_CLOUD,
-        STASIS,
         THIEVERY,
         THORNS,
         TIME_WARP,
 
         // special case for the heart's second unique power
         INVINCIBLE,
-        MINION, // only stored in statusbits
         SHARP_HIDE,
+
+        // bool powers, stored in statusbits
+        ASLEEP,
+        BARRICADE,
+        MINION,
+        MINION_LEADER,
+        REACTIVE,
+        REGROW,
+        SHIFTING,
+        STASIS,
     };
 
 
@@ -76,8 +79,6 @@ namespace sts {
         "Weak",
 
         "Angry",
-        "Asleep",
-        "Barricade",
         "Beat Of Death",
         "Curiosity",
         "Curl Up",
@@ -87,22 +88,25 @@ namespace sts {
         "Generic Strength Up",
         "Intangible",
         "Malleable",
-
         "Mode Shift",
-        "Reactive",
-        "Regrow",
         "Ritual",
-        "Shifting",
         "Slow",
         "Spore Cloud",
-        "Stasis",
         "Thievery",
         "Thorns",
         "Time Warp",
 
         "Invincible",
-        "Minion",
         "Sharp Hide",
+
+        "Asleep",
+        "Barricade",
+        "Minion",
+        "Minion Leader",
+        "Reactive",
+        "Regrow",
+        "Shifting",
+        "Stasis",
     };
 
     static constexpr bool isBooleanPower(MonsterStatus s) {
@@ -110,6 +114,7 @@ namespace sts {
             case MS::ASLEEP:
             case MS::BARRICADE:
             case MS::MINION:
+            case MS::MINION_LEADER:
             case MS::REACTIVE:
             case MS::REGROW:
             case MS::SHIFTING:

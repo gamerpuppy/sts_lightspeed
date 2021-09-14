@@ -1146,8 +1146,19 @@ void GameContext::afterBattle() {
                 openCombatRewardScreen(createBossCombatReward());
 
             } else if (act == 3) {
-                regainControlAction = [](GameContext &gc) { gc.transitionToAct(gc.act + 1); };
-                enterAct3VictoryRoom();
+
+                if (ascension >= 20 && info.encounter == boss) {
+                    // go to second boss
+                    regainControlAction = [](GameContext &gc) {
+                        gc.afterBattle();
+                    };
+                    enterBattle(secondBoss);
+
+                } else {
+                    // go to next act
+                    regainControlAction = [](GameContext &gc) { gc.transitionToAct(gc.act + 1); };
+                    enterAct3VictoryRoom();
+                }
 
             } else if (act == 4) {
                 outcome = GameOutcome::PLAYER_VICTORY;

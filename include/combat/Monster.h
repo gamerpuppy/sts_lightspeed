@@ -10,6 +10,7 @@
 #include <map>
 #include <game/Random.h>
 #include <bitset>
+#include <cassert>
 
 #include "constants/MonsterStatusEffects.h"
 #include "constants/MonsterIds.h"
@@ -57,7 +58,6 @@ namespace sts {
         int strength = 0;
         int vulnerable = 0;
         int weak = 0;
-
 
         int uniquePower0 = 0; // unique powers, hexaghost orbCount
         std::int16_t uniquePower1 = 0; // Corrupt Heart invincible,
@@ -269,6 +269,7 @@ namespace sts {
             case MonsterStatus::ASLEEP:
             case MonsterStatus::BARRICADE:
             case MonsterStatus::MINION:
+            case MonsterStatus::MINION_LEADER:
             case MonsterStatus::REGROW:
             case MonsterStatus::REACTIVE:
             case MonsterStatus::SHIFTING:
@@ -324,52 +325,53 @@ namespace sts {
         switch (s) {
             case MonsterStatus::BLOCK_RETURN:
                 blockReturn += amount;
-                setHasStatus<s>(blockReturn);
+                setHasStatus<s>(true);
                 return;
 
             case MonsterStatus::CHOKED:
                 choked += amount;
-                setHasStatus<s>(choked);
+                setHasStatus<s>(true);
                 return;
 
             case MonsterStatus::CORPSE_EXPLOSION:
                 corpseExplosion += amount;
-                setHasStatus<s>(corpseExplosion);
+                setHasStatus<s>(true);
                 return;
 
             case MonsterStatus::LOCK_ON:
                 lockOn += amount;
-                setHasStatus<s>(lockOn);
+                setHasStatus<s>(true);
                 return;
 
             case MonsterStatus::MARK:
                 mark += amount;
-                setHasStatus<s>(mark);
+                setHasStatus<s>(true);
                 return;
 
             case MonsterStatus::POISON:
                 poison += amount;
-                setHasStatus<s>(poison);
+                setHasStatus<s>(true);
                 return;
 
             case MonsterStatus::STRENGTH:
                 strength += amount;
+                setHasStatus<s>(true);
                 return;
 
             case MonsterStatus::VULNERABLE:
                 vulnerable += amount;
-                setHasStatus<s>(vulnerable);
+                setHasStatus<s>(true);
                 return;
 
             case MonsterStatus::WEAK:
                 weak += amount;
-                setHasStatus<s>(weak);
+                setHasStatus<s>(true);
                 return;
 
             default:
+                assert(false);
                 break;
         }
-//        static_assert(false);
     }
 
     template <MonsterStatus s>
@@ -510,6 +512,11 @@ namespace sts {
 
     template <MonsterStatus s>
     void Monster::buff(int amount) {
+        if (isBooleanPower(s)) {
+            setHasStatus<s>(true);
+            return;
+        }
+
         switch (s) {
             case MonsterStatus::ARTIFACT:
                 artifact += amount;
@@ -543,16 +550,6 @@ namespace sts {
 
             case MonsterStatus::STRENGTH:
                 strength += amount;
-                return;
-
-            case MS::ASLEEP:
-            case MS::BARRICADE:
-            case MS::MINION:
-            case MS::REACTIVE:
-            case MS::REGROW:
-            case MS::SHIFTING:
-            case MS::STASIS:
-                setHasStatus<s>(true);
                 return;
 
             case MS::ANGRY:

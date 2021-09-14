@@ -132,7 +132,7 @@ bool Monster::hasStatus(MonsterStatus s) const {
 }
 
 int Monster::getStatusInternal(MonsterStatus s) const {
-    if (s == MonsterStatus::STRENGTH) {
+    if (s == MS::STRENGTH) {
         return strength;
     }
 
@@ -141,80 +141,82 @@ int Monster::getStatusInternal(MonsterStatus s) const {
     }
 
     switch (s) {
-        case MonsterStatus::ARTIFACT:
+        case MS::ARTIFACT:
             return artifact;
 
-        case MonsterStatus::BLOCK_RETURN:
+        case MS::BLOCK_RETURN:
             return blockReturn;
 
-        case MonsterStatus::CHOKED:
+        case MS::CHOKED:
             return choked;
 
-        case MonsterStatus::CORPSE_EXPLOSION:
+        case MS::CORPSE_EXPLOSION:
             return corpseExplosion;
 
-        case MonsterStatus::LOCK_ON:
+        case MS::LOCK_ON:
             return lockOn;
 
-        case MonsterStatus::MARK:
+        case MS::MARK:
             return mark;
 
-        case MonsterStatus::METALLICIZE:
+        case MS::METALLICIZE:
             return metallicize;
 
-        case MonsterStatus::PAINFUL_STABS:
+        case MS::PAINFUL_STABS:
             return painfulStabs;
 
-        case MonsterStatus::PLATED_ARMOR:
+        case MS::PLATED_ARMOR:
             return platedArmor;
 
-        case MonsterStatus::POISON:
+        case MS::POISON:
             return poison;
 
-        case MonsterStatus::REGEN:
+        case MS::REGEN:
             return regen;
 
-        case MonsterStatus::SHACKLED:
+        case MS::SHACKLED:
             return shackled;
 
-        case MonsterStatus::VULNERABLE:
+        case MS::VULNERABLE:
             return vulnerable;
 
-        case MonsterStatus::WEAK:
+        case MS::WEAK:
             return weak;
 
-        case MonsterStatus::ANGRY:
-        case MonsterStatus::BEAT_OF_DEATH:
-        case MonsterStatus::CURIOSITY:
-        case MonsterStatus::CURL_UP:
-        case MonsterStatus::ENRAGE:
-        case MonsterStatus::FADING:
-        case MonsterStatus::FLIGHT:
-        case MonsterStatus::GENERIC_STRENGTH_UP:
-        case MonsterStatus::INTANGIBLE:
-        case MonsterStatus::MALLEABLE:
-        case MonsterStatus::MODE_SHIFT:
-        case MonsterStatus::RITUAL:
-        case MonsterStatus::SLOW:
-        case MonsterStatus::SPORE_CLOUD:
-        case MonsterStatus::THIEVERY:
-        case MonsterStatus::THORNS:
-        case MonsterStatus::TIME_WARP:
+        case MS::ANGRY:
+        case MS::BEAT_OF_DEATH:
+        case MS::CURIOSITY:
+        case MS::CURL_UP:
+        case MS::ENRAGE:
+        case MS::FADING:
+        case MS::FLIGHT:
+        case MS::GENERIC_STRENGTH_UP:
+        case MS::INTANGIBLE:
+        case MS::MALLEABLE:
+        case MS::MODE_SHIFT:
+        case MS::RITUAL:
+        case MS::SLOW:
+        case MS::SPORE_CLOUD:
+        case MS::THIEVERY:
+        case MS::THORNS:
+        case MS::TIME_WARP:
             return uniquePower0;
 
-        // boolean powers
-        case MonsterStatus::ASLEEP:
-        case MonsterStatus::BARRICADE:
-        case MonsterStatus::MINION:
-        case MonsterStatus::REGROW:
-        case MonsterStatus::REACTIVE:
-        case MonsterStatus::SHIFTING:
-        case MonsterStatus::STASIS:
-            return hasStatus(s);
 
-        case MonsterStatus::INVINCIBLE:
-        case MonsterStatus::SHARP_HIDE:
+        case MS::INVINCIBLE:
+        case MS::SHARP_HIDE:
             return uniquePower1;
+
+        // boolean powers
+        case MS::ASLEEP:
+        case MS::BARRICADE:
+        case MS::MINION:
+        case MS::MINION_LEADER:
+        case MS::REACTIVE:
+        case MS::REGROW:
+        case MS::SHIFTING:
+        case MS::STASIS:
+            return hasStatus(s);
 
         default:
 #ifdef sts_asserts
@@ -265,38 +267,29 @@ void Monster::addBlock(int amount) {
 }
 
 void Monster::die(BattleContext &bc) {
-    const bool isMinionLeader =
-            id == MonsterId::BRONZE_AUTOMATON ||
-            id == MonsterId::GREMLIN_LEADER ||
-            id == MonsterId::REPTOMANCER ||
-            id == MonsterId::THE_COLLECTOR;
-
-    //todo implement trigger relics
     --bc.monsters.monstersAlive;
-    if (bc.monsters.monstersAlive == 0 || isMinionLeader) {
+    if (bc.monsters.monstersAlive == 0 || hasStatus<MS::MINION_LEADER>()) {
         bc.cleanCardQueue(); // todo should this really return like this.
         bc.outcome = Outcome::PLAYER_VICTORY;
         return;
     }
 
-    if (hasStatus<MS::REGROW>()) {
-        resetAllStatusEffects();
-        setMove(MMID::DARKLING_REGROW);
-        halfDead = true;
-    }
-
     if (hasStatus<MS::SPORE_CLOUD>()) {
         // spore cloud always has a value of 2 in game
         bc.addToTop( Actions::DebuffPlayer<PS::VULNERABLE>(2, bc.turnHasEnded) );
+
+    } else if (hasStatus<MS::REGROW>()) {
+        resetAllStatusEffects();
+        setMove(MMID::DARKLING_REGROW);
+        halfDead = true;
+
+    } else if (hasStatus<MS::STASIS>()) {
+        returnStasisCard(bc);
     }
 
     if (hasStatus<MS::CORPSE_EXPLOSION>()) {
         int damage = maxHp * getStatus<MS::CORPSE_EXPLOSION>();
         bc.addToBot( Actions::DamageAllEnemy(damage) );
-    }
-
-    if (hasStatus<MS::STASIS>()) {
-        returnStasisCard(bc);
     }
 
     if (bc.player.hasRelic<RelicId::GREMLIN_HORN>()) {
@@ -326,8 +319,8 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
         damage = 5;
     }
 
-    if (hasStatus<MS::REACTIVE>()) {
-        bc.addToBot( Actions::RollMove(idx) );
+    if (bc.player.hasStatus<PS::ENVENOM>()) {
+        bc.addToTop( Actions::DebuffEnemy<MS::POISON>(this->idx, bc.player.getStatus<PS::ENVENOM>()) );
     }
 
     if (hasStatus<MS::PLATED_ARMOR>()) {
@@ -335,48 +328,42 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
         if(!hasStatus<MS::PLATED_ARMOR>() && id == MonsterId::SHELLED_PARASITE) {
             setMove(MMID::SHELLED_PARASITE_STUNNED);
         }
-    }
 
-    if (bc.player.hasStatus<PS::ENVENOM>()) {
-        bc.addToTop( Actions::DebuffEnemy<MS::POISON>(this->idx, bc.player.getStatus<PS::ENVENOM>()) );
-    }
-
-    if (hasStatus<MS::CURL_UP>()) {
+    } else if (hasStatus<MS::CURL_UP>()) {
         bc.addToBot(Actions::MonsterGainBlock(this->idx, getStatus<MS::CURL_UP>()) );
         setHasStatus<MS::CURL_UP>(false);
-    }
 
-    if (hasStatus<MS::FLIGHT>() && damage > 0) {
+    } else if (hasStatus<MS::FLIGHT>() && damage > 0) {
         auto flight = getStatus<MS::FLIGHT>();
         if (flight == 1) {
             setMove(MMID::BYRD_STUNNED);
         }
         setStatus<MS::FLIGHT>(flight-1);
-        // todo add to bot change enemy action to grounded?
-    }
 
-    if (hasStatus<MS::MALLEABLE>()) {
-        const auto malleable = getStatus<MS::MALLEABLE>();
-        bc.addToBot( Actions::MonsterGainBlock(this->idx, malleable) );
-        setStatus<MS::MALLEABLE>(malleable+1);
-    }
+    } else if (hasStatus<MS::MALLEABLE>() || hasStatus<MS::REACTIVE>()) {
+        if (hasStatus<MS::MALLEABLE>()) {
+            const auto malleable = getStatus<MS::MALLEABLE>();
+            bc.addToBot( Actions::MonsterGainBlock(this->idx, malleable) );
+            setStatus<MS::MALLEABLE>(malleable+1);
+        }
+        if (hasStatus<MS::REACTIVE>()) {
+            bc.addToBot( Actions::RollMove(idx) );
+        }
 
-    if (hasStatus<MS::SHIFTING>()) {
+    } else if (hasStatus<MS::THORNS>()) {
+        bc.addToTop(Actions::DamagePlayer(getStatus<MS::THORNS>()) );
+
+    } else if (hasStatus<MS::ASLEEP>()) {
+        // lagavulin
+        setHasStatus<MS::ASLEEP>(false);
+        decrementStatus<MS::METALLICIZE>(8);
+
+    } else if (hasStatus<MS::SHIFTING>()) {
         addDebuff<MS::STRENGTH>(-damage);
 
         setStatus<MS::SHACKLED>(
                 getStatus<MS::SHACKLED>() + damage
         );
-    }
-
-    if (hasStatus<MS::THORNS>()) {
-        bc.addToTop(Actions::DamagePlayer(getStatus<MS::THORNS>()) );
-    }
-
-    if (hasStatus<MS::ASLEEP>()) {
-        // lagavulin
-        setHasStatus<MS::ASLEEP>(false);
-        decrementStatus<MS::METALLICIZE>(8);
     }
 
     curHp -= damage;

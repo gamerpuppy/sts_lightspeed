@@ -40,7 +40,6 @@ void BattleSimulator::exitBattle(GameContext &gc) {
 }
 
 void BattleSimulator::handleInputLine(const std::string &line, std::ostream &os, SimulatorContext &c) {
-
 #ifdef sts_asserts
     assert(initialized);
 #endif
