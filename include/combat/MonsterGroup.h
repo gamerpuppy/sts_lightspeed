@@ -16,7 +16,6 @@
 namespace sts {
 
     struct MonsterGroup {
-
         int monstersAlive = 0;
         int monsterCount = 0;
         std::array<Monster, 5> arr;

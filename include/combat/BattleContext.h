@@ -45,6 +45,7 @@ namespace sts {
         bool haveUsedDiscoveryAction = false; // for tracking undefined behavior resulting from using the action
         bool undefinedBehaviorEvoked = false; // some cards cause inconsistent outcomes in games
         std::uint64_t seed = 0; // for debugging purposes
+        int loopCount = 0;  // for debugging purposes
 
         Random aiRng;
         Random cardRandomRng;
@@ -77,7 +78,7 @@ namespace sts {
         MonsterGroup monsters;
         CardManager cards;
 
-        CardQueueItem curCardQueueItem; // todo use this instead of cardInUse
+        CardQueueItem curCardQueueItem;
 
         std::bitset<32> miscBits; // 0 stolen gold check,
 

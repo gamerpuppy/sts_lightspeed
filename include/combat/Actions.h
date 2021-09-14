@@ -80,7 +80,7 @@ namespace sts {
         // used by Deep Breath and Reboot, does not trigger onShuffle relics
         static Action ShuffleDrawPile();
 
-        static Action ShuffleTempCardIntoDrawPile(CardId id, int count);
+        static Action ShuffleTempCardIntoDrawPile(CardId id, int count=1);
 
         static Action PlayTopCard(int monsterTargetIdx, bool exhausts);
         static Action MakeTempCardInHand(CardId card, bool upgraded= false, int amount = 1);

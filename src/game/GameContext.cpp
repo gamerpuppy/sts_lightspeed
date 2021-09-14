@@ -1109,7 +1109,7 @@ void GameContext::enterAct3VictoryRoom() {
     if (hasKey(Key::SAPPHIRE_KEY) && hasKey(Key::EMERALD_KEY) && hasKey(Key::RUBY_KEY)) {
         transitionToAct(4);
     } else {
-        outcome = GameOutcome::PLAYER_LOSS;
+        outcome = GameOutcome::PLAYER_VICTORY;
     }
 }
 
@@ -1149,6 +1149,13 @@ void GameContext::afterBattle() {
 
                 if (ascension >= 20 && info.encounter == boss) {
                     // go to second boss
+                    ++floorNum;
+                    const auto r = Random(seed + floorNum);
+                    miscRng = r;
+                    shuffleRng = r;
+                    cardRandomRng = r;
+                    relicsOnEnterRoom(curRoom);
+
                     regainControlAction = [](GameContext &gc) {
                         gc.afterBattle();
                     };

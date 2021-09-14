@@ -75,6 +75,7 @@ namespace sts {
         // writhing mass used implant
         // darkling d
         // time eater has used haste
+        // awakened one isPhase2
         int miscInfo = 0;
 
         Monster() = default;
@@ -93,8 +94,8 @@ namespace sts {
 
         // ***********************
 
-        bool hasStatus(MonsterStatus s) const;
-        int getStatusInternal(MonsterStatus s) const; // only used by print methods
+        [[nodiscard]] bool hasStatusInternal(MonsterStatus s) const; // only to be used by print methods
+        [[nodiscard]] int getStatusInternal(MonsterStatus s) const; // only to be used by print methods
 
 
         template <MonsterStatus> [[nodiscard]] bool hasStatus() const;
@@ -154,6 +155,7 @@ namespace sts {
         void takeTurn(BattleContext &bc);
 
         // monster specific functions
+
         void stealGoldFromPlayer(BattleContext &bc, int amount);
         static void largeSlimeSplit(BattleContext &bc, MonsterId mediumSlimeType, int placeIdx, int hp);
         static void slimeBossSplit(BattleContext &bc, int hp);
@@ -378,11 +380,11 @@ namespace sts {
     void Monster::setJustApplied(bool value) {
         std::uint64_t mask;
         if (s == MonsterStatus::VULNERABLE) {
-            mask = 0x1 << 63;
+            mask = 0x1ULL << 63;
         } else if (s == MonsterStatus::WEAK) {
-            mask = 0x1 << 62;
+            mask = 0x1ULL << 62;
         } else if (s == MonsterStatus::RITUAL) {
-            mask = 0x1 << 61;
+            mask = 0x1ULL << 61;
         }
 
         if (value) {
@@ -396,11 +398,11 @@ namespace sts {
     bool Monster::wasJustApplied() const {
         std::uint64_t mask;
         if (s == MonsterStatus::VULNERABLE) {
-            mask = 0x1 << 63;
+            mask = 0x1ULL << 63;
         } else if (s == MonsterStatus::WEAK) {
-            mask = 0x1 << 62;
+            mask = 0x1ULL << 62;
         } else if (s == MonsterStatus::RITUAL) {
-            mask = 0x1 << 61;
+            mask = 0x1ULL << 61;
         }
         return statusBits & mask;
     }
@@ -416,7 +418,7 @@ namespace sts {
             return strength;
         }
 
-        if (!hasStatus(s)) {
+        if (!hasStatusInternal(s)) {
             return 0;
         }
 
@@ -490,7 +492,7 @@ namespace sts {
             case MonsterStatus::REACTIVE:
             case MonsterStatus::SHIFTING:
             case MonsterStatus::STASIS:
-                return hasStatus(s);
+                return hasStatusInternal(s);
 
             case MonsterStatus::INVINCIBLE:
             case MonsterStatus::SHARP_HIDE:
@@ -504,7 +506,7 @@ namespace sts {
     template <MonsterStatus s>
     void Monster::removeStatus() {
         static_assert(s != MonsterStatus::STRENGTH);
-        if (hasStatus(s)) {
+        if (hasStatusInternal(s)) {
             setStatus<s>(0);
             setHasStatus<s>(false);
         }

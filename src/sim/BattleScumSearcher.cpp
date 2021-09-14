@@ -124,7 +124,7 @@ void ScumSearcherAgent::playout(GameContext &gc) {
     BattleContext bc;
     const auto seedStr = std::string(SeedHelper::getString(gc.seed));
 
-    while (gc.outcome == GameOutcome::UNDECIDED && gc.act < 3) {
+    while (gc.outcome == GameOutcome::UNDECIDED) {
         if (gc.screenState == ScreenState::BATTLE) {
             bc = BattleContext();
             bc.init(gc);

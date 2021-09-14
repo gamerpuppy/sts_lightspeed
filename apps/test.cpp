@@ -382,9 +382,9 @@ void playRandom4(PlayRandomInfo *info) {
         info->floorSum += gc.floorNum;
         info->nodeEvalTotal += agent.nodesEvaluated;
 
-        if (gc.act == 2) {
+        if (gc.outcome == sts::GameOutcome::PLAYER_VICTORY) {
             ++info->winCount;
-//            std::cout << gc << std::endl;
+            std::cout << gc << std::endl;
 
         } else {
             ++info->lossCount;

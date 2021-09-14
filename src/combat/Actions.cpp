@@ -1021,8 +1021,9 @@ Action Actions::FeedAction(int idx, int damage, bool upgraded) {
         bc.monsters.arr[idx].attacked(bc, damage);
 
         const bool effectTriggered = !m.hasStatus<MS::MINION>()
-                                   && !m.isAlive()
-                                   && !(m.hasStatus<MS::REGROW>() && bc.monsters.monstersAlive > 0);
+                && !m.isAlive()
+                && !m.isHalfDead()
+                && !(m.hasStatus<MS::REGROW>() && bc.monsters.monstersAlive > 0);
 
         if (effectTriggered) {
             bc.player.increaseMaxHp(upgraded ? 4 : 3);
@@ -1053,8 +1054,10 @@ Action Actions::HandOfGreedAction(int idx, int damage, bool upgraded) {
         bc.monsters.arr[idx].damage(bc, damage);
 
         const bool effectTriggered = !m.hasStatus<MS::MINION>()
-                                     && !m.isAlive()
-                                     && !(m.hasStatus<MS::REGROW>() && bc.monsters.monstersAlive > 0);
+                && !m.isAlive()
+                && !m.isHalfDead()
+                && !(m.hasStatus<MS::REGROW>() && bc.monsters.monstersAlive > 0);
+
         if (effectTriggered) {
             bc.player.gainGold(bc, upgraded ? 25 : 20);
         }

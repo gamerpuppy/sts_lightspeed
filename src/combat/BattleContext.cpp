@@ -711,10 +711,9 @@ void BattleContext::executeActions() {
     // todo find a place for checking where card queue is empty and player doesn't have control for calling onEndingTurn
     ++sum;
 
-    int loopCount = 0;
     while (true)
     {
-        if (++loopCount > 1000 || monsters.monstersAlive < 0 || turn > 1000) {
+        if (++loopCount > 100000 || monsters.monstersAlive < 0 || turn > 1000) {
             // something went wrong
             if (turn > 1000) {
                 outcome = Outcome::PLAYER_LOSS;
@@ -1831,7 +1830,7 @@ void BattleContext::onUsePowerCard() {
     }
 
 //    auto &m = monsters.optionMap[2];
-//    if (m.hasStatus<MS::CURIOSITY>()) {
+//    if (m.hasStatusInternal<MS::CURIOSITY>()) {
 //        m.buff<MS::STRENGTH>(m.getStatus<MS::CURIOSITY>());
 //    }
 }

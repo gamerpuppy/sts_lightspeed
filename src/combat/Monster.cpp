@@ -52,6 +52,10 @@ void Monster::applyEndOfTurnTriggers(BattleContext &bc) {
         decrementStatus<MS::INTANGIBLE>();
     }
 
+    if (hasStatus<MS::REGEN>()) {
+        heal(getStatus<MS::REGEN>());
+    }
+
     if (hasStatus<MS::SHACKLED>()) {
         buff<MS::STRENGTH>(getStatus<MS::SHACKLED>());
         removeStatus<MS::SHACKLED>();
@@ -127,7 +131,7 @@ void Monster::construct(BattleContext &bc, MonsterId monsterId, int monsterIdx) 
     }
 }
 
-bool Monster::hasStatus(MonsterStatus s) const {
+bool Monster::hasStatusInternal(MonsterStatus s) const {
     return statusBits & (1ULL << (int)s);
 }
 
@@ -136,7 +140,7 @@ int Monster::getStatusInternal(MonsterStatus s) const {
         return strength;
     }
 
-    if (!hasStatus(s)) {
+    if (!hasStatusInternal(s)) {
         return 0;
     }
 
@@ -216,7 +220,7 @@ int Monster::getStatusInternal(MonsterStatus s) const {
         case MS::REGROW:
         case MS::SHIFTING:
         case MS::STASIS:
-            return hasStatus(s);
+            return hasStatusInternal(s);
 
         default:
 #ifdef sts_asserts
@@ -268,8 +272,16 @@ void Monster::addBlock(int amount) {
 
 void Monster::die(BattleContext &bc) {
     --bc.monsters.monstersAlive;
-    if (bc.monsters.monstersAlive == 0 || hasStatus<MS::MINION_LEADER>()) {
-        bc.cleanCardQueue(); // todo should this really return like this.
+
+    if (id == MonsterId::AWAKENED_ONE && !miscInfo) { // is awakened one stage 1 // todo change to status
+        halfDead = true;
+        removeDebuffs();
+        removeStatus<MS::CURIOSITY>();
+        setMove(MonsterMoveId::AWAKENED_ONE_REBIRTH);
+        bc.cardQueue.clear();
+
+    } else if (bc.monsters.monstersAlive == 0 || hasStatus<MS::MINION_LEADER>()) {
+//            bc.cleanCardQueue(); // todo should this really return like this?
         bc.outcome = Outcome::PLAYER_VICTORY;
         return;
     }
@@ -351,7 +363,7 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
         }
 
     } else if (hasStatus<MS::THORNS>()) {
-        bc.addToTop(Actions::DamagePlayer(getStatus<MS::THORNS>()) );
+        bc.addToTop( Actions::DamagePlayer(getStatus<MS::THORNS>()) );
 
     } else if (hasStatus<MS::ASLEEP>()) {
         // lagavulin
@@ -624,21 +636,6 @@ void Monster::setMove(MMID moveId) {
 
 namespace sts {
 
-    std::ostream& printIfHaveStatus(const Monster &m, std::ostream &os, MonsterStatus s, bool &havePrint) {
-        int value = m.getStatusInternal(s);
-        if (!value) {
-            return os;
-        }
-
-        if (havePrint) {
-            os << ", ";
-        }
-        havePrint = true;
-        auto desc = enemyStatusStrings[(int)s];
-
-        return os << "(" << desc << "," << value << ")";
-    }
-
     std::ostream& printIfHaveStatus(std::ostream &os, const Monster &m, MonsterStatus s, bool &havePrint) {
         if (!m.getStatusInternal(s)) {
             return os;
@@ -666,11 +663,11 @@ namespace sts {
            << " block:(" << m.block << ") statusEffects:{";
 
         bool havePrint = false;
-        printIfHaveStatus(m, os, MS::STRENGTH, havePrint);
-        for (int i = static_cast<int>(MS::ARTIFACT); i <= static_cast<int>(MS::SHARP_HIDE); ++i) {
+        printIfHaveStatus(os, m, MS::STRENGTH, havePrint);
+        for (int i = static_cast<int>(MS::ARTIFACT); i <= static_cast<int>(MS::STASIS); ++i) {
             auto s = static_cast<MS>(i);
             if (s != MonsterStatus::STRENGTH) {
-                printIfHaveStatus(m, os, s, havePrint);
+                printIfHaveStatus(os, m, s, havePrint);
             }
         }
         os << "}";

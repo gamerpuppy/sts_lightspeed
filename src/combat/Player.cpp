@@ -457,7 +457,7 @@ void Player::applyAtEndOfRoundPowers() {
     }
 
     // handling this later so it is not removed before block check
-//    if (hasStatus<PS::BLUR>()) {
+//    if (hasStatusInternal<PS::BLUR>()) {
 //        decrementStatus<PS::BLUR>();
 //    }
 
@@ -466,7 +466,7 @@ void Player::applyAtEndOfRoundPowers() {
     }
 
     // handle elsewhere
-//    if (hasStatus<PS::DRAW_REDUCTION>()) {
+//    if (hasStatusInternal<PS::DRAW_REDUCTION>()) {
 //        decrementStatus<PS::DRAW_REDUCTION>();
 //    }
 
@@ -774,20 +774,20 @@ namespace sts {
 //
 //    void printStatusCounters(std::ostream &os, const Player &p) {
 //
-//        if (p.hasStatus<PS::COMBUST>()) {
+//        if (p.hasStatusInternal<PS::COMBUST>()) {
 //            os << "combustHpLoss: " << p.combustHpLoss << " ";
 //        }
 //
-//        if (p.hasStatus<PS::DEVA>()) {
+//        if (p.hasStatusInternal<PS::DEVA>()) {
 //            os << "devaFormEnergyPerTurn: " << p.devaFormEnergyPerTurn << " ";
 //        }
 //
-//        if (p.hasStatus<PS::ECHO_FORM>()) {
+//        if (p.hasStatusInternal<PS::ECHO_FORM>()) {
 //            os << "panacheCounter: " << p.panacheCounter << " ";
 //        }
 //
 //
-//        if (p.hasStatus<PS::PANACHE>()) {
+//        if (p.hasStatusInternal<PS::PANACHE>()) {
 //            os << "panacheCounter: " << p.panacheCounter << " ";
 //        }
 //    }

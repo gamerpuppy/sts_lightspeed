@@ -153,6 +153,7 @@ void Monster::preBattleAction(BattleContext &bc) {
 
         case MonsterId::EXPLODER:       // game adds explosive power
         case MonsterId::GIANT_HEAD:     // game adds slow power
+            break;
 
         case MonsterId::GREMLIN_LEADER: // game adds MinionPower to all gremlins
             buff<MS::MINION_LEADER>();
@@ -332,6 +333,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
     const bool asc2 = bc.ascension >= 2;
     const bool asc3 = bc.ascension >= 3;
     const bool asc4 = bc.ascension >= 4;
+    const bool asc9 = bc.ascension >= 9;
     const bool asc17 = bc.ascension >= 17;
     const bool asc18 = bc.ascension >= 18;
     const bool asc19 = bc.ascension >= 19;
@@ -1666,31 +1668,42 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
 
         case MMID::AWAKENED_ONE_DARK_ECHO:
             attackPlayerHelper(bc, 40);
-            bc.addToBot( Actions::RollMove(1) );
+            bc.addToBot( Actions::RollMove(idx) );
             break;
 
-        case MMID::AWAKENED_ONE_REBIRTH:
+        case MMID::AWAKENED_ONE_REBIRTH: {
+            maxHp = asc9 ? 320 : 300;
+            curHp = maxHp;
+            halfDead = false;
+            miscInfo = true;
+            strength = std::max(0,strength);
+            buff<MS::MINION_LEADER>();
 
-
+            moveHistory[0] = MonsterMoveId::INVALID; // for first turn condition
+            rollMove(bc);
+            break;
+        }
 
         case MMID::AWAKENED_ONE_SLASH:
             attackPlayerHelper(bc, 20);
-            bc.addToBot( Actions::RollMove(1) );
+            bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::AWAKENED_ONE_SLUDGE:
-
-
+            attackPlayerHelper(bc, 18);
+            bc.addToBot( Actions::ShuffleTempCardIntoDrawPile(CardId::VOID) );
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
 
         case MMID::AWAKENED_ONE_SOUL_STRIKE:
             attackPlayerHelper(bc, 6, 4);
-            bc.addToBot( Actions::RollMove(1) );
+            bc.addToBot( Actions::RollMove(idx) );
             break;
 
 
         case MMID::AWAKENED_ONE_TACKLE:
             attackPlayerHelper(bc, 10, 3);
-            bc.addToBot( Actions::RollMove(1) );
+            bc.addToBot( Actions::RollMove(idx) );
             break;
 
 
@@ -1923,7 +1936,7 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             // 6 caw
 
             // handled during turn
-//            if (!hasStatus<MS::FLIGHT>()) {
+//            if (!hasStatusInternal<MS::FLIGHT>()) {
 //                return (MMID::BYRD_HEADBUTT);
 //                break;
 //            }
@@ -3063,16 +3076,56 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
         }
 
         case MonsterId::AWAKENED_ONE: {
+            // 1 slash
+            // 2 soul strike
+            // 3 rebirth
+            // 5 dark echo
+            // 6 sludge
+            // 8 tackle
 
 
+            const bool phase2 = miscInfo;
+            if (!phase2) {
+                if (firstTurn()) {
+                    return MonsterMoveId::AWAKENED_ONE_SLASH;
+                }
+
+                if (roll < 25) {
+                    if (lastMove(MonsterMoveId::AWAKENED_ONE_SOUL_STRIKE)) {
+                        return MonsterMoveId::AWAKENED_ONE_SLASH;
+                    } else {
+                        return MonsterMoveId::AWAKENED_ONE_SOUL_STRIKE;
+                    }
+                }
+
+                if (!lastTwoMoves(MonsterMoveId::AWAKENED_ONE_SLASH)) {
+                    return MonsterMoveId::AWAKENED_ONE_SLASH;
+                } else {
+                    return MonsterMoveId::AWAKENED_ONE_SOUL_STRIKE;
+                }
+            }
+
+            // phase 2
+            if (firstTurn()) {
+                return MonsterMoveId::AWAKENED_ONE_DARK_ECHO;
+            }
+
+            if (roll < 50) {
+                if (!lastTwoMoves(MonsterMoveId::AWAKENED_ONE_SLUDGE)) {
+                    return MonsterMoveId::AWAKENED_ONE_SLUDGE;
+                } else {
+                    return MonsterMoveId::AWAKENED_ONE_TACKLE;
+                }
+            }
+
+            if (!lastTwoMoves(MonsterMoveId::AWAKENED_ONE_TACKLE)) {
+                return MonsterMoveId::AWAKENED_ONE_TACKLE;
+            } else {
+                return MonsterMoveId::AWAKENED_ONE_SLUDGE;
+            }
         }
 
-        // just setting in collector spawn move
-//        case MonsterId::TORCH_HEAD: {
-//            setMove(MMID::TORCH_HEAD_TACKLE);
-//            break;
-//        }
-
+        case MonsterId::TORCH_HEAD: // setting in collector spawn move
         default:
             break;
     }

@@ -179,7 +179,7 @@ namespace sts {
                 break;
 
             case PS::DEXTERITY:
-                dexterity -= amount;    // dexterity should not be used by "hasStatus"
+                dexterity -= amount;    // dexterity should not be used by "hasStatusInternal"
                 break;
 
             case PS::FOCUS:
@@ -187,7 +187,7 @@ namespace sts {
                 break;
 
             case PS::STRENGTH:
-                strength -= amount;     // strength should not be used by "hasStatus"
+                strength -= amount;     // strength should not be used by "hasStatusInternal"
                 break;
 
             default:
