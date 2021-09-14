@@ -202,7 +202,7 @@ void Monster::preBattleAction(BattleContext &bc) {
         }
 
         case MonsterId::TIME_EATER: {
-            uniquePower0 = 0; // TimeWarpPower
+            buff<MS::TIME_WARP>(0);
             break;
         }
 
@@ -1585,6 +1585,40 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             bc.noOpRollMove();
             break;
 
+        case MMID::TIME_EATER_HASTE:
+            miscInfo = true; // set have used haste true
+            curHp = maxHp / 2;
+            if (asc19) {
+                addBlock(32);
+            }
+            removeDebuffs();  // also removes shackled here
+            rollMove(bc);
+            break;
+
+        case MMID::TIME_EATER_HEAD_SLAM:
+            attackPlayerHelper(bc, asc4 ? 32 : 26);
+            bc.addToBot( Actions::DebuffPlayer<PS::DRAW_REDUCTION>(1, true) );
+            if (asc19) {
+                bc.addToBot( Actions::MakeTempCardInDiscard(CardId::SLIMED, 2) );
+            }
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::TIME_EATER_REVERBERATE:
+            attackPlayerHelper(bc, asc4 ? 8 : 7, 3);
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::TIME_EATER_RIPPLE: // 3
+            addBlock(20);
+            bc.player.debuff<PS::WEAK>(1, true);
+            bc.player.debuff<PS::VULNERABLE>(1, true);
+            if (asc19) {
+                bc.player.debuff<PS::FRAIL>(1, true);
+            }
+            rollMove(bc);
+            break;
+
         case MMID::INVALID:
 #ifdef sts_asserts
         {
@@ -2901,6 +2935,47 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             } else {
                 return MMID::GIANT_HEAD_GLARE;
             }
+        }
+
+        case MonsterId::TIME_EATER: {
+            // 2 reverberate
+            // 3 ripple
+            // 4 head slam
+            // 5 haste
+            const bool usedHaste = miscInfo;
+            const bool underHalfHp = curHp < maxHp/2;
+            if (!usedHaste && underHalfHp) {
+                return MonsterMoveId::TIME_EATER_HASTE;
+            }
+
+            auto myRoll = roll;
+            if (myRoll < 45) {
+                if (!lastTwoMoves(MonsterMoveId::TIME_EATER_REVERBERATE)) {
+                    return MonsterMoveId::TIME_EATER_REVERBERATE;
+                }
+                myRoll = bc.aiRng.random(50,99);
+            }
+
+            if (myRoll < 80) {
+                if (!lastMove(MonsterMoveId::TIME_EATER_HEAD_SLAM)) {
+                    return MonsterMoveId::TIME_EATER_HEAD_SLAM;
+                }
+                if (bc.aiRng.randomBoolean(0.66f)) {
+                    return MonsterMoveId::TIME_EATER_REVERBERATE;
+                }
+                return MonsterMoveId::TIME_EATER_RIPPLE;
+            }
+
+            if (lastMove(MMID::TIME_EATER_RIPPLE)) {
+                myRoll = bc.aiRng.random(74);
+                if (myRoll < 45) {
+                    return MonsterMoveId::TIME_EATER_REVERBERATE;
+                } else {
+                    return MonsterMoveId::TIME_EATER_HEAD_SLAM;
+                }
+            }
+
+            return MonsterMoveId::TIME_EATER_RIPPLE;
         }
 
         // just setting in collector spawn move

@@ -379,6 +379,13 @@ namespace sts {
             }
         }
 
+        if (s == PlayerStatus::DRAW_REDUCTION) {
+            --cardDrawPerTurn;
+            setJustApplied<PS::DRAW_REDUCTION>(true);
+            setHasStatus<PS::DRAW_REDUCTION>(true);
+            return;
+        }
+
         if (s == PlayerStatus::STRENGTH) {
             strength += amount;
             return;

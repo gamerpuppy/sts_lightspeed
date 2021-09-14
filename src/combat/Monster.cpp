@@ -52,9 +52,9 @@ void Monster::applyEndOfTurnTriggers(BattleContext &bc) {
         decrementStatus<MS::INTANGIBLE>();
     }
 
-    if (hasStatus<MS::END_OF_TURN_GAIN_STRENGTH>()) {
-        buff<MS::STRENGTH>(getStatus<MS::END_OF_TURN_GAIN_STRENGTH>());
-        removeStatus<MS::END_OF_TURN_GAIN_STRENGTH>();
+    if (hasStatus<MS::SHACKLED>()) {
+        buff<MS::STRENGTH>(getStatus<MS::SHACKLED>());
+        removeStatus<MS::SHACKLED>();
     }
 }
 
@@ -127,16 +127,100 @@ void Monster::construct(BattleContext &bc, MonsterId monsterId, int monsterIdx) 
     }
 }
 
+bool Monster::hasStatus(MonsterStatus s) const {
+    return statusBits & (1ULL << (int)s);
+}
+
 int Monster::getStatusInternal(MonsterStatus s) const {
-    if (s == MS::STRENGTH) {
+    if (s == MonsterStatus::STRENGTH) {
         return strength;
+    }
 
-    } else if (statusBits & (1ULL << (int)s)) {
-        return statusMap.at(s);
-
-    } else {
+    if (!hasStatus(s)) {
         return 0;
+    }
 
+    switch (s) {
+        case MonsterStatus::ARTIFACT:
+            return artifact;
+
+        case MonsterStatus::BLOCK_RETURN:
+            return blockReturn;
+
+        case MonsterStatus::CHOKED:
+            return choked;
+
+        case MonsterStatus::CORPSE_EXPLOSION:
+            return corpseExplosion;
+
+        case MonsterStatus::LOCK_ON:
+            return lockOn;
+
+        case MonsterStatus::MARK:
+            return mark;
+
+        case MonsterStatus::METALLICIZE:
+            return metallicize;
+
+        case MonsterStatus::PAINFUL_STABS:
+            return painfulStabs;
+
+        case MonsterStatus::PLATED_ARMOR:
+            return platedArmor;
+
+        case MonsterStatus::POISON:
+            return poison;
+
+        case MonsterStatus::REGEN:
+            return regen;
+
+        case MonsterStatus::SHACKLED:
+            return shackled;
+
+        case MonsterStatus::VULNERABLE:
+            return vulnerable;
+
+        case MonsterStatus::WEAK:
+            return weak;
+
+        case MonsterStatus::ANGRY:
+        case MonsterStatus::BEAT_OF_DEATH:
+        case MonsterStatus::CURIOSITY:
+        case MonsterStatus::CURL_UP:
+        case MonsterStatus::ENRAGE:
+        case MonsterStatus::FADING:
+        case MonsterStatus::FLIGHT:
+        case MonsterStatus::GENERIC_STRENGTH_UP:
+        case MonsterStatus::INTANGIBLE:
+        case MonsterStatus::MALLEABLE:
+        case MonsterStatus::MODE_SHIFT:
+        case MonsterStatus::RITUAL:
+        case MonsterStatus::SLOW:
+        case MonsterStatus::SPORE_CLOUD:
+        case MonsterStatus::THIEVERY:
+        case MonsterStatus::THORNS:
+        case MonsterStatus::TIME_WARP:
+            return uniquePower0;
+
+        // boolean powers
+        case MonsterStatus::ASLEEP:
+        case MonsterStatus::BARRICADE:
+        case MonsterStatus::MINION:
+        case MonsterStatus::REGROW:
+        case MonsterStatus::REACTIVE:
+        case MonsterStatus::SHIFTING:
+        case MonsterStatus::STASIS:
+            return hasStatus(s);
+
+        case MonsterStatus::INVINCIBLE:
+        case MonsterStatus::SHARP_HIDE:
+            return uniquePower1;
+
+        default:
+#ifdef sts_asserts
+            assert(false);
+            return 0;
+#endif
     }
 }
 
@@ -280,8 +364,8 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
     if (hasStatus<MS::SHIFTING>()) {
         addDebuff<MS::STRENGTH>(-damage);
 
-        setStatus<MS::END_OF_TURN_GAIN_STRENGTH>(
-                getStatus<MS::END_OF_TURN_GAIN_STRENGTH>()+damage
+        setStatus<MS::SHACKLED>(
+                getStatus<MS::SHACKLED>() + damage
         );
     }
 
@@ -327,7 +411,7 @@ void Monster::attacked(BattleContext &bc, int damage) {
         auto amount = getStatus<MS::INVINCIBLE>();
         int diff = amount - damage;
         if (diff >= 0) {
-            decrementStatus<MS::INVINCIBLE>(damage);
+//            setStatus<MS::INVINCIBLE>(damage); // TODO
         } else {
             damage += diff;
             setStatus<MS::INVINCIBLE>(0);
@@ -358,8 +442,8 @@ void Monster::damageUnblockedHelper(BattleContext &bc, int damage) {
     if (hasStatus<MS::SHIFTING>()) {
         addDebuff<MS::STRENGTH>(-damage);
 
-        setStatus<MS::END_OF_TURN_GAIN_STRENGTH>(
-                getStatus<MS::END_OF_TURN_GAIN_STRENGTH>()+damage
+        setStatus<MS::SHACKLED>(
+                getStatus<MS::SHACKLED>() + damage
         );
     }
 
@@ -458,21 +542,20 @@ void Monster::removeDebuffs() {
         setStatus<MS::STRENGTH>(0);
     }
 
+    removeStatus<MS::BLOCK_RETURN>();
+    removeStatus<MS::CHOKED>();
+    removeStatus<MS::CORPSE_EXPLOSION>();
+    removeStatus<MS::LOCK_ON>();
+    removeStatus<MS::MARK>();
+    removeStatus<MS::POISON>();
+    removeStatus<MS::SHACKLED>();
     removeStatus<MS::VULNERABLE>();
     removeStatus<MS::WEAK>();
-    removeStatus<MS::END_OF_TURN_GAIN_STRENGTH>();
-
-//    removeStatus<MS::POISON>();
-//    removeStatus<MS::CHOKED>();
-//    removeStatus<MS::CORPSE_EXPLOSION>();
-//    removeStatus<MS::LOCK_ON>();
-
 }
 
 void Monster::resetAllStatusEffects() {
-    justAppliedBits = 0;
     statusBits = 0;
-    strength = 0;
+    setStatus<MS::STRENGTH>(0);
     block = 0;
 }
 
@@ -569,32 +652,40 @@ namespace sts {
         return os << "(" << desc << "," << value << ")";
     }
 
-    std::ostream& printIfHaveBoolStatuses(std::ostream &os, const Monster &m,  bool &havePrint) {
-        if (m.hasStatus<MS::ASLEEP>()) {
-            if (havePrint) {
-                os << ", ";
-            }
-            havePrint = true;
-            auto desc = enemyStatusStrings[static_cast<int>(MS::ASLEEP)];
-            os << "(" << desc << ")";
+    std::ostream& printIfHaveStatus(std::ostream &os, const Monster &m, MonsterStatus s, bool &havePrint) {
+        if (!m.getStatusInternal(s)) {
+            return os;
         }
+
+        if (havePrint) {
+            os << ", ";
+        }
+        havePrint = true;
+
+        os << '(' << enemyStatusStrings[(int)s];
+        if (!isBooleanPower(s)) {
+            os << "," << m.getStatusInternal(s);
+        }
+        os << ")";
         return os;
     }
+
+
 
     std::ostream &operator<<(std::ostream &os, const Monster &m) {
         os << "{";
         os << m.idx << " " << sts::enemyIdStrings[(int) m.id]
            << " hp:(" << m.curHp << "/" << m.maxHp << ")"
-           << " block:(" << m.block << ") {";
+           << " block:(" << m.block << ") statusEffects:{";
 
         bool havePrint = false;
         printIfHaveStatus(m, os, MS::STRENGTH, havePrint);
-        printIfHaveBoolStatuses(os, m, havePrint);
-
-        for (auto pair : m.statusMap) {
-            printIfHaveStatus(m, os, pair.first, havePrint);
+        for (int i = static_cast<int>(MS::ARTIFACT); i <= static_cast<int>(MS::SHARP_HIDE); ++i) {
+            auto s = static_cast<MS>(i);
+            if (s != MonsterStatus::STRENGTH) {
+                printIfHaveStatus(m, os, s, havePrint);
+            }
         }
-
         os << "}";
 
         os << " halfDead: " << m.halfDead

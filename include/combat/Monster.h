@@ -33,20 +33,34 @@ namespace sts {
         MonsterId id = MonsterId::INVALID;
         int curHp = 0;
         int maxHp = 0;
+        int block = 0;
 
         bool isEscapingB = false;
 //        bool isDyingB = false;
         bool halfDead = false;
         bool escapeNext = false;
-
-        int block = 0;
-        int strength = 0;
-
-        std::uint64_t justAppliedBits = 0;
-        std::uint64_t statusBits = 0;
-        std::map<MonsterStatus, std::int16_t> statusMap;
-
         MMID moveHistory[2] = {MMID::INVALID, MMID::INVALID };
+
+        std::uint64_t statusBits = 0;
+        std::int8_t artifact = 0;
+        std::int8_t blockReturn = 0;
+        std::int8_t choked = 0;
+        std::int8_t corpseExplosion = 0;
+        std::int8_t lockOn = 0;
+        std::int8_t mark = 0;
+        std::int8_t metallicize = 0;
+        std::int8_t painfulStabs = 0;
+        std::int8_t platedArmor = 0;
+        std::int8_t poison = 0;
+        std::int8_t regen = 0;
+        std::int8_t shackled = 0;
+        int strength = 0;
+        int vulnerable = 0;
+        int weak = 0;
+
+
+        int uniquePower0 = 0; // unique powers, hexaghost orbCount
+        std::int16_t uniquePower1 = 0; // Corrupt Heart invincible,
 
         // Shield Gremlin target
         // GreenLouse / RedLouse D
@@ -60,21 +74,8 @@ namespace sts {
         // spiker thorn buff count
         // writhing mass used implant
         // darkling d
+        // time eater has used haste
         int miscInfo = 0;
-
-        // Lagavulin asleep
-        // Mugger/Looter ThieveryPower
-        // Byrd FlightPower
-        // Transient FadingPower
-        // Time Eater TimeMazePower
-        // Fungi Beast SporeCloudPower
-        // Heart InvinciblePower
-        // The Guardian ModeShiftPower
-        // hexaghost orbCount
-        int uniquePower0 = 0;
-
-        // BeatOfDeathPower
-        int uniquePower1 = 0;
 
         Monster() = default;
         Monster(const Monster& rhs) = default;
@@ -92,13 +93,16 @@ namespace sts {
 
         // ***********************
 
-        int getStatusInternal(MonsterStatus s) const;
+        bool hasStatus(MonsterStatus s) const;
+        int getStatusInternal(MonsterStatus s) const; // only used by print methods
 
-        template <MonsterStatus> void setHasStatus(bool value);
+
+        template <MonsterStatus> [[nodiscard]] bool hasStatus() const;
+        template <MonsterStatus> [[nodiscard]] int getStatus() const;
+        template <MonsterStatus> void setHasStatus(bool value=true);
         template <MonsterStatus> void setStatus(int amount);
         template <MonsterStatus> void decrementStatus(int amount=1);
         template <MonsterStatus> void addDebuff(int amount, bool isSourceMonster=true);
-
         template <MonsterStatus> void removeStatus();
         template <MonsterStatus> void buff(int amount=1);
 
@@ -115,8 +119,7 @@ namespace sts {
         [[nodiscard]] bool doesEscapeNext() const;
         [[nodiscard]] bool isAttacking() const;
 
-        template <MonsterStatus> [[nodiscard]] bool hasStatus() const;
-        template <MonsterStatus> [[nodiscard]] int getStatus() const;
+
 
         // ***********************
 
@@ -170,7 +173,6 @@ namespace sts {
         if (s == MS::STRENGTH) {
             return; // should not be called
         }
-
         if (value) {
             statusBits |= (1ULL << (int)s);
         } else {
@@ -178,131 +180,412 @@ namespace sts {
         }
     }
 
+
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
     template <MonsterStatus s>
     void Monster::setStatus(int amount) {
-        if (s == MS::STRENGTH) {
-            strength = amount;
-            return;
-        }
+        switch (s) {
+            case MonsterStatus::ARTIFACT:
+                artifact = amount;
+                return;
 
-        if (amount == 0) {
-            setHasStatus<s>(false);
-        } else {
-            setHasStatus<s>(true);
-            statusMap[s] = amount;
+            case MonsterStatus::BLOCK_RETURN:
+                blockReturn = amount;
+                return;
+
+            case MonsterStatus::CHOKED:
+                choked = amount;
+                return;
+
+            case MonsterStatus::CORPSE_EXPLOSION:
+                corpseExplosion = amount;
+                return;
+
+            case MonsterStatus::LOCK_ON:
+                lockOn = amount;
+                return;
+
+            case MonsterStatus::MARK:
+                mark = amount;
+                return;
+
+            case MonsterStatus::METALLICIZE:
+                metallicize = amount;
+                return;
+
+            case MonsterStatus::PAINFUL_STABS:
+                painfulStabs = amount;
+                return;
+
+            case MonsterStatus::PLATED_ARMOR:
+                platedArmor = amount;
+                return;
+
+            case MonsterStatus::POISON:
+                poison = amount;
+                return;
+
+            case MonsterStatus::REGEN:
+                regen = amount;
+                return;
+
+            case MonsterStatus::SHACKLED:
+                shackled = amount;
+                return;
+
+            case MonsterStatus::STRENGTH:
+                strength = amount;
+                return;
+
+            case MonsterStatus::VULNERABLE:
+                vulnerable = amount;
+                return;
+
+            case MonsterStatus::WEAK:
+                weak = amount;
+                return;
+
+            case MonsterStatus::ANGRY:
+            case MonsterStatus::BEAT_OF_DEATH:
+            case MonsterStatus::CURIOSITY:
+            case MonsterStatus::CURL_UP:
+            case MonsterStatus::ENRAGE:
+            case MonsterStatus::FADING:
+            case MonsterStatus::FLIGHT:
+            case MonsterStatus::GENERIC_STRENGTH_UP:
+            case MonsterStatus::INTANGIBLE:
+            case MonsterStatus::MALLEABLE:
+            case MonsterStatus::MODE_SHIFT:
+            case MonsterStatus::RITUAL:
+            case MonsterStatus::SLOW:
+            case MonsterStatus::SPORE_CLOUD:
+            case MonsterStatus::THIEVERY:
+            case MonsterStatus::THORNS:
+            case MonsterStatus::TIME_WARP:
+                uniquePower0 = amount;
+                return;
+
+            case MonsterStatus::ASLEEP:
+            case MonsterStatus::BARRICADE:
+            case MonsterStatus::MINION:
+            case MonsterStatus::REGROW:
+            case MonsterStatus::REACTIVE:
+            case MonsterStatus::SHIFTING:
+            case MonsterStatus::STASIS:
+                setHasStatus<s>(amount);
+                return;
+
+            case MonsterStatus::INVINCIBLE:
+            case MonsterStatus::SHARP_HIDE:
+                uniquePower1 = amount;
+                return;
         }
     }
+#pragma clang diagnostic pop
 
     template <MonsterStatus s>
     void Monster::decrementStatus(int amount) {
-        if (s == MS::STRENGTH) {
+        if (isBooleanPower(s)) {
+            setHasStatus<s>(false);
+            return;
+        }
+
+        if (s == MonsterStatus::STRENGTH) {
             strength -= amount;
             return;
         }
 
-        if (hasStatus<s>()) {
-            statusMap[s] -= amount;
-            if (statusMap.at(s) == 0) {
+        if (static_cast<int>(s) <= static_cast<int>(MS::WEAK)) {
+            const auto newAmount = getStatus<s>()-amount;
+            setStatus<s>(newAmount);
+            setHasStatus<s>(newAmount);
+
+        } else if (static_cast<int>(s) <= static_cast<int>(MS::TIME_WARP)) {
+            uniquePower0 -= amount;
+            if (uniquePower0 == 0) {
                 setHasStatus<s>(false);
             }
+
         } else {
-            setHasStatus<s>(true);
-            statusMap[s] = -amount;
+            uniquePower1 -= amount;
+            if (uniquePower1 == 0) {
+                setHasStatus<s>(false);
+            }
         }
     }
 
     template <MonsterStatus s>
     void Monster::addDebuff(int amount, bool isSourceMonster) {
-        if (isSourceMonster && (s == MS::WEAK || s == MS::VULNERABLE || s == MS::INTANGIBLE)) {
+        if (isSourceMonster && (s == MS::WEAK || s == MS::VULNERABLE)) {
             setJustApplied<s>(true);
         }
 
-        if (s == MonsterStatus::STRENGTH) {
-            strength += amount;
-            return;
-        }
+        switch (s) {
+            case MonsterStatus::BLOCK_RETURN:
+                blockReturn += amount;
+                setHasStatus<s>(blockReturn);
+                return;
 
-        if (hasStatus<s>()) {
-            statusMap[s] += amount;
-        } else {
-            setHasStatus<s>(true);
-            statusMap[s] = amount;
+            case MonsterStatus::CHOKED:
+                choked += amount;
+                setHasStatus<s>(choked);
+                return;
+
+            case MonsterStatus::CORPSE_EXPLOSION:
+                corpseExplosion += amount;
+                setHasStatus<s>(corpseExplosion);
+                return;
+
+            case MonsterStatus::LOCK_ON:
+                lockOn += amount;
+                setHasStatus<s>(lockOn);
+                return;
+
+            case MonsterStatus::MARK:
+                mark += amount;
+                setHasStatus<s>(mark);
+                return;
+
+            case MonsterStatus::POISON:
+                poison += amount;
+                setHasStatus<s>(poison);
+                return;
+
+            case MonsterStatus::STRENGTH:
+                strength += amount;
+                return;
+
+            case MonsterStatus::VULNERABLE:
+                vulnerable += amount;
+                setHasStatus<s>(vulnerable);
+                return;
+
+            case MonsterStatus::WEAK:
+                weak += amount;
+                setHasStatus<s>(weak);
+                return;
+
+            default:
+                break;
         }
+//        static_assert(false);
     }
 
     template <MonsterStatus s>
     void Monster::setJustApplied(bool value) {
+        std::uint64_t mask;
+        if (s == MonsterStatus::VULNERABLE) {
+            mask = 0x1 << 63;
+        } else if (s == MonsterStatus::WEAK) {
+            mask = 0x1 << 62;
+        } else if (s == MonsterStatus::RITUAL) {
+            mask = 0x1 << 61;
+        }
+
         if (value) {
-            justAppliedBits |= 1ULL << (int) s;
+            statusBits |= mask;
         } else {
-            justAppliedBits &= ~(1ULL << (int) s);
+            statusBits &= ~mask;
         }
     }
 
     template <MonsterStatus s>
     bool Monster::wasJustApplied() const {
-        return (justAppliedBits >> (int) s) & 1;
+        std::uint64_t mask;
+        if (s == MonsterStatus::VULNERABLE) {
+            mask = 0x1 << 63;
+        } else if (s == MonsterStatus::WEAK) {
+            mask = 0x1 << 62;
+        } else if (s == MonsterStatus::RITUAL) {
+            mask = 0x1 << 61;
+        }
+        return statusBits & mask;
     }
 
     template <MonsterStatus s>
     bool Monster::hasStatus() const {
-        if (s == MS::STRENGTH) {
-            return strength;
-        }
-
         return statusBits & (1ULL << (int)s);
     }
 
     template <MonsterStatus s>
     int Monster::getStatus() const {
-        if (s == MS::STRENGTH) {
+        if (s == MonsterStatus::STRENGTH) {
             return strength;
+        }
 
-        } else if (hasStatus<s>()) {
-            return statusMap.at(s);
-
-        } else {
+        if (!hasStatus(s)) {
             return 0;
+        }
 
+        switch (s) {
+            case MonsterStatus::ARTIFACT:
+                return artifact;
+
+            case MonsterStatus::BLOCK_RETURN:
+                return blockReturn;
+
+            case MonsterStatus::CHOKED:
+                return choked;
+
+            case MonsterStatus::CORPSE_EXPLOSION:
+                return corpseExplosion;
+
+            case MonsterStatus::LOCK_ON:
+                return lockOn;
+
+            case MonsterStatus::MARK:
+                return mark;
+
+            case MonsterStatus::METALLICIZE:
+                return metallicize;
+
+            case MonsterStatus::PAINFUL_STABS:
+                return painfulStabs;
+
+            case MonsterStatus::PLATED_ARMOR:
+                return platedArmor;
+
+            case MonsterStatus::POISON:
+                return poison;
+
+            case MonsterStatus::REGEN:
+                return regen;
+
+            case MonsterStatus::SHACKLED:
+                return shackled;
+
+            case MonsterStatus::VULNERABLE:
+                return vulnerable;
+
+            case MonsterStatus::WEAK:
+                return weak;
+
+            case MonsterStatus::ANGRY:
+            case MonsterStatus::BEAT_OF_DEATH:
+            case MonsterStatus::CURIOSITY:
+            case MonsterStatus::CURL_UP:
+            case MonsterStatus::ENRAGE:
+            case MonsterStatus::FADING:
+            case MonsterStatus::FLIGHT:
+            case MonsterStatus::GENERIC_STRENGTH_UP:
+            case MonsterStatus::INTANGIBLE:
+            case MonsterStatus::MALLEABLE:
+            case MonsterStatus::MODE_SHIFT:
+            case MonsterStatus::RITUAL:
+            case MonsterStatus::SLOW:
+            case MonsterStatus::SPORE_CLOUD:
+            case MonsterStatus::THIEVERY:
+            case MonsterStatus::THORNS:
+            case MonsterStatus::TIME_WARP:
+                return uniquePower0;
+
+                // boolean powers
+            case MonsterStatus::ASLEEP:
+            case MonsterStatus::BARRICADE:
+            case MonsterStatus::MINION:
+            case MonsterStatus::REGROW:
+            case MonsterStatus::REACTIVE:
+            case MonsterStatus::SHIFTING:
+            case MonsterStatus::STASIS:
+                return hasStatus(s);
+
+            case MonsterStatus::INVINCIBLE:
+            case MonsterStatus::SHARP_HIDE:
+                return uniquePower1;
+
+            default:
+                return 0;
         }
     }
-
 
     template <MonsterStatus s>
     void Monster::removeStatus() {
         static_assert(s != MonsterStatus::STRENGTH);
-        setHasStatus<s>(false);
+        if (hasStatus(s)) {
+            setStatus<s>(0);
+            setHasStatus<s>(false);
+        }
     }
 
     template <MonsterStatus s>
     void Monster::buff(int amount) {
-        // boolean powers
-        if (s == MonsterStatus::BARRICADE
-            || s == MonsterStatus::MINION
-            || s == MonsterStatus::REGROW
-            || s == MonsterStatus::ASLEEP
-            || s == MonsterStatus::REACTIVE
-            || s == MonsterStatus::SHIFTING
-            || s == MonsterStatus::STASIS
-        ) {
-            setHasStatus<s>(true);
-            return;
-        }
+        switch (s) {
+            case MonsterStatus::ARTIFACT:
+                artifact += amount;
+                setHasStatus<s>(true);
+                return;
 
-        if (s == MS::STRENGTH) {
-            strength += amount;
-            return;
-        }
+            case MonsterStatus::METALLICIZE:
+                metallicize += amount;
+                setHasStatus<s>(true);
+                return;
 
-        if (s == MS::RITUAL) {
-            setJustApplied<s>(true);
-        }
+            case MonsterStatus::PAINFUL_STABS:
+                painfulStabs += amount;
+                setHasStatus<s>(true);
+                return;
 
-        if (hasStatus<s>()) {
-            statusMap[s] += amount;
-        } else {
-            setHasStatus<s>(true);
-            statusMap[s] = amount;
+            case MonsterStatus::PLATED_ARMOR:
+                platedArmor += amount;
+                setHasStatus<s>(true);
+                return;
+
+            case MonsterStatus::REGEN:
+                regen += amount;
+                setHasStatus<s>(true);
+                return;
+
+            case MonsterStatus::SHACKLED:
+                shackled += amount;
+                setHasStatus<s>(true);
+                return;
+
+            case MonsterStatus::STRENGTH:
+                strength += amount;
+                return;
+
+            case MS::ASLEEP:
+            case MS::BARRICADE:
+            case MS::MINION:
+            case MS::REACTIVE:
+            case MS::REGROW:
+            case MS::SHIFTING:
+            case MS::STASIS:
+                setHasStatus<s>(true);
+                return;
+
+            case MS::ANGRY:
+            case MS::BEAT_OF_DEATH:
+            case MS::CURIOSITY:
+            case MS::CURL_UP:
+            case MS::ENRAGE:
+            case MS::FADING:
+            case MS::FLIGHT:
+            case MS::GENERIC_STRENGTH_UP:
+            case MS::INTANGIBLE:
+            case MS::MALLEABLE:
+            case MS::MODE_SHIFT:
+            case MS::SLOW:
+            case MS::SPORE_CLOUD:
+            case MS::THIEVERY:
+            case MS::THORNS:
+            case MS::TIME_WARP:
+                setHasStatus<s>(true);
+                uniquePower0 += amount;
+                return;
+
+            case MS::RITUAL:
+                setJustApplied<s>(true);
+                setHasStatus<s>(true);
+                uniquePower0 += amount;
+                return;
+
+            case MonsterStatus::INVINCIBLE:
+            case MonsterStatus::SHARP_HIDE:
+                setHasStatus<s>(true);
+                uniquePower1 += amount;
+                return;
         }
     }
 

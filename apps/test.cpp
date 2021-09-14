@@ -415,9 +415,12 @@ void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
 
         infos.push_back(info);
     }
-
-    for (int tid = 0; tid < threadCount; ++tid) {
-        threads.emplace_back( new std::thread(playRandom4, &infos[tid]) );
+    if (threadCount == 1) { // doing this for more consistency when benchmarking
+        playRandom4(&infos[0]);
+    } else {
+        for (int tid = 0; tid < threadCount; ++tid) {
+            threads.emplace_back(new std::thread(playRandom4, &infos[tid]));
+        }
     }
 
     std::int64_t winCount = 0;
@@ -425,13 +428,17 @@ void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
     std::int64_t floorSum = 0;
     std::int64_t nodeSearchSum = 0;
 
+
     for (int tid = 0; tid < threadCount; ++tid) {
-        threads[tid]->join();
+        if (threadCount > 1) {
+            threads[tid]->join();
+        }
         winCount += infos[tid].winCount;
         lossCount += infos[tid].lossCount;
         floorSum += infos[tid].floorSum;
         nodeSearchSum += infos[tid].nodeEvalTotal;
     }
+
 
     auto endTime = std::chrono::high_resolution_clock::now();
     double duration = std::chrono::duration<double>(endTime-startTime).count();

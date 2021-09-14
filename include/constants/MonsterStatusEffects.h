@@ -8,39 +8,23 @@
 namespace sts {
 
     enum class MonsterStatus: std::uint8_t {
-
-        // statuses that use just applied
-        VULNERABLE=0,
-        WEAK,
-
-        // *********    DEBUFFS   ************
-
+        ARTIFACT=0,
         BLOCK_RETURN,
         CHOKED,
         CORPSE_EXPLOSION,
         LOCK_ON,
         MARK,
-        POISON,
-        SHACKLED,
-        SLOW, // this should be set just to
-        STRENGTH_DOWN,
-        STUNNED,
-
-        // *********    POWERS   ************
-
-        ARTIFACT,
-        GENERIC_STRENGTH_UP,
-        END_OF_TURN_GAIN_STRENGTH,
-        MALLEABLE,
         METALLICIZE,
-        MINION,
-        PAINFUL_STABS, // not unique, used by book of stabbing and corrupt heart after buffs and
+        PAINFUL_STABS, // not unique, used by book of stabbing and corrupt heart after buffs
         PLATED_ARMOR,
+        POISON,
         REGEN,
+        SHACKLED,
         STRENGTH,
-        THIEVERY,
+        VULNERABLE,
+        WEAK,
 
-        // unique powers
+        // unique powers : two of these can't be on the same monster
         ANGRY,
         ASLEEP,
         BARRICADE,
@@ -50,26 +34,92 @@ namespace sts {
         ENRAGE,
         FADING,
         FLIGHT,
-        INTANGIBLE, // does not work quite like game, always decrements at end of round
-        INVINCIBLE,
+        GENERIC_STRENGTH_UP,
+        INTANGIBLE, // differs from the game in that it always decrements at end of round
+        MALLEABLE,
         MODE_SHIFT,
         REACTIVE,
         REGROW,
-        RITUAL,
-        SHARP_HIDE,
+        RITUAL, // todo just merge this with orb walker strength up
         SHIFTING,
+        SLOW, // this should be set just to
         SPORE_CLOUD,
         STASIS,
+        THIEVERY,
         THORNS,
         TIME_WARP,
+
+        // special case for the heart's second unique power
+        INVINCIBLE,
+        MINION, // only stored in statusbits
+        SHARP_HIDE,
     };
 
 
     typedef MonsterStatus MS;
 
     static constexpr const char* const enemyStatusStrings[]{
-            "Vulnerable","Weak","Block Return","Choked","Corpse Explosion","Lock On","Mark","Poison","Shackled","Slow","Strength Down","Stunned","Artifact","Generic Strength Up","End of Turn Gain Strength","Malleable","Metallicize","Minion","Painful Stabs","Plated Armor","Regen","Strength","Thievery","Angry","Asleep","Barricade","Beat Of Death","Curiosity","Curl Up","Enrage","Fading","Flight","Intangible","Invincible","Mode Shift","Reactive","Regrow","Ritual","Sharp Hide","Shifting","Spore Cloud","Stasis","Thorns","Time Warp",
+        "Artifact",
+        "Block Return",
+        "Choked",
+        "Corpse Explosion",
+        "Lock On",
+        "Mark",
+        "Metallicize",
+        "Painful Stabs",
+        "Plated Armor",
+        "Poison",
+        "Regen",
+        "Shackled",
+        "Strength",
+        "Vulnerable",
+        "Weak",
+
+        "Angry",
+        "Asleep",
+        "Barricade",
+        "Beat Of Death",
+        "Curiosity",
+        "Curl Up",
+        "Enrage",
+        "Fading",
+        "Flight",
+        "Generic Strength Up",
+        "Intangible",
+        "Malleable",
+
+        "Mode Shift",
+        "Reactive",
+        "Regrow",
+        "Ritual",
+        "Shifting",
+        "Slow",
+        "Spore Cloud",
+        "Stasis",
+        "Thievery",
+        "Thorns",
+        "Time Warp",
+
+        "Invincible",
+        "Minion",
+        "Sharp Hide",
     };
+
+    static constexpr bool isBooleanPower(MonsterStatus s) {
+        switch (s) {
+            case MS::ASLEEP:
+            case MS::BARRICADE:
+            case MS::MINION:
+            case MS::REACTIVE:
+            case MS::REGROW:
+            case MS::SHIFTING:
+            case MS::STASIS:
+                return true;
+
+            default:
+                return false;
+        }
+    }
 
 }
 

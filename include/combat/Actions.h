@@ -22,6 +22,7 @@ namespace sts {
 
     class BattleContext;
     class CardInstance;
+    class CardQueueItem;
 
     typedef std::array<std::uint16_t,5> DamageMatrix;
 
@@ -140,6 +141,7 @@ namespace sts {
 
         // ************
 
+        static Action TimeEaterPlayCardQueueItem(const CardQueueItem &item);
         static Action UpgradeAllCardsInHand();
         static Action OnAfterCardUsed(); // called UseCardAction in game
         static Action EssenceOfDarkness(int darkOrbsPerSlot); // handle sacred bark

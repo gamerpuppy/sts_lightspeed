@@ -129,7 +129,12 @@ void Player::removeDebuffs() {
     removeStatus<PS::BIAS>();
     removeStatus<PS::CONFUSED>();
     removeStatus<PS::CONSTRICTED>();
-    removeStatus<PS::DRAW_REDUCTION>();
+
+    if (hasStatus<PS::DRAW_REDUCTION>()) {
+        ++cardDrawPerTurn;
+        removeStatus<PS::DRAW_REDUCTION>();
+    }
+
     removeStatus<PS::ENTANGLED>();
     removeStatus<PS::FASTING>();
     removeStatus<PS::FRAIL>();
@@ -460,9 +465,10 @@ void Player::applyAtEndOfRoundPowers() {
         decrementIfNotJustApplied<PS::DOUBLE_DAMAGE>();
     }
 
-    if (hasStatus<PS::DRAW_REDUCTION>()) {
-        decrementIfNotJustApplied<PS::DRAW_REDUCTION>();
-    }
+    // handle elsewhere
+//    if (hasStatus<PS::DRAW_REDUCTION>()) {
+//        decrementStatus<PS::DRAW_REDUCTION>();
+//    }
 
     if (hasStatus<PS::DUPLICATION>()) {
         decrementStatus<PS::DUPLICATION>();

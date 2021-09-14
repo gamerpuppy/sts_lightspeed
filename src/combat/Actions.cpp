@@ -847,6 +847,17 @@ Action Actions::WarcryAction() {
     }};
 }
 
+Action Actions::TimeEaterPlayCardQueueItem(const CardQueueItem &x) {
+    return {[=] (BattleContext &bc) {
+        auto item = x;
+        item.exhaustOnUse |= bc.curCardQueueItem.card.doesExhaust();
+        item.triggerOnUse = false;
+        bc.curCardQueueItem = item;
+        bc.onAfterUseCard();
+
+    }, false};
+}
+
 Action Actions::UpgradeAllCardsInHand() {
     return {[=] (BattleContext &bc) {
         for (int i = 0; i < bc.cards.cardsInHand; ++i) {

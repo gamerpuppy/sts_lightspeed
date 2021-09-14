@@ -912,9 +912,11 @@ void BattleContext::useNoTriggerCard() {
 
 
         default:
-#ifdef sts_asserts
-            assert(false);
-#endif // sts_asserts
+            // this can actually be called on any card now because of time warp power
+
+//#ifdef sts_asserts
+//            assert(false);
+//#endif // sts_asserts
             break;
     }
 
@@ -1219,7 +1221,7 @@ void BattleContext::useSkillCard() {
         case CardId::DARK_SHACKLES:
             addToBot( Actions::DebuffEnemy<MS::STRENGTH>(t, up ? 15 : 9) );
             if (monsters.arr[t].hasStatus<MS::ARTIFACT>()) {
-                addToBot( Actions::BuffEnemy<MS::END_OF_TURN_GAIN_STRENGTH>(t, up ? 15 : 9) );
+                addToBot( Actions::BuffEnemy<MS::SHACKLED>(t, up ? 15 : 9) );
             }
             break;
 
@@ -1891,19 +1893,24 @@ void BattleContext::onAfterUseCard() {
     auto &item = curCardQueueItem;
     auto &c = item.card;
 
-    auto &m0 = monsters.arr[0];
-    if (m0.hasStatus<MS::TIME_WARP>()) {
-        auto timeWarp = m0.getStatus<MS::TIME_WARP>();
-        if (timeWarp == 11) {
-            timeWarp = 0;
-            // todo callEndTurnEarlySequence
-        } else {
-            m0.setStatus<MS::TIME_WARP>(timeWarp+1);
-            ++timeWarp;
+    if (item.triggerOnUse) {
+        auto &m = monsters.arr[0];
+        if (m.hasStatus<MS::TIME_WARP>()) {
+            auto timeWarp = m.getStatus<MS::TIME_WARP>();
+            if (timeWarp == 11) {
+                m.setStatus<MS::TIME_WARP>(0);
+                m.buff<MS::STRENGTH>(2);
+                callEndTurnEarlySequence();
+
+            } else {
+                m.setStatus<MS::TIME_WARP>(timeWarp + 1);
+                ++timeWarp;
+            }
+        } else if (m.hasStatus<MS::SLOW>()) {
+            m.buff<MS::SLOW>(1);
         }
-    } else if (m0.hasStatus<MS::SLOW>()) {
-        m0.setStatus<MS::SLOW>(m0.getStatus<MS::SLOW>()+1);
     }
+
 
     if (item.purgeOnUse) {
         return;
@@ -1968,6 +1975,7 @@ void BattleContext::endTurn() {
 #ifdef sts_assert
     assert(!endTurnQueued);
 #endif //sts_assert
+    // todo probably dont need a card queue item for this
     cardQueue.pushBack(CardQueueItem::endTurnItem());
     endTurnQueued = true;
 }
@@ -2061,6 +2069,17 @@ void BattleContext::onTurnEnding() {
     addToBot(Actions::UnnamedEndOfTurnAction());
 }
 
+void BattleContext::callEndTurnEarlySequence() {
+    while (!cardQueue.isEmpty()) {
+        auto item = cardQueue.popFront();
+        if (item.autoplay && !item.purgeOnUse) {
+            addToBot( Actions::TimeEaterPlayCardQueueItem(item) );
+        }
+    }
+    addToTopCard(CardQueueItem::endTurnItem());
+    endTurnQueued = true;
+}
+
 void BattleContext::applyEndOfRoundPowers() {
     for (int i = 0; i < monsters.monsterCount; i++) {
         auto &m = monsters.arr[i];
@@ -2124,6 +2143,15 @@ void BattleContext::afterMonsterTurns() {
     }
 
     addToBot(Actions::DrawCards(player.cardDrawPerTurn)); // in this action, an effect queue item is added to rechard energy lol
+
+    if (player.hasStatus<PS::DRAW_REDUCTION>()) {
+        if (player.wasJustApplied<PS::DRAW_REDUCTION>()) {
+            player.setJustApplied<PS::DRAW_REDUCTION>(false);
+        } else {
+            player.removeStatus<PS::DRAW_REDUCTION>();
+            ++player.cardDrawPerTurn;
+        }
+    }
 
     player.applyStartOfTurnPostDrawRelics(*this);
     player.applyStartOfTurnPostDrawPowers(*this);

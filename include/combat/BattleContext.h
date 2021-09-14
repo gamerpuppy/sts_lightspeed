@@ -137,6 +137,8 @@ namespace sts {
         void callEndOfTurnActions(); // GameActionManager.callEndTurnActions(), called when the end turn cardQueue item is reached.
         void onTurnEnding(); // AbstractRoom endTurn(), called when the turn actually ends.
 
+        void callEndTurnEarlySequence(); // time eater
+
         void applyEndOfRoundPowers(); // game : MonsterGroup applyEndOfTurnPowers
         void afterMonsterTurns();
 
