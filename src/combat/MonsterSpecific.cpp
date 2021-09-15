@@ -2456,10 +2456,10 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
                 return MMID::REPTOMANCER_SUMMON;
             }
 
-            while (true) {
-                int myRoll = roll;
-                const bool canSpawn = bc.monsters.monstersAlive < 4;
+            int myRoll = roll;
+            const bool canSpawn = bc.monsters.monstersAlive < 4;
 
+            while (true) {
                 if (myRoll < 33) {
                     if (!lastMove(MMID::REPTOMANCER_SNAKE_STRIKE)) {
                         return MMID::REPTOMANCER_SNAKE_STRIKE;
