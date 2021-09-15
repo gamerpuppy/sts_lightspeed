@@ -78,7 +78,7 @@ namespace sts {
         WRITHING_MASS,
     };
 
-    static constexpr const char* const  enemyIdStrings[] = {
+    static constexpr const char* const  monsterIdStrings[] = {
             "INVALID = 0",
             "ACID_SLIME_L",
             "ACID_SLIME_M",

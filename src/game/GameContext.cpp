@@ -782,6 +782,7 @@ void GameContext::transitionToMapNode(int mapNodeX) {
     } else {
         curRoom = map->getNode(curMapNodeX, curMapNodeY).room;
     }
+    relicsOnEnterRoom(curRoom);
 
     curEvent = Event::INVALID;
     if (curRoom == Room::EVENT) {
@@ -801,7 +802,6 @@ void GameContext::transitionToMapNode(int mapNodeX) {
         }
     }
 
-    relicsOnEnterRoom(curRoom);
     switch (curRoom) {
         case Room::EVENT: {
             setupEvent();
@@ -1122,6 +1122,10 @@ void GameContext::enterBattle(MonsterEncounter encounter) {
 }
 
 void GameContext::afterBattle() {
+    if (hasRelic(RelicId::FACE_OF_CLERIC)) {
+        playerIncreaseMaxHp(1);
+    }
+
     switch (curRoom) {
         case Room::MONSTER: {
             regainControlAction = returnToMapAction;

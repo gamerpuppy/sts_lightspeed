@@ -7,6 +7,7 @@
 #include "combat/BattleContext.h"
 #include "sim/ConsoleSimulator.h"
 #include "sim/PrintHelpers.h"
+#include "sim/SimHelpers.h"
 
 #include <regex>
 #include <sstream>
@@ -52,7 +53,7 @@ void BattleSimulator::handleInputLine(const std::string &line, std::ostream &os,
     }
 
     if (c.printInput) {
-        os << "<< " << line << "\n\n";
+        os << "<< " << line << "\n";
     }
 
     if (line.length() >= 4 && (line.substr(0, 4) == "quit" || line.substr(0, 4) == "stop")) {
@@ -135,38 +136,6 @@ void BattleSimulator::doPrintCommand(std::ostream &os, const std::string &cmd) {
 
 void BattleSimulator::doSetCommand(const std::string &cmd) {
 
-}
-
-bool BattleSimulator::doAssertCommand(const std::string &cmd) {
-    std::istringstream iss(cmd);
-    std::string variable;
-    iss >> variable;
-
-    if (variable == "player.curHp") {
-        int value;
-        iss >> value;
-        return value == bc->player.curHp;
-    }
-
-    if (variable == "player.maxHp") {
-        int value;
-        iss >> value;
-        return value == bc->player.maxHp;
-    }
-
-    if (variable == "hand.size") {
-        int value;
-        iss >> value;
-        return value == bc->cards.cardsInHand;
-    }
-
-    if (variable == "monsters.aliveCount") {
-        int value;
-        iss >> value;
-        return value == bc->monsters.monstersAlive;
-    }
-
-    return false; // unrecognized asserts default to failing
 }
 
 void BattleSimulator::printPotionActions(std::ostream &os) const {
@@ -508,45 +477,199 @@ void BattleSimulator::takeCardSelectAction(const std::string &action) {
         case CardSelectTask::WARCRY:
             bc->chooseWarcryCard(std::stoi(action));
             break;
-
     }
 }
 
-//void BattleSimulator::printDiscoveryActions(std::ostream &os) const {
-//    os << "DiscoveryAction: Choose a card to create " << bc->cardSelectInfo.data0 << " copies of in your hand.\n";
-//    for (int i = 0; i < 3; ++i) {
-//        os << i << ": " << getCardName(bc->cardSelectInfo.discovery_Cards()[i]) << "\n";
-//    }
-//}
-//
-//void BattleSimulator::takeDiscoveryAction(const std::string &action) {
-//    const int idx = std::stoi(action);
-//    bc->chooseDiscoveryCard(idx);
-//}
-//
-//void BattleSimulator::printDiscardToHandActions(std::ostream &os) const {
-//        << (bc->cardSelectInfo.discardToHand_ForZeroCost() ? " for zero cost.\n" : ".\n");
-//
-//    for (int i = 0; i < bc->cards.discardPile.size(); ++i) {
-//        os << i << ": " << bc->cards.discardPile[i].getName() << "\n";
-//    }
-//}
-//
-//void BattleSimulator::takeChooseCardsInHandAction(const std::string &action) const {
-//    std::istringstream iss(action);
-//
-//    int chooseCount;
-//    if (bc->cardSelectInfo.cardSelect_MaxCount()) {
-//        iss >> chooseCount;
-//    } else {
-//        chooseCount = bc->cardSelectInfo.cardSelect_MinCount();
-//    }
-//
-//    int chooseIdxs[10];
-//    for (int i = 0; i < chooseCount; ++i) {
-//        iss >> chooseIdxs[i];
-//    }
-//
-//    bc->chooseHandSelectCards(chooseIdxs, chooseCount);
-//}
-//
+
+bool cardAssert(std::istringstream &iss, const CardInstance &c) {
+    std::string attribute;
+    iss >> attribute;
+
+    if (attribute == "id") {
+        std::string str;
+        iss >> str;
+        auto id = SimHelpers::getCardIdForString(str);
+        return c.id == id;
+    }
+
+    if (attribute == "upgraded") {
+        int value;
+        iss >> value;
+        return c.getUpgradeCount() == value;
+    }
+
+    if (attribute == "cost") {
+        int value;
+        iss >> value;
+        return c.cost == value;
+    }
+
+    if (attribute == "costForTurn") {
+        int value;
+        iss >> value;
+        return c.costForTurn == value;
+    }
+
+    return false;
+}
+
+
+bool monsterAssert(std::istringstream &iss, const Monster &m) {
+    std::string attribute;
+    iss >> attribute;
+
+    if (attribute == "block") {
+        int value;
+        iss >> value;
+        return m.block == value;
+    }
+
+    if (attribute == "hp" || attribute == "curHp") {
+        int value;
+        iss >> value;
+        return m.curHp == value;
+    }
+
+    if (attribute == "maxHp") {
+        int value;
+        iss >> value;
+        return m.maxHp == value;
+    }
+
+    if (attribute == "maxHp") {
+        int value;
+        iss >> value;
+        return m.maxHp == value;
+    }
+
+    if (attribute == "id") {
+        std::string str;
+        iss >> str;
+        return m.id == SimHelpers::getMonsterIdForString(str);
+    }
+
+    if (attribute == "hasStatus") {
+        std::string str;
+        iss >> str;
+        auto status = SimHelpers::getMonsterStatusForString(str);
+        return m.hasStatusInternal(status);
+    }
+
+    if (attribute == "getStatus") {
+        std::string str;
+        int value;
+        iss >> str;
+        iss >> value;
+        auto status = SimHelpers::getMonsterStatusForString(str);
+        return m.getStatusInternal(status) == value;
+    }
+
+    if (attribute == "move" || attribute == "nextMove" || attribute == "lastMove") {
+        int idx = (attribute == "move" || attribute == "nextMove") ? 0 : 1;
+        std::string str;
+        iss >> str;
+        auto move = SimHelpers::getMonsterMoveForString(str);
+        return m.moveHistory[idx] == move;
+    }
+
+    return false;
+}
+
+bool BattleSimulator::doAssertCommand(const std::string &cmd) {
+    std::istringstream iss(cmd);
+    std::string tok;
+    iss >> tok;
+
+    if (tok == "hand") {
+        std::string tok2;
+        iss >> tok2;
+
+        if (tok2 == "size") {
+            int value;
+            iss >> value;
+            return value == bc->cards.cardsInHand;
+        }
+
+        int cardIdx = std::stoi(tok2);
+        assert(cardIdx >= 0 && cardIdx < 10);
+        return cardAssert(iss, bc->cards.hand[cardIdx]);
+    }
+
+    if (tok == "player") {
+        std::string tok2;
+        iss >> tok2;
+
+        if (tok2 == "block") {
+            int value;
+            iss >> value;
+            return value == bc->player.block;
+        }
+
+        if (tok2 == "energy") {
+            int value;
+            iss >> value;
+            return value == bc->player.energy;
+        }
+
+        if (tok2 == "hp" || tok2 == "curHp") {
+            int value;
+            iss >> value;
+            return value == bc->player.curHp;
+        }
+
+        if (tok2 == "maxHp") {
+            int value;
+            iss >> value;
+            return value == bc->player.maxHp;
+        }
+
+        if (tok2 == "gold") {
+            int value;
+            iss >> value;
+            return value == bc->player.gold;
+        }
+
+        if (tok2 == "hasStatus") {
+            std::string str;
+            iss >> str;
+            const auto status = SimHelpers::getPlayerStatusForString(str);
+            return bc->player.hasStatusRuntime(status);
+        }
+
+        if (tok2 == "getStatus") {
+            std::string str;
+            int value;
+            iss >> str;
+            iss >> value;
+            const auto status = SimHelpers::getPlayerStatusForString(str);
+            return value == bc->player.getStatusRuntime(status);
+        }
+
+
+    }
+
+    // monster idx -> tok2
+    if (tok == "monsters" || tok == "monster") {
+        std::string tok2;
+        iss >> tok2;
+
+        if (tok2 == "alive") {
+            int value;
+            iss >> value;
+            return value == bc->monsters.monstersAlive;
+        }
+
+        if (tok2 == "count" || tok2 == "size") {
+            int value;
+            iss >> value;
+            return value == bc->monsters.monsterCount;
+        }
+
+        int mIdx = std::stoi(tok2);
+        assert(mIdx >= 0 && mIdx < 5);
+        const auto &m = bc->monsters.arr[mIdx];
+        return monsterAssert(iss, m);
+    }
+
+    return false; // unrecognized asserts default to failing
+}

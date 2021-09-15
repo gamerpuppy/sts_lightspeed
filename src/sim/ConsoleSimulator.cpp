@@ -54,6 +54,7 @@ void ConsoleSimulator::reset() {
 
 void ConsoleSimulator::play(std::istream &is, std::ostream &os, SimulatorContext &c) {
     if (gc == nullptr) {
+        ++c.line;
         std::string seedStr;
         std::string character;
         int ascensionLevel;
@@ -70,7 +71,7 @@ void ConsoleSimulator::play(std::istream &is, std::ostream &os, SimulatorContext
 
     bool firstLine = true;
 
-    while (!c.quitCommandGiven && gc->outcome == GameOutcome::UNDECIDED && !is.eof()) {
+    while (!c.quitCommandGiven && !(c.failedTest && c.quitOnTestFailed) && gc->outcome == GameOutcome::UNDECIDED && !is.eof()) {
         if (c.printPrompts && (c.printFirstLine || !firstLine)) {
             printActions(os);
         }
@@ -87,6 +88,9 @@ void ConsoleSimulator::getInputLoop(std::istream &is, std::ostream &os, Simulato
         ++c.line;
         c.tookAction = false;
         handleInputLine(line, os, c);
+    }
+    if (c.failedTest && c.quitOnTestFailed) {
+        os << "FAILED TEST line(" << c.line << "): \"" << line << "\"" << std::endl;
     }
 }
 

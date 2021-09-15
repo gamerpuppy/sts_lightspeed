@@ -658,7 +658,7 @@ namespace sts {
 
     std::ostream &operator<<(std::ostream &os, const Monster &m) {
         os << "{";
-        os << m.idx << " " << sts::enemyIdStrings[(int) m.id]
+        os << m.idx << " " << sts::monsterIdStrings[(int) m.id]
            << " hp:(" << m.curHp << "/" << m.maxHp << ")"
            << " block:(" << m.block << ") statusEffects:{";
 

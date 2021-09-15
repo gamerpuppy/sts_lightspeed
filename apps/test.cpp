@@ -489,6 +489,8 @@ int scumSearch(int argc, const char *argv[]) {
 
 
 int main(int argc, const char* argv[]) {
+    printSizes();
+
     if (argc < 2) {
         std::cout << "incorrect arguments" << std::endl;
         return 0;

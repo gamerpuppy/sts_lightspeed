@@ -19,7 +19,7 @@ namespace sts {
 
     struct SimulatorContext {
         // state
-        int line = -1;
+        int line = 0;
         bool quitCommandGiven = false;
         bool tookAction = false;
         bool failedTest = false;
@@ -44,7 +44,6 @@ namespace sts {
         void setupGame(std::uint64_t seed, CharacterClass c, int ascension);
         void setupGameFromSaveFile(const SaveFile &save);
         void reset();
-
 
         void play(std::istream &is, std::ostream &os, SimulatorContext &c);
 

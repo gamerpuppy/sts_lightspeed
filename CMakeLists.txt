@@ -22,7 +22,7 @@ target_link_directories(main PRIVATE nlohmann_json::nlohmann_json)
 target_include_directories(test PUBLIC include)
 target_include_directories(test PUBLIC nlohmann_json/include)
 
-
-add_executable(small-test apps/small-test.cpp src/game/SaveFile.cpp)
+add_executable(small-test apps/small-test.cpp ${sts_lightspeed_SOURCES})
+target_link_directories(small-test PRIVATE nlohmann_json::nlohmann_json)
 target_include_directories(small-test PUBLIC include)
 target_include_directories(small-test PUBLIC nlohmann_json/include)

@@ -7,6 +7,8 @@
 #include "game/Game.h"
 #include "constants/Cards.h"
 
+#include "sim/SimHelpers.h"
+
 #include <vector>
 #include <algorithm>
 
@@ -58,7 +60,12 @@ void printCardIdOrder() {
 
 
 int main(int argc, const char *argv[]) {
-    printCardIdOrder();
+
+    std::cout << static_cast<int>(SimHelpers::getMonsterIdForString(argv[1])) << '\n';
+    std::cout << static_cast<int>(SimHelpers::getMonsterStatusForString(argv[2])) << '\n';
+    std::cout << static_cast<int>(SimHelpers::getMonsterMoveForString(argv[3])) << '\n';
+
+//    printCardIdOrder();
 //    findShovelSeed();
 //    std::cout << sts::Base64::encode(argv[1]);
 

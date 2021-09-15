@@ -1713,7 +1713,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             std::cerr << bc.seed << " ";
             auto x = static_cast<int>(moveHistory[0]);
             if (x >= 0 && x <= static_cast<int>(MMID::WRITHING_MASS_STRONG_STRIKE)) {
-                std::cerr << enemyIdStrings[static_cast<int>(id)] << " " << monsterMoveStrings[x] << std::endl;
+                std::cerr << monsterIdStrings[static_cast<int>(id)] << " " << monsterMoveStrings[x] << std::endl;
             }
             assert(false);
         }

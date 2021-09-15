@@ -56,6 +56,8 @@ namespace sts {
         REGROW,
         SHIFTING,
         STASIS,
+
+        INVALID,
     };
 
 
@@ -107,6 +109,54 @@ namespace sts {
         "Regrow",
         "Shifting",
         "Stasis",
+
+        "INVALID",
+    };
+
+    static constexpr const char* const monsterStatusEnumStrings[]{
+        "ARTIFACT",
+        "BLOCK_RETURN",
+        "CHOKED",
+        "CORPSE_EXPLOSION",
+        "LOCK_ON",
+        "MARK",
+        "METALLICIZE",
+        "PAINFUL_STABS",
+        "PLATED_ARMOR",
+        "POISON",
+        "REGEN",
+        "SHACKLED",
+        "STRENGTH",
+        "VULNERABLE",
+        "WEAK",
+        "ANGRY",
+        "BEAT_OF_DEATH",
+        "CURIOSITY",
+        "CURL_UP",
+        "ENRAGE",
+        "FADING",
+        "FLIGHT",
+        "GENERIC_STRENGTH_UP",
+        "INTANGIBLE",
+        "MALLEABLE",
+        "MODE_SHIFT",
+        "RITUAL",
+        "SLOW",
+        "SPORE_CLOUD",
+        "THIEVERY",
+        "THORNS",
+        "TIME_WARP",
+        "INVINCIBLE",
+        "SHARP_HIDE",
+        "ASLEEP",
+        "BARRICADE",
+        "MINION",
+        "MINION_LEADER",
+        "REACTIVE",
+        "REGROW",
+        "SHIFTING",
+        "STASIS",
+        "INVALID",
     };
 
     static constexpr bool isBooleanPower(MonsterStatus s) {

@@ -280,10 +280,6 @@ void Player::hpWasLost(BattleContext &bc, int amount, bool selfDamage) {
 
     curHp = std::max(0, curHp-amount);
 
-    // powers wasHpLost
-    // -rupture
-    // -plated armor
-
     if (selfDamage && hasStatus<PS::RUPTURE>()) {
         buff<PS::STRENGTH>(getStatus<PS::RUPTURE>());
     }
@@ -745,7 +741,7 @@ std::ostream& printIfHaveStatus(const Player &p, std::ostream &os, PlayerStatus 
         return os;
     }
 
-    std::string desc = playerStatusEffectNames[(int)s];
+    std::string desc = playerStatusStrings[(int)s];
     return os << "(" << desc << "," << p.getStatusRuntime(s) << ")" << ", ";
 }
 

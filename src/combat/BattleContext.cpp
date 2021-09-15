@@ -136,7 +136,11 @@ void BattleContext::initRelics(const GameContext &gc) {
             }
 
             case R::HAPPY_FLOWER:
-                player.happyFlowerCounter = r.data;
+                player.happyFlowerCounter = r.data + 1;
+                if (player.happyFlowerCounter == 3) {
+                    ++player.energy;
+                    player.happyFlowerCounter = 0;
+                }
                 break;
 
             case R::INCENSE_BURNER:
@@ -320,7 +324,7 @@ void BattleContext::initRelics(const GameContext &gc) {
                 break;
 
             case R::SLAVERS_COLLAR:
-                if (room == Room::ELITE) { // todo this needs to be set by eliteTrigger maybe?
+                if (room == Room::ELITE || room == Room::BOSS) { // todo this needs to be set by eliteTrigger maybe?
                     p.energyPerTurn++;
                 }
                 break;
@@ -749,7 +753,6 @@ void BattleContext::executeActions() {
             // play a card queue item
             auto item = cardQueue.popFront();
             playCardQueueItem(item);
-
             continue;
         }
 
@@ -789,6 +792,19 @@ void BattleContext::executeActions() {
             onTurnEnding();
             continue;
 
+        }
+
+        if (player.hasRelic<R::UNCEASING_TOP>()) {
+            // turn cannot have ended here
+#ifdef sts_asserts
+            assert(!endTurnQueued);
+            assert(actionQueue.isEmpty());
+            assert(cardQueue.isEmpty());
+#endif
+
+            if (cards.cardsInHand == 0) {
+                drawCards(1);
+            }
         }
 
         setState(InputState::PLAYER_NORMAL);
@@ -1243,7 +1259,7 @@ void BattleContext::useSkillCard() {
             break;
 
         case CardId::DOUBLE_TAP:
-            addToBot(Actions::BuffPlayer<PS::DOUBLE_TAP>(1));
+            addToBot(Actions::BuffPlayer<PS::DOUBLE_TAP>(up ? 2 : 1));
             break;
 
         case CardId::DUAL_WIELD:
