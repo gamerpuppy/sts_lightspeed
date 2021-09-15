@@ -1932,11 +1932,14 @@ void BattleContext::onAfterUseCard() {
                 m.setStatus<MS::TIME_WARP>(timeWarp + 1);
                 ++timeWarp;
             }
-        } else if (m.hasStatus<MS::SLOW>()) {
+        }
+        if (m.hasStatus<MS::SLOW>()) {
             m.buff<MS::SLOW>(1);
         }
+        if (m.hasStatus<MS::BEAT_OF_DEATH>()) {
+            addToBot( Actions::DamagePlayer(m.getStatus<MS::BEAT_OF_DEATH>()) );
+        }
     }
-
 
     if (item.purgeOnUse) {
         return;

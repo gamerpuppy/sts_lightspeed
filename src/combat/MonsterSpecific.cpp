@@ -139,6 +139,12 @@ void Monster::preBattleAction(BattleContext &bc) {
     const int hallwayDiffIdx = getTriIdx(bc.ascension, 2, 17);
 
     switch (id) {
+        case MonsterId::CORRUPT_HEART: {
+            buff<MS::BEAT_OF_DEATH>(asc19 ? 2 : 1);
+            buff<MS::INVINCIBLE>(asc19 ? 200 : 300);
+            break;
+        }
+
         case MonsterId::DAGGER:
             buff<MS::MINION>();
             break;
@@ -248,12 +254,6 @@ void Monster::preBattleAction(BattleContext &bc) {
             buff<MS::ARTIFACT>(3);
             buff<MS::BARRICADE>();
             addBlock(40);
-            break;
-        }
-
-        case MonsterId::CORRUPT_HEART: {
-            uniquePower0 = asc19 ? 200 : 300; // InvinciblePower
-            uniquePower1 = asc19 ? 2 : 1; // BeatOfDeathPower
             break;
         }
 
@@ -1706,10 +1706,75 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
-
         case MMID::AWAKENED_ONE_TACKLE:
             attackPlayerHelper(bc, 10, 3);
             bc.addToBot( Actions::RollMove(idx) );
+            break;
+
+        case MMID::SPIRE_SHIELD_BASH:
+        case MMID::SPIRE_SHIELD_FORTIFY:
+        case MMID::SPIRE_SHIELD_SMASH:
+        case MMID::SPIRE_SPEAR_BURN_STRIKE:
+        case MMID::SPIRE_SPEAR_PIERCER:
+        case MMID::SPIRE_SPEAR_SKEWER:
+            break;
+
+        case MMID::CORRUPT_HEART_BLOOD_SHOTS: // 1
+            attackPlayerHelper(bc, 2, asc4 ? 15 : 12);
+            if (bc.getMonsterTurnNumber() % 3 == 0) {
+                setMove(MonsterMoveId::CORRUPT_HEART_BUFF);
+            } else {
+                setMove(MonsterMoveId::CORRUPT_HEART_BLOOD_SHOTS);
+            }
+            bc.noOpRollMove();
+            break;
+
+        case MMID::CORRUPT_HEART_BUFF: { // 4
+            // remove negative str and buff 2
+            const auto newStr = std::max(0, getStatus<MS::STRENGTH>()) + 2;
+            setStatus<MS::STRENGTH>(newStr);
+            const auto buffCount = bc.getMonsterTurnNumber() / 3;
+            switch (buffCount) {
+                case 1:
+                    buff<MS::ARTIFACT>(2);
+                    break;
+                case 2:
+                    buff<MS::BEAT_OF_DEATH>(1);
+                    break;
+                case 3:
+                    buff<MS::PAINFUL_STABS>();
+                    break;
+                case 4:
+                    buff<MS::STRENGTH>(10);
+                    break;
+                default:
+                    buff<MS::STRENGTH>(50);
+                    break;
+            }
+            rollMove(bc);
+            break;
+        }
+
+        case MMID::CORRUPT_HEART_DEBILITATE: // 3
+            bc.player.debuff<PS::VULNERABLE>(2, true);
+            bc.player.debuff<PS::WEAK>(2, true);
+            bc.player.debuff<PS::FRAIL>(2, true);
+            Actions::ShuffleTempCardIntoDrawPile(CardId::DAZED).actFunc(bc);
+            Actions::ShuffleTempCardIntoDrawPile(CardId::SLIMED).actFunc(bc);
+            Actions::ShuffleTempCardIntoDrawPile(CardId::WOUND).actFunc(bc);
+            Actions::ShuffleTempCardIntoDrawPile(CardId::BURN).actFunc(bc);
+            Actions::ShuffleTempCardIntoDrawPile(CardId::VOID).actFunc(bc);
+            rollMove(bc);
+            break;
+
+        case MMID::CORRUPT_HEART_ECHO: // 2
+            attackPlayerHelper(bc, asc4 ? 45 : 40);
+            if (bc.getMonsterTurnNumber() % 3 == 0) {
+                setMove(MonsterMoveId::CORRUPT_HEART_BUFF);
+            } else {
+                setMove(MonsterMoveId::CORRUPT_HEART_BLOOD_SHOTS);
+            }
+            bc.noOpRollMove();
             break;
 
 
@@ -3128,6 +3193,18 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
                 return MonsterMoveId::AWAKENED_ONE_TACKLE;
             } else {
                 return MonsterMoveId::AWAKENED_ONE_SLUDGE;
+            }
+        }
+
+        case MonsterId::CORRUPT_HEART: {
+            if (firstTurn()) {
+                return MonsterMoveId::CORRUPT_HEART_DEBILITATE;
+            }
+            // only called if not going to buff
+            if (bc.aiRng.randomBoolean()) {
+                return MonsterMoveId::CORRUPT_HEART_ECHO;
+            } else {
+                return MonsterMoveId::CORRUPT_HEART_BLOOD_SHOTS;
             }
         }
 

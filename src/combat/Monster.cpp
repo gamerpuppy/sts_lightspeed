@@ -169,9 +169,6 @@ int Monster::getStatusInternal(MonsterStatus s) const {
         case MS::METALLICIZE:
             return metallicize;
 
-        case MS::PAINFUL_STABS:
-            return painfulStabs;
-
         case MS::PLATED_ARMOR:
             return platedArmor;
 
@@ -209,7 +206,6 @@ int Monster::getStatusInternal(MonsterStatus s) const {
         case MS::TIME_WARP:
             return uniquePower0;
 
-
         case MS::INVINCIBLE:
         case MS::SHARP_HIDE:
             return uniquePower1;
@@ -219,11 +215,12 @@ int Monster::getStatusInternal(MonsterStatus s) const {
         case MS::BARRICADE:
         case MS::MINION:
         case MS::MINION_LEADER:
+        case MS::PAINFUL_STABS:
         case MS::REACTIVE:
         case MS::REGROW:
         case MS::SHIFTING:
         case MS::STASIS:
-            return hasStatusInternal(s);
+            return true; // already did status check above
 
         default:
 #ifdef sts_asserts
@@ -413,7 +410,7 @@ void Monster::attacked(BattleContext &bc, int damage) {
     }
 
     if (hasStatus<MS::INVINCIBLE>()) {
-        auto amount = getStatus<MS::INVINCIBLE>();
+        int amount = getStatus<MS::INVINCIBLE>();
         int diff = amount - damage;
         if (diff >= 0) {
 //            setStatus<MS::INVINCIBLE>(damage); // TODO
@@ -473,7 +470,7 @@ void Monster::damage(BattleContext &bc, int damage) {
     }
 
     if (hasStatus<MS::INVINCIBLE>()) {
-        auto amount = getStatus<MS::INVINCIBLE>();
+        int amount = getStatus<MS::INVINCIBLE>();
         int diff = amount - damage;
         if (diff >= 0) {
             decrementStatus<MS::INVINCIBLE>(damage);

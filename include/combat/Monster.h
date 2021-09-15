@@ -48,9 +48,8 @@ namespace sts {
         std::int8_t choked = 0;
         std::int8_t corpseExplosion = 0;
         std::int8_t lockOn = 0;
-        std::int8_t mark = 0;
+        std::int16_t mark = 0;
         std::int8_t metallicize = 0;
-        std::int8_t painfulStabs = 0;
         std::int8_t platedArmor = 0;
         std::int8_t poison = 0;
         std::int8_t regen = 0;
@@ -120,8 +119,6 @@ namespace sts {
         [[nodiscard]] bool doesEscapeNext() const;
         [[nodiscard]] bool isAttacking() const;
 
-
-
         // ***********************
 
         void heal(int amount);
@@ -187,6 +184,11 @@ namespace sts {
 #pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
     template <MonsterStatus s>
     void Monster::setStatus(int amount) {
+        if (isBooleanPower(s)) {
+            setHasStatus<s>(amount);
+            return;
+        }
+
         switch (s) {
             case MonsterStatus::ARTIFACT:
                 artifact = amount;
@@ -214,10 +216,6 @@ namespace sts {
 
             case MonsterStatus::METALLICIZE:
                 metallicize = amount;
-                return;
-
-            case MonsterStatus::PAINFUL_STABS:
-                painfulStabs = amount;
                 return;
 
             case MonsterStatus::PLATED_ARMOR:
@@ -266,17 +264,6 @@ namespace sts {
             case MonsterStatus::THORNS:
             case MonsterStatus::TIME_WARP:
                 uniquePower0 = amount;
-                return;
-
-            case MonsterStatus::ASLEEP:
-            case MonsterStatus::BARRICADE:
-            case MonsterStatus::MINION:
-            case MonsterStatus::MINION_LEADER:
-            case MonsterStatus::REGROW:
-            case MonsterStatus::REACTIVE:
-            case MonsterStatus::SHIFTING:
-            case MonsterStatus::STASIS:
-                setHasStatus<s>(amount);
                 return;
 
             case MonsterStatus::INVINCIBLE:
@@ -418,7 +405,11 @@ namespace sts {
             return strength;
         }
 
-        if (!hasStatusInternal(s)) {
+        if (isBooleanPower(s)) {
+            return hasStatus<s>();
+        }
+
+        if (!hasStatus<s>()) {
             return 0;
         }
 
@@ -443,9 +434,6 @@ namespace sts {
 
             case MonsterStatus::METALLICIZE:
                 return metallicize;
-
-            case MonsterStatus::PAINFUL_STABS:
-                return painfulStabs;
 
             case MonsterStatus::PLATED_ARMOR:
                 return platedArmor;
@@ -484,16 +472,6 @@ namespace sts {
             case MonsterStatus::TIME_WARP:
                 return uniquePower0;
 
-                // boolean powers
-            case MonsterStatus::ASLEEP:
-            case MonsterStatus::BARRICADE:
-            case MonsterStatus::MINION:
-            case MonsterStatus::REGROW:
-            case MonsterStatus::REACTIVE:
-            case MonsterStatus::SHIFTING:
-            case MonsterStatus::STASIS:
-                return hasStatusInternal(s);
-
             case MonsterStatus::INVINCIBLE:
             case MonsterStatus::SHARP_HIDE:
                 return uniquePower1;
@@ -527,11 +505,6 @@ namespace sts {
 
             case MonsterStatus::METALLICIZE:
                 metallicize += amount;
-                setHasStatus<s>(true);
-                return;
-
-            case MonsterStatus::PAINFUL_STABS:
-                painfulStabs += amount;
                 setHasStatus<s>(true);
                 return;
 

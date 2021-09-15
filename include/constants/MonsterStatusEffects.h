@@ -15,7 +15,6 @@ namespace sts {
         LOCK_ON,
         MARK,
         METALLICIZE,
-        PAINFUL_STABS, // not unique, used by book of stabbing and corrupt heart after buffs
         PLATED_ARMOR,
         POISON,
         REGEN,
@@ -52,6 +51,7 @@ namespace sts {
         BARRICADE,
         MINION,
         MINION_LEADER,
+        PAINFUL_STABS,
         REACTIVE,
         REGROW,
         SHIFTING,
@@ -71,7 +71,6 @@ namespace sts {
         "Lock On",
         "Mark",
         "Metallicize",
-        "Painful Stabs",
         "Plated Armor",
         "Poison",
         "Regen",
@@ -105,6 +104,7 @@ namespace sts {
         "Barricade",
         "Minion",
         "Minion Leader",
+        "Painful Stabs",
         "Reactive",
         "Regrow",
         "Shifting",
@@ -121,7 +121,6 @@ namespace sts {
         "LOCK_ON",
         "MARK",
         "METALLICIZE",
-        "PAINFUL_STABS",
         "PLATED_ARMOR",
         "POISON",
         "REGEN",
@@ -152,6 +151,7 @@ namespace sts {
         "BARRICADE",
         "MINION",
         "MINION_LEADER",
+        "PAINFUL_STABS",
         "REACTIVE",
         "REGROW",
         "SHIFTING",
@@ -165,6 +165,7 @@ namespace sts {
             case MS::BARRICADE:
             case MS::MINION:
             case MS::MINION_LEADER:
+            case MS::PAINFUL_STABS:
             case MS::REACTIVE:
             case MS::REGROW:
             case MS::SHIFTING:
