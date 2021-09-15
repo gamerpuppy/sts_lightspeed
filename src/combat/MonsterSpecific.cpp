@@ -1711,12 +1711,71 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
-        case MMID::SPIRE_SHIELD_BASH:
-        case MMID::SPIRE_SHIELD_FORTIFY:
-        case MMID::SPIRE_SHIELD_SMASH:
-        case MMID::SPIRE_SPEAR_BURN_STRIKE:
-        case MMID::SPIRE_SPEAR_PIERCER:
-        case MMID::SPIRE_SPEAR_SKEWER:
+        case MMID::SPIRE_SHIELD_BASH: // 1
+            attackPlayerHelper(bc, asc3 ? 14 : 12);
+            if (bc.player.orbSlots > 0) {
+                bc.addToBot( Actions::SpireShieldDebuff() );
+            } else {
+                bc.player.debuff<PS::STRENGTH>(-1);
+            }
+            if (lastMoveBefore(MonsterMoveId::SPIRE_SHIELD_SMASH)) {
+                setMove(MonsterMoveId::SPIRE_SHIELD_FORTIFY);
+            } else {
+                setMove(MonsterMoveId::SPIRE_SHIELD_SMASH);
+            }
+            bc.noOpRollMove();
+            break;
+
+
+        case MMID::SPIRE_SHIELD_FORTIFY: // 2
+            addBlock(30);
+            bc.monsters.arr[1].addBlock(30);
+            if (lastMoveBefore(MonsterMoveId::SPIRE_SHIELD_SMASH)) {
+                setMove(MonsterMoveId::SPIRE_SHIELD_BASH);
+            } else {
+                setMove(MonsterMoveId::SPIRE_SHIELD_SMASH);
+            }
+            bc.noOpRollMove();
+            break;
+
+
+        case MMID::SPIRE_SHIELD_SMASH: { // 3
+            const auto damageOutput = calculateDamageToPlayer(bc, asc3 ? 38 : 34);
+            bc.addToBot( Actions::AttackPlayer(idx, damageOutput) );
+            bc.addToBot( Actions::MonsterGainBlock(idx, asc18 ? 99 : damageOutput));
+            bc.addToBot( Actions::RollMove(idx) );
+            break;
+        }
+
+        case MMID::SPIRE_SPEAR_BURN_STRIKE: // 1
+            attackPlayerHelper(bc, asc3 ? 6 : 5, 2);
+            if (asc18) {
+                bc.addToBot( Actions::MakeTempCardInDrawPile(CardId::BURN, 2, false) );
+            } else {
+                bc.addToBot( Actions::MakeTempCardInDiscard(CardId::BURN, 2) );
+            }
+            if (lastMoveBefore(MonsterMoveId::SPIRE_SPEAR_SKEWER)) {
+                setMove(MonsterMoveId::SPIRE_SPEAR_PIERCER);
+            } else {
+                setMove(MonsterMoveId::SPIRE_SPEAR_SKEWER);
+            }
+            bc.noOpRollMove();
+            break;
+
+        case MMID::SPIRE_SPEAR_PIERCER: // 2
+            buff<MS::STRENGTH>(2);
+            bc.monsters.arr[0].buff<MS::STRENGTH>(2);
+            if (lastMoveBefore(MonsterMoveId::SPIRE_SPEAR_SKEWER)) {
+                setMove(MonsterMoveId::SPIRE_SPEAR_BURN_STRIKE);
+            } else {
+                setMove(MonsterMoveId::SPIRE_SPEAR_SKEWER);
+            }
+            bc.noOpRollMove();
+            break;
+
+        case MMID::SPIRE_SPEAR_SKEWER: // 3
+            attackPlayerHelper(bc, 10, asc3 ? 4 : 3);
+            bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::CORRUPT_HEART_BLOOD_SHOTS: // 1
@@ -3205,6 +3264,28 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
                 return MonsterMoveId::CORRUPT_HEART_ECHO;
             } else {
                 return MonsterMoveId::CORRUPT_HEART_BLOOD_SHOTS;
+            }
+        }
+
+        case MonsterId::SPIRE_SHIELD: {
+            // 1 bash
+            // 2 fortify
+            // 3 smash
+            if (bc.aiRng.randomBoolean()) {
+                return MonsterMoveId::SPIRE_SHIELD_FORTIFY;
+            } else {
+                return MonsterMoveId::SPIRE_SHIELD_BASH;
+            }
+        }
+
+        case MonsterId::SPIRE_SPEAR: {
+            if (firstTurn()) {
+                return MonsterMoveId::SPIRE_SPEAR_BURN_STRIKE;
+            }
+            if (bc.aiRng.randomBoolean()) {
+                return MonsterMoveId::SPIRE_SPEAR_PIERCER;
+            } else {
+                return MonsterMoveId::SPIRE_SPEAR_BURN_STRIKE;
             }
         }
 

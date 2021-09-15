@@ -508,6 +508,16 @@ Action Actions::SpawnTorchHeads() {
     }};
 }
 
+Action Actions::SpireShieldDebuff() {
+    return {[] (BattleContext &bc) {
+        if (bc.aiRng.randomBoolean()) {
+            bc.player.debuff<PS::FOCUS>(-1);
+        } else {
+            bc.player.debuff<PS::STRENGTH>(-1);
+        }
+    }};
+}
+
 
 Action Actions::OnAfterCardUsed() {
     return {[] (BattleContext &bc) {

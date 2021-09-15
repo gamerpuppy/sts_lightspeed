@@ -394,6 +394,10 @@ namespace sts {
             dexterity += amount;
             return;
         }
+        if (s == PlayerStatus::FOCUS) {
+            focus += amount;
+            return;
+        }
 
         if (s == PS::CONFUSED || s == PS::HEX) {
             setHasStatus<s>(true);

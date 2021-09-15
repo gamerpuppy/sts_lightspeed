@@ -110,6 +110,7 @@ namespace sts {
 
         static Action SummonGremlins();
         static Action SpawnTorchHeads();
+        static Action SpireShieldDebuff(); // only called if player has orb slots
 
         static Action ExhaustRandomCardInHand(int count);
         static Action MadnessAction();
