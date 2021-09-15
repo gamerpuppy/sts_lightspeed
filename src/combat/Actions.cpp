@@ -1154,14 +1154,15 @@ Action Actions::SeverSoulExhaustAction() {
     }};
 }
 
-Action Actions::SwordBoomerangAction() {
-    return {[](BattleContext &bc) {
+Action Actions::SwordBoomerangAction(int baseDamage) { // pretty hacky until I can figure out a better solution
+    return {[=](BattleContext &bc) {
         const static CardInstance swordBoomerang {CardId::SWORD_BOOMERANG};
         const auto idx = bc.monsters.getRandomMonsterIdx(bc.cardRandomRng, true);
         if (idx == -1) {
             return;
         }
-        int damage = bc.calculateCardDamage(swordBoomerang, idx, 3);
+
+        int damage = bc.calculateCardDamage(swordBoomerang, idx, baseDamage);
         bc.addToTop(Actions::AttackEnemy(idx, damage));
     }};
 }
