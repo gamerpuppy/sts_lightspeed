@@ -175,7 +175,7 @@ void ConsoleSimulator::doSetCommand(const std::string &cmd) {
     std::string command;
     ss >> command;
 
-    if (command == "curHp") {
+    if (command == "curHp" || command == "hp") {
         int hp;
         ss >> hp;
         gc->curHp = hp;

@@ -564,6 +564,12 @@ bool monsterAssert(std::istringstream &iss, const Monster &m) {
         return m.getStatusInternal(status) == value;
     }
 
+    if (attribute == "miscInfo" || attribute == "misc") {
+        int value;
+        iss >> value;
+        return m.miscInfo == value;
+    }
+
     if (attribute == "move" || attribute == "nextMove" || attribute == "lastMove") {
         int idx = (attribute == "move" || attribute == "nextMove") ? 0 : 1;
         std::string str;
