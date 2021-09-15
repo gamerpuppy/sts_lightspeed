@@ -3256,19 +3256,19 @@ void GameContext::chooseEventOption(int idx) {
 
         case Event::THE_LIBRARY: {
             if (idx == 0) {
-                fixed_list<CardId, 20> cards;
                 std::bitset<384> selectedBits;
-
-                for (int i = 0; i < 20; ++i) {
+                info.toSelectCards.clear();
+                info.toSelectCards.resize(20);
+                // cards are added in displayed in reverse order that they are generated
+                for (int i = 19; i >= 0; --i) {
                     CardId id;
                     do {
                         id = getRandomClassCardOfRarity(cardRng, cc, rollCardRarity(Room::EVENT));
                     } while (selectedBits.test(static_cast<int>(id)));
                     selectedBits.set(static_cast<int>(id));
-                    cards.push_back(id);
+                    info.toSelectCards[i] = previewObtainCard(id);
                 }
-                openCardObtainScreen(cards, 1);
-
+                openCardSelectScreen(CardSelectScreenType::OBTAIN, 1, false);
 
             } else if (idx == 1) {
                 playerHeal(info.hpAmount0);
@@ -3776,21 +3776,9 @@ void GameContext::openCardSelectScreen(CardSelectScreenType type, int selectCoun
                 deck.addMatchingToSelectList(info.toSelectCards, [](auto c){ return c.canTransform(); });
                 break;
 
-
-
             default:
                 break;
         }
-    }
-}
-
-void GameContext::openCardObtainScreen(fixed_list<CardId, 20> cards, int selectCount) {
-    info.selectScreenType = CardSelectScreenType::OBTAIN;
-    info.toSelectCount = selectCount;
-    info.toSelectCards.clear();
-    info.haveSelectedCards.clear();
-    for (const auto &c : cards) {
-        info.toSelectCards.push_back(previewObtainCard(c));
     }
 }
 

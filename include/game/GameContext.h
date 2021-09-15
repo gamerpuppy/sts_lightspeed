@@ -320,7 +320,6 @@ namespace sts {
         void selectScreenTransform();
         void openCombatRewardScreen(Rewards reward);
         void openCardSelectScreen(CardSelectScreenType type, int selectCount, bool initSelectCards=true);
-        void openCardObtainScreen(fixed_list<CardId, 20> cards, int selectCount=1);
 
         // interface methods
         void chooseNeowOption(const Neow::Option &gc);
