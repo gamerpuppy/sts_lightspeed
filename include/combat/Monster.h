@@ -162,7 +162,7 @@ namespace sts {
         void spawnBronzeOrbs(BattleContext &bc); // Bronze Automaton
         void stasisAction(BattleContext &bc); // Bronze Orb
         void returnStasisCard(BattleContext &bc);
-        void reptomancerSummon(BattleContext &bc);
+        void reptomancerSummon(BattleContext &bc, int daggerCount);
 
         [[nodiscard]] static int getAliveGremlinCount(const BattleContext &bc);
 

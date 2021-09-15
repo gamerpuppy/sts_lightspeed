@@ -152,7 +152,11 @@ void Monster::preBattleAction(BattleContext &bc) {
             break;
 
         case MonsterId::EXPLODER:       // game adds explosive power
+            break;
+
         case MonsterId::GIANT_HEAD:     // game adds slow power
+            setHasStatus<MS::SLOW>(true);
+            setStatus<MS::SLOW>(0);
             break;
 
         case MonsterId::GREMLIN_LEADER: // game adds MinionPower to all gremlins
@@ -198,7 +202,7 @@ void Monster::preBattleAction(BattleContext &bc) {
         }
 
         case MonsterId::WRITHING_MASS: {
-            // game adds reactive power
+            buff<MS::REACTIVE>();
             buff<MS::MALLEABLE>(3);
             break;
         }
@@ -1517,12 +1521,12 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             break;
 
         case MMID::WRITHING_MASS_MULTI_STRIKE: // 1
-            attackPlayerHelper(bc, asc2 ? 9 : 7);
+            attackPlayerHelper(bc, asc2 ? 9 : 7, 3);
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::WRITHING_MASS_STRONG_STRIKE: // 0
-            attackPlayerHelper(bc, asc2 ? 16 : 15);
+            attackPlayerHelper(bc, asc2 ? 38 : 32);
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
@@ -1587,7 +1591,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             break;
 
         case MMID::REPTOMANCER_SUMMON: // 2
-            reptomancerSummon(bc);
+            reptomancerSummon(bc, asc18 ? 2 : 1);
             rollMove(bc);
             break;
 
@@ -2922,7 +2926,7 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             // 2 flail
             // 3 wither
             // 4 implant
-            if (bc.getMonsterTurnNumber() == 1) {
+            if (firstTurn()) {
                 if (roll < 33) {
                     return (MMID::WRITHING_MASS_MULTI_STRIKE);
 
@@ -3321,7 +3325,7 @@ void Monster::returnStasisCard(BattleContext &bc) {
     stasisCard = {CardId::INVALID};
 }
 
-void reptoSummonHelper(const BattleContext &bc, int daggerIdxs[2]) {
+void reptoSummonHelper(const BattleContext &bc, int daggerIdxs[2], int daggerCount) {
     constexpr int searchOrder[4] = {4, 1, 3, 0};
 
     int openSlotsFound = 0;
@@ -3333,7 +3337,7 @@ void reptoSummonHelper(const BattleContext &bc, int daggerIdxs[2]) {
             daggerIdxs[openSlotsFound++] = mIdx;
         }
 
-        if (openSlotsFound == 2) {
+        if (openSlotsFound == daggerCount) {
             return;
         }
     }
@@ -3343,16 +3347,21 @@ void reptoSummonHelper(const BattleContext &bc, int daggerIdxs[2]) {
 #endif
 }
 
-void Monster::reptomancerSummon(BattleContext &bc) {
+void Monster::reptomancerSummon(BattleContext &bc, int daggerCount) {
     int daggerIdxs[2];
-    reptoSummonHelper(bc, daggerIdxs);
+    reptoSummonHelper(bc, daggerIdxs, daggerCount);
 
-    for (int daggerIdx : daggerIdxs) {
+    for (int i = 0; i < daggerCount; ++i) {
+        const auto daggerIdx = daggerIdxs[i];
         auto &dagger = bc.monsters.arr[daggerIdx];
         dagger = Monster();
         dagger.construct(bc, MonsterId::DAGGER, daggerIdx);
         ++bc.monsters.monstersAlive;
         dagger.setMove(MMID::DAGGER_STAB);
+        dagger.buff<MS::MINION>();
+        if (bc.player.hasRelic<R::PHILOSOPHERS_STONE>()) {
+            dagger.buff<MS::STRENGTH>(1);
+        }
 
         bc.noOpRollMove();
         bc.monsters.skipTurn.set(daggerIdx, true);

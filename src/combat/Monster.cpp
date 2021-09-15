@@ -44,6 +44,10 @@ void Monster::applyEndOfTurnTriggers(BattleContext &bc) {
         addBlock(getStatus<MS::METALLICIZE>());
     }
 
+    if (hasStatus<MS::MALLEABLE>()) {
+        setStatus<MS::MALLEABLE>(3);
+    }
+
     if (hasStatus<MS::PLATED_ARMOR>()) {
         addBlock(getStatus<MS::PLATED_ARMOR>());
     }
@@ -72,9 +76,8 @@ void Monster::applyEndOfRoundPowers(BattleContext &bc) {
         }
     }
 
-    if (hasStatus<MS::SLOW>()) { // todo make this not remove it.
+    if (hasStatus<MS::SLOW>()) {
         setStatus<MS::SLOW>(0);
-        setHasStatus<MS::SLOW>(true);
     }
 
     if (hasStatus<MS::LOCK_ON>()) {
@@ -434,13 +437,9 @@ void Monster::damageUnblockedHelper(BattleContext &bc, int damage) {
         setHasStatus<MS::ASLEEP>(false);
         decrementStatus<MS::METALLICIZE>(8);
     }
-
     if (hasStatus<MS::SHIFTING>()) {
         addDebuff<MS::STRENGTH>(-damage);
-
-        setStatus<MS::SHACKLED>(
-                getStatus<MS::SHACKLED>() + damage
-        );
+        buff<MS::SHACKLED>(damage);
     }
 
     curHp = std::max(0, curHp-damage);
