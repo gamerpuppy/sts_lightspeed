@@ -944,6 +944,7 @@ void BattleContext::useAttackCard() {
     const auto t = item.target;
     const bool up = c.isUpgraded();
 
+    // todo test vigor with multi attacks and necro/double tap
     switch (c.getId()) {
         case CardId::STRIKE_RED:
         case CardId::STRIKE_BLUE:
@@ -989,18 +990,22 @@ void BattleContext::useAttackCard() {
             addToBot( Actions::AttackEnemy(t, calculateCardDamage(c, t, up ? 18 : 14)) );
             break;
 
-        case CardId::CLEAVE:
-            addToBot( Actions::AttackAllEnemy(up ? 11 : 8) );
+        case CardId::CLEAVE:  {
+            int baseDamage = (up ? 11 : 8) + player.getStatus<PS::VIGOR>();
+            addToBot( Actions::AttackAllEnemy(baseDamage) );
             break;
+        }
 
         case CardId::CLOTHESLINE:
             addToBot( Actions::AttackEnemy(t, calculateCardDamage(c, t, up ? 14 : 12)) );
             addToBot( Actions::DebuffEnemy<MS::WEAK>(t, up ? 3 : 2, false) );
             break;
 
-        case CardId::DRAMATIC_ENTRANCE:
-            addToBot( Actions::AttackAllEnemy(up ? 12 : 8) );
+        case CardId::DRAMATIC_ENTRANCE: {
+            int baseDamage = (up ? 12 : 8) + player.getStatus<PS::VIGOR>();
+            addToBot( Actions::AttackAllEnemy(baseDamage) );
             break;
+        }
 
         case CardId::DROPKICK:
             addToBot( Actions::DropkickAction(t) );
@@ -1042,10 +1047,12 @@ void BattleContext::useAttackCard() {
             addToBot( Actions::AttackEnemy(t, calculateCardDamage(c, t, up ? 20 : 15)) );
             break;
 
-        case CardId::IMMOLATE:
-            addToBot( Actions::AttackAllEnemy(up ? 28 : 21) );
+        case CardId::IMMOLATE: {
+            int baseDamage = (up ? 28 : 21) + player.getStatus<PS::VIGOR>();
+            addToBot( Actions::AttackAllEnemy(baseDamage) );
             addToBot( Actions::MakeTempCardInDiscard({CardId::BURN}, 1) );
             break;
+        }
 
         case CardId::IRON_WAVE: {
             addToBot( Actions::GainBlock(calculateCardBlock(calculateCardBlock(up  ? 7 : 5))) );
@@ -1093,9 +1100,11 @@ void BattleContext::useAttackCard() {
             break;
         }
 
-        case CardId::REAPER:
-            addToBot( Actions::ReaperAction(up ? 5 : 4) );
+        case CardId::REAPER: {
+            const auto baseDamage = (up ? 5 : 4) + player.getStatus<PS::VIGOR>();
+            addToBot( Actions::ReaperAction(baseDamage) );
             break;
+        }
 
         case CardId::RECKLESS_CHARGE:
             addToBot( Actions::AttackEnemy(t, calculateCardDamage(c, t, up ? 10 : 7)) );
@@ -1109,7 +1118,7 @@ void BattleContext::useAttackCard() {
         case CardId::SEARING_BLOW: {
             const int n = c.getUpgradeCount();
             const int baseDmg = n * (n+7) / 2 + 12;
-            addToBot(Actions::AttackEnemy(t, calculateCardDamage(c, t, baseDmg)));
+            addToBot( Actions::AttackEnemy(t, calculateCardDamage(c, t, baseDmg)) );
             break;
         }
 
@@ -1128,10 +1137,12 @@ void BattleContext::useAttackCard() {
             }
             break;
 
-        case CardId::THUNDERCLAP:
-            addToBot( Actions::AttackAllEnemy(up ? 7 : 4) );
+        case CardId::THUNDERCLAP: {
+            int baseDamage = (up ? 7 : 4) + player.getStatus<PS::VIGOR>();
+            addToBot( Actions::AttackAllEnemy(baseDamage));
             addToBot( Actions::DebuffAllEnemy<MS::VULNERABLE>(1, false) );
             break;
+        }
 
         case CardId::TWIN_STRIKE: { // todo test with breaking block on first hit and drill relic
             const int dmg = calculateCardDamage(c, t, up ? 7 : 5);
@@ -1146,12 +1157,14 @@ void BattleContext::useAttackCard() {
             addToBot( Actions::DebuffEnemy<MS::VULNERABLE>(t, up ? 2 : 1, false) );
             break;
 
-        case CardId::WHIRLWIND:
+        case CardId::WHIRLWIND: {
             if (!item.ignoreEnergyTotal && player.energy < item.energyOnUse) {
                 item.energyOnUse = player.energy;
             }
-            addToBot( Actions::WhirlwindAction(up ? 8 : 5, item.energyOnUse, !(item.freeToPlay || c.freeToPlayOnce)) );
+            const auto baseDamage = (up ? 8 : 5) + player.getStatus<PS::VIGOR>();
+            addToBot( Actions::WhirlwindAction(baseDamage, item.energyOnUse, !(item.freeToPlay || c.freeToPlayOnce)));
             break;
+        }
 
         case CardId::WILD_STRIKE:
             addToBot(Actions::AttackEnemy(t, calculateCardDamage(c, t, up ? 17 : 12)));
