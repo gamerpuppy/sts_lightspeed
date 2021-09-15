@@ -48,7 +48,14 @@ int MonsterGroup::getRandomMonsterIdx(Random &rng, bool aliveOnly) const {
             int aliveEncountered = 0;
             while (true) {
 #ifdef sts_asserts
-                assert(i < monsterCount);
+                // seed 11195
+                if (i >= monsterCount) {
+                    std::cerr << monsterIdStrings[static_cast<int>(arr[0].id)] << " "
+                    << monsterIdStrings[static_cast<int>(arr[1].id)] << " "
+                    << "count:" << monsterCount << " "
+                    << "alive:" << monstersAlive << std::endl;
+                    assert(false);
+                }
 #endif
                 if (!arr[i].isDeadOrEscaped()) {
                     if (aliveEncountered == aliveIdx) {

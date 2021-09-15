@@ -69,7 +69,7 @@ namespace sts {
 
     struct SelectScreenCard {
         Card card;
-        int deckIdx = -1;
+        std::int16_t deckIdx = -1;
 
         SelectScreenCard() = default;
         SelectScreenCard(const Card &card);

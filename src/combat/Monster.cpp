@@ -228,8 +228,8 @@ int Monster::getStatusInternal(MonsterStatus s) const {
         default:
 #ifdef sts_asserts
             assert(false);
-            return 0;
 #endif
+            return 0;
     }
 }
 
@@ -266,6 +266,12 @@ bool Monster::isAttacking() const {
 }
 
 void Monster::heal(int amount) {
+#ifdef sts_asserts
+    if (amount < 0) {
+        assert (false);
+    }
+#endif
+
     curHp = std::min(maxHp, curHp + amount);
 }
 

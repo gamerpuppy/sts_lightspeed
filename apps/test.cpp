@@ -259,6 +259,12 @@ void printSizes() {
     std::cout << "sizeof ActionFunction : " << sizeof(ActionFunction) << '\n';
     std::cout << "sizeof ActionQueue<40> : " << sizeof(ActionQueue<40>) << '\n';
     std::cout << "sizeof BattleContext: " << sizeof(BattleContext) << '\n';
+
+
+    std::cout << "sizeof GameContext: " << sizeof(GameContext) << '\n';
+    std::cout << "sizeof Deck: " << sizeof(Deck) << '\n';
+    std::cout << "sizeof Card: " << sizeof(Card) << '\n';
+    std::cout << "sizeof SelectScreenCard: " << sizeof(SelectScreenCard) << '\n';
 }
 
 void playFromSaveFile(const std::string &fname, const std::string &actionFile) {
@@ -377,6 +383,11 @@ void playRandom4(PlayRandomInfo *info) {
         agent.minTurnLookahead = g_minTurnLookahead;
 
         GameContext gc(seed, CharacterClass::IRONCLAD, g_searchAscension);
+        gc.deck.obtain(gc, {CardId::IMMOLATE, true});
+        gc.deck.obtain(gc, {CardId::IMPERVIOUS, true});
+        gc.obtainRelic(sts::RelicId::BRIMSTONE);
+        gc.playerIncreaseMaxHp(100);
+//        std::cout << "starting " << seed << std::endl;
         agent.playout(gc);
 
         info->floorSum += gc.floorNum;
@@ -384,11 +395,12 @@ void playRandom4(PlayRandomInfo *info) {
 
         if (gc.outcome == sts::GameOutcome::PLAYER_VICTORY) {
             ++info->winCount;
-            std::cout << gc << std::endl;
+//            std::cout << gc << std::endl;
 
         } else {
             ++info->lossCount;
         }
+//        std::cout << "finished " << seed << std::endl;
     }
 //        ScumSearcherAgent agent( (std::default_random_engine(seed)) );
 //        agent.print = true;

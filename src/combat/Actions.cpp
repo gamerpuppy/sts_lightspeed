@@ -101,15 +101,11 @@ Action Actions::VampireAttack(int damage) {
     return {[=] (BattleContext &bc) {
         const auto mIdx = 0;
         auto &m = bc.monsters.arr[mIdx]; // only used by shelled parasite so idx is 0
-        const auto playerHpBefore = bc.player.curHp;
-
         bc.player.attacked(bc, mIdx, damage);
-
         if (m.isAlive()) {
-            const auto playerHpLoss = playerHpBefore-bc.player.curHp;
-            m.heal(std::min(damage, playerHpLoss));
+            m.heal(std::min(damage, static_cast<int>(bc.player.lastAttackUnblockedDamage)));
         }
-    }, false};
+    }};
 }
 
 Action Actions::PlayerLoseHp(int hp, bool selfDamage) { // TODO this doesn't take into account intangible or relics

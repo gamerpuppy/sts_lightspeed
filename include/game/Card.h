@@ -12,7 +12,7 @@ namespace sts {
 
     struct Card {
         CardId id = CardId::INVALID;
-        int misc = 0;
+        std::int16_t misc = 0;
         bool upgraded = false;
 
         Card() = default;
