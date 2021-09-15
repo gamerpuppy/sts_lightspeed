@@ -305,11 +305,9 @@ void BattleContext::initRelics(const GameContext &gc) {
 
             case R::PRESERVED_INSECT:
                 if (room == Room::ELITE) {
-                    if (r.data) {
-                        for (int i = 0; i < monsters.monsterCount; ++i) {
-                            Monster &m = monsters.arr[i];
-                            m.curHp = static_cast<int>(m.maxHp * .75);
-                        }
+                    for (int i = 0; i < monsters.monsterCount; ++i) {
+                        Monster &m = monsters.arr[i];
+                        m.curHp = static_cast<int>(m.maxHp * .75);
                     }
                 }
                 break;
@@ -1126,7 +1124,7 @@ void BattleContext::useAttackCard() {
 
         case CardId::SWORD_BOOMERANG:
             for (int i = 0; i < (up ? 4 : 3); ++i) {
-                addToBot(Actions::SwordBoomerangAction());
+                addToBot(Actions::SwordBoomerangAction(3+player.getStatus<PS::VIGOR>())); // vigor is removed afterwards so this is a necessary (maybe not 100% accurate) hack
             }
             break;
 

@@ -506,7 +506,7 @@ namespace sts {
     template <MonsterStatus s>
     void Monster::removeStatus() {
         static_assert(s != MonsterStatus::STRENGTH);
-        if (hasStatusInternal(s)) {
+        if (hasStatus<s>()) {
             setStatus<s>(0);
             setHasStatus<s>(false);
         }

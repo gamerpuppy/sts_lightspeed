@@ -595,6 +595,52 @@ bool BattleSimulator::doAssertCommand(const std::string &cmd) {
         return cardAssert(iss, bc->cards.hand[cardIdx]);
     }
 
+    if (tok == "discard" || tok == "discardPile") {
+        std::string tok2;
+        iss >> tok2;
+
+        if (tok2 == "size") {
+            int value;
+            iss >> value;
+            return value == bc->cards.discardPile.size();
+        }
+
+        int cardIdx = std::stoi(tok2);
+        assert(cardIdx >= 0 && cardIdx < bc->cards.discardPile.size());
+        return cardAssert(iss, bc->cards.discardPile[cardIdx]);
+    }
+
+    if (tok == "draw" || tok == "drawPile") {
+        std::string tok2;
+        iss >> tok2;
+
+        if (tok2 == "size") {
+            int value;
+            iss >> value;
+            return value == bc->cards.drawPile.size();
+        }
+
+        int cardIdx = std::stoi(tok2);
+        assert(cardIdx >= 0 && cardIdx < bc->cards.drawPile.size());
+        return cardAssert(iss, bc->cards.drawPile[cardIdx]);
+    }
+
+    if (tok == "exhaust" || tok == "exhaustPile") {
+        std::string tok2;
+        iss >> tok2;
+
+        if (tok2 == "size") {
+            int value;
+            iss >> value;
+            return value == bc->cards.exhaustPile.size();
+        }
+
+        int cardIdx = std::stoi(tok2);
+        assert(cardIdx >= 0 && cardIdx < bc->cards.exhaustPile.size());
+        return cardAssert(iss, bc->cards.exhaustPile[cardIdx]);
+    }
+
+
     if (tok == "player") {
         std::string tok2;
         iss >> tok2;

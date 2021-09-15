@@ -443,7 +443,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
 
         case MMID::BRONZE_AUTOMATON_BOOST: {// 5
             buff<MS::STRENGTH>(asc4 ? 4 : 3);
-            addBlock(asc4 ? 12 : 9);
+            addBlock(asc9 ? 12 : 9);
             auto &lastBoostWasFlail = miscInfo;
             if (lastBoostWasFlail) {
                 setMove(MMID::BRONZE_AUTOMATON_HYPER_BEAM);
@@ -1487,12 +1487,14 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
         // ************ TRANSIENT ************
 
         case MMID::TRANSIENT_ATTACK: {
+
             const auto damage = (asc2 ? 40 : 30) + 10*(bc.getMonsterTurnNumber()-1);
             attackPlayerHelper(bc, damage);
             if (getStatus<MS::FADING>() == 1) {
                 bc.addToBot( Actions::SuicideAction(idx, false) );
             }
             bc.noOpRollMove();
+            decrementStatus<MS::FADING>();
             break;
         }
 
@@ -2924,7 +2926,7 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
                 if (roll < 33) {
                     return (MMID::WRITHING_MASS_MULTI_STRIKE);
 
-                } else if (roll << 66) {
+                } else if (roll < 66) {
                     return (MMID::WRITHING_MASS_FLAIL);
 
                 } else {

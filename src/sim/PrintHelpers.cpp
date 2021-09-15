@@ -68,8 +68,29 @@ namespace sts {
         os << "curHp:" << gc.curHp
             << ",maxHp:" << gc.maxHp
             << ",gold:" << gc.gold
-            << ",keyBits:" << gc.keyBits
-            << ",cc:" << getCharacterClassName(gc.cc)
+            << ",keys:{";
+
+        bool havePrintKey = false;
+        if (gc.hasKey(Key::EMERALD_KEY)) {
+            os << "GREEN";
+            havePrintKey = true;
+        }
+        if (gc.hasKey(Key::RUBY_KEY)) {
+            if (havePrintKey) {
+                os << ',';
+            }
+            os << "RED";
+        }
+        if (gc.hasKey(Key::SAPPHIRE_KEY)) {
+            if (havePrintKey) {
+                os << ',';
+            }
+            os << "BLUE";
+        }
+        os << "}";
+
+
+        os << ",cc:" << getCharacterClassName(gc.cc)
             << ",potionCapacity:" << gc.potionCapacity;
         os << "}\n";
     }

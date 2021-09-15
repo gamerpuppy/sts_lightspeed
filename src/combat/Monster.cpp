@@ -372,10 +372,7 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
 
     } else if (hasStatus<MS::SHIFTING>()) {
         addDebuff<MS::STRENGTH>(-damage);
-
-        setStatus<MS::SHACKLED>(
-                getStatus<MS::SHACKLED>() + damage
-        );
+        buff<MS::SHACKLED>(damage);
     }
 
     curHp -= damage;
