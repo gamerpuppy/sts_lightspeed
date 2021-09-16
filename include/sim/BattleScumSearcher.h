@@ -37,6 +37,12 @@ namespace sts {
         std::vector<SearchInfo> bestInfos;
         std::int64_t nodesEvaluated = 0;
 
+        std::default_random_engine randEngine;
+        // above this sample from the state instead of searching every branch
+        // mainly for gamblers brew / elixir potion where a set of cards are selected
+        static constexpr int stateSizeSampleThreshold = 11;
+        static constexpr int stateSampleCount = 10;
+
         int maxMoveDepth = 5;
         int minTurnLookahead = 1;
 

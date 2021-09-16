@@ -362,10 +362,7 @@ void playRandom3(PlayRandomInfo *info) {
             ++info->lossCount;
         }
         info->floorSum += gc.floorNum;
-
-
 //        std::cout << seed << '\n';
-
     }
 
 //    std::cout << "thread finished: " << info->seedOffset << std::endl;

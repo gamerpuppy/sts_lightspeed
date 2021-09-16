@@ -19,6 +19,8 @@ using namespace sts;
 //}
 
 void BattleScumSearcher::search(const BattleContext &bc) {
+    randEngine.seed(bc.seed+bc.turn+bc.ascension+bc.loopCount+bc.player.curHp);
+
     bestInfos.clear();
     std::vector<SearchInfo> searchStack;
     searchStack.resize(maxMoveDepth);
@@ -32,7 +34,6 @@ void BattleScumSearcher::search(const BattleContext &bc) {
         searchStack[0].stateSize = 0;
     }
 
-
     int curDepth = 0;
     while (true) {
         if (curDepth < 0) {
@@ -42,14 +43,15 @@ void BattleScumSearcher::search(const BattleContext &bc) {
         assert(curDepth < maxMoveDepth && curDepth >= 0);
         auto &cur = searchStack[curDepth];
 
+        const auto optionsSize = cur.stateSize < stateSizeSampleThreshold ? cur.stateSize : stateSampleCount;
 
-        if (cur.optionIdx + 1 < cur.stateSize && curDepth+1 < maxMoveDepth) {
+        if (cur.optionIdx + 1 < optionsSize && curDepth+1 < maxMoveDepth) {
             ++cur.optionIdx;
 
         } else {
-
-            if (cur.bc.outcome == Outcome::UNDECIDED && cur.stateSize > 0) {
-                cur.handler.chooseOption(cur.bc, 0);
+            // handle leaf node
+            if (cur.bc.outcome == Outcome::UNDECIDED && cur.bc.inputState == InputState::PLAYER_NORMAL && cur.stateSize > 0) {
+                cur.handler.chooseOption(cur.bc, 0); // thingy that ends turn, improves results a bit.
             }
 
 
@@ -73,11 +75,18 @@ void BattleScumSearcher::search(const BattleContext &bc) {
             continue;
         }
 
-
         auto &next = searchStack[curDepth+1];
         next = cur;
-        next.handler.chooseOption(next.bc, next.optionIdx);
 
+
+        if (cur.stateSize < stateSizeSampleThreshold) {
+            next.handler.chooseOption(next.bc, next.optionIdx);
+        } else {
+            // todo maybe break up the space into parts and sample from those for a better distribution
+            std::uniform_int_distribution<int> distr(0,cur.stateSize-1);
+            const auto sampledChoice = distr(randEngine);
+            next.handler.chooseOption(next.bc, sampledChoice);
+        }
 
         next.optionIdx = -1;
         next.stateSize = 0;

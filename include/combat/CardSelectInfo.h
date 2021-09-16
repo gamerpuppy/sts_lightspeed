@@ -16,8 +16,8 @@ namespace sts {
         CODEX,
         DISCOVERY,
         DUAL_WIELD,
-        ELIXIR_POTION,
         EXHAUST_ONE,
+        EXHAUST_MANY,
         EXHUME,
         FORETHOUGHT,
         GAMBLE,
@@ -39,16 +39,13 @@ namespace sts {
         bool canPickZero = false;
         bool canPickAnyNumber = false;
         int pickCount = 0;
-
         int data0 = 0;
-        int data1 = 0;
 
         CardSelectTask cardSelectTask;
 
         std::array<CardId, 3>& discovery_Cards() { return cards; }
         int& discovery_CopyCount() { return data0; }
         int& dualWield_CopyCount() { return data0; }
-
         std::array<CardId, 3>& codexCards() { return cards; }
     };
 

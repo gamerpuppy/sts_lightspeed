@@ -117,8 +117,9 @@ namespace sts {
         static Action RandomizeHandCost();
         static Action UpgradeRandomCardAction(); // Warped Tongs Relic
 
-
         static Action CodexAction(); // Nilrys Codex onPlayerEndTurn
+        static Action ExhaustMany(int limit);
+        static Action GambleAction();
         static Action ToolboxAction();
         static Action FiendFireAction(int targetIdx, int calculatedDamage); // Fiend Fire Card
         static Action SwordBoomerangAction(int baseDamage); // Sword Boomerang

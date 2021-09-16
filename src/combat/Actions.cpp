@@ -936,6 +936,21 @@ Action Actions::CodexAction() {
     }};
 }
 
+Action Actions::ExhaustMany(int limit) {
+    return {[=] (BattleContext &bc) {
+        bc.inputState = InputState::CARD_SELECT;
+        bc.cardSelectInfo.cardSelectTask = CardSelectTask::EXHAUST_MANY;
+        bc.cardSelectInfo.pickCount = limit;
+    }};
+}
+
+Action Actions::GambleAction() {
+    return {[] (BattleContext &bc) {
+        bc.inputState = InputState::CARD_SELECT;
+        bc.cardSelectInfo.cardSelectTask = CardSelectTask::GAMBLE;
+    }};
+}
+
 Action Actions::ToolboxAction() {
     return {[] (BattleContext &bc) {
         bc.inputState = InputState::CARD_SELECT;

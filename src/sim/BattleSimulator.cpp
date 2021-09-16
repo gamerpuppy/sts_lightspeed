@@ -304,10 +304,8 @@ void BattleSimulator::printCardSelectActions(std::ostream &os) const {
             );
             break;
 
-        case CardSelectTask::ELIXIR_POTION:
-            // todo unsupported
-            assert(false);
-            os << "Elixir Potion: Choose cards to exhaust in your hand.\n";
+        case CardSelectTask::EXHAUST_MANY:
+            os << "Choose cards to exhaust in your hand. (use descending order separated by spaces)\n";
             printCardOptionsHelper(os, bc->cards.hand.begin(), bc->cards.hand.begin() + bc->cards.cardsInHand);
             break;
 
@@ -334,7 +332,8 @@ void BattleSimulator::printCardSelectActions(std::ostream &os) const {
         }
 
         case CardSelectTask::GAMBLE:
-            os << "Gamble Action: Choose cards to discard from your hand and redraw that many.\n";
+            os << "Gamble Action: Choose cards to discard from your hand and redraw that many. (use descending order separated by spaces)\n";
+            printCardOptionsHelper(os, bc->cards.exhaustPile.begin(), bc->cards.exhaustPile.end());
             break;
 
         case CardSelectTask::HEADBUTT:
@@ -395,6 +394,27 @@ void BattleSimulator::printCardSelectActions(std::ostream &os) const {
 
 }
 
+fixed_list<int,10> getIdxListFromString(const std::string &action) {
+    fixed_list<int,10> ret;
+    if (action.empty() || action == "none") {
+        return ret;
+    }
+
+    std::istringstream iss(action);
+    int idx;
+    while (true) {
+        iss >> idx;
+        if (iss.fail()) {
+            break;
+        }
+        assert(idx >= 0 && idx < 10 && ret.size() != 10);
+
+        ret.push_back(idx);
+    }
+
+    return ret;
+}
+
 void BattleSimulator::takeCardSelectAction(const std::string &action) {
     switch (bc->cardSelectInfo.cardSelectTask) {
         case CardSelectTask::ARMAMENTS:
@@ -418,7 +438,12 @@ void BattleSimulator::takeCardSelectAction(const std::string &action) {
             bc->chooseDualWieldCard(std::stoi(action));
             break;
 
-        case CardSelectTask::ELIXIR_POTION:
+        case CardSelectTask::EXHAUST_MANY:
+            bc->chooseExhaustCards(getIdxListFromString(action));
+            break;
+
+        case CardSelectTask::EXHAUST_ONE:
+            bc->chooseExhaustOneCard(std::stoi(action));
             break;
 
         case CardSelectTask::EXHUME:
@@ -434,6 +459,7 @@ void BattleSimulator::takeCardSelectAction(const std::string &action) {
             break;
 
         case CardSelectTask::GAMBLE:
+            bc->chooseGambleCards(getIdxListFromString(action));
             break;
 
         case CardSelectTask::HEADBUTT:
@@ -468,10 +494,6 @@ void BattleSimulator::takeCardSelectAction(const std::string &action) {
             break;
 
         case CardSelectTask::SETUP:  // todo
-            break;
-
-        case CardSelectTask::EXHAUST_ONE:
-            bc->chooseExhaustOneCard(std::stoi(action));
             break;
 
         case CardSelectTask::WARCRY:

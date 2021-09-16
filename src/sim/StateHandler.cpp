@@ -697,7 +697,13 @@ void RandomBattleStateHandler::chooseOption(BattleContext &bc, int option) const
         optionFunctions[option](bc);
 
     } else if (bc.inputState == InputState::CARD_SELECT) {
-        cardSelectFunction(bc, validCardIdxs[option]);
+        if (bc.cardSelectInfo.cardSelectTask == CardSelectTask::GAMBLE ||
+            bc.cardSelectInfo.cardSelectTask == CardSelectTask::EXHAUST_MANY) {
+            cardSelectFunction(bc, option);
+        } else {
+            cardSelectFunction(bc, validCardIdxs[option]);
+        }
+
 
     } else {
         assert(false);
@@ -792,6 +798,23 @@ void setupCardOptionsHelper(IndexList &idxs, const ForwardIt begin, const Forwar
     }
 }
 
+
+fixed_list<int,10> getIdxListFor(int bitsetOfElements) {
+    // low to high ( lowest bit corresponds to 0th idx)
+    fixed_list<int,10> idxList;
+    int idx = 0;
+    while (bitsetOfElements != 0) {
+        if (bitsetOfElements & 0x1) {
+            idxList.push_back(idx);
+        }
+        ++idx;
+        bitsetOfElements >>= 1;
+    }
+    return idxList;
+}
+
+
+
 int RandomBattleStateHandler::setupCardSelectOptions(const BattleContext &bc) {
     validCardIdxs.clear();
     cardSelectFunction = nullptr;
@@ -839,6 +862,14 @@ int RandomBattleStateHandler::setupCardSelectOptions(const BattleContext &bc) {
             };
             break;
 
+        case CardSelectTask::EXHAUST_MANY:
+            // return number of unique sets of cards in hand. which is 2^n
+            cardSelectFunction = [] (BattleContext &bc, int bitset) {
+                auto idxList = getIdxListFor(bitset);
+                bc.chooseExhaustCards(idxList);
+            };
+            return 1 << std::min(bc.cardSelectInfo.pickCount, bc.cards.cardsInHand);
+
         case CardSelectTask::EXHAUST_ONE:
             setupCardOptionsHelper(validCardIdxs, bc.cards.hand.begin(), bc.cards.hand.begin() + bc.cards.cardsInHand);
             cardSelectFunction = [] (BattleContext &bc, int idx) {
@@ -864,6 +895,14 @@ int RandomBattleStateHandler::setupCardSelectOptions(const BattleContext &bc) {
             }
             break;
         }
+
+        case CardSelectTask::GAMBLE:
+            // return number of unique sets of cards in hand. which is 2^n
+            cardSelectFunction = [] (BattleContext &bc, int bitset) {
+                auto idxList = getIdxListFor(bitset);
+                bc.chooseGambleCards(idxList);
+            };
+            return 1 << bc.cards.cardsInHand;
 
         case CardSelectTask::HEADBUTT:
             setupCardOptionsHelper(validCardIdxs, bc.cards.discardPile.begin(), bc.cards.discardPile.end());
@@ -908,20 +947,15 @@ int RandomBattleStateHandler::setupCardSelectOptions(const BattleContext &bc) {
 
 
         case CardSelectTask::HOLOGRAM:
-        case CardSelectTask::ELIXIR_POTION:
-        case CardSelectTask::GAMBLE:
         case CardSelectTask::MEDITATE:
         case CardSelectTask::NIGHTMARE:
         case CardSelectTask::RECYCLE:
         case CardSelectTask::SEEK:
         case CardSelectTask::SETUP:
-            // todo unsupported
-            assert(false);
-            break;
-
-
         default:
 #ifdef sts_asserts
+            // todo unsupported
+            std::cerr << "unspported card select task: " << static_cast<int>(bc.cardSelectInfo.cardSelectTask) << std::endl;
             assert(false);
 #endif
             break;

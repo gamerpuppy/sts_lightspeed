@@ -274,6 +274,9 @@ void CardManager::notifyRemoveFromDiscardPile(const CardInstance &c) {
 
 void CardManager::eraseAtIdxInHand(int idx) {
 #ifdef sts_asserts
+    if (idx >= cardsInHand) {
+        assert(false);
+    }
     assert(idx < cardsInHand);
 #endif
 

@@ -168,11 +168,11 @@ namespace sts {
         [[nodiscard]] int calculateCardDamage(const CardInstance &card, int targetIdx, int baseDamage) const;
         [[nodiscard]] int calculateCardBlock(int baseBlock) const;
 
-
         void queuePurgeCard(const CardInstance &c, int target);
         void addPurgeCardToCardQueue(const CardQueueItem &item); // not really the front but hey
         void noOpRollMove(); // called by monsters to manipulate the aiRng counter when their rollMove function doesn't do anything
 
+        void onManualDiscard(const CardInstance &c);
         void onShuffle();
         void triggerAndMoveToExhaustPile(CardInstance c);
         void mummifiedHandOnUsePower();
@@ -190,10 +190,12 @@ namespace sts {
         void chooseDiscardToHandCard(int discardIdx, bool forZeroCost);
         void chooseDiscoveryCard(CardId id);
         void chooseDualWieldCard(int handIdx);
+        void chooseExhaustCards(const fixed_list<int,10> &idxs);
+        void chooseExhaustOneCard(int handIdx);
         void chooseExhumeCard(int exhaustIdx);
         void chooseForethoughtCard(int handIdx);
+        void chooseGambleCards(const fixed_list<int,10> &idxs);
         void chooseHeadbuttCard(int discardIdx);
-        void chooseExhaustOneCard(int handIdx);
         void chooseRecycleCard(int handIdx);
         void chooseWarcryCard(int handIdx);
     };

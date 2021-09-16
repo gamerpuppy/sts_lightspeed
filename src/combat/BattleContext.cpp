@@ -430,8 +430,7 @@ void BattleContext::initRelics(const GameContext &gc) {
     for (auto r : atTurnStartPostDraw) {
         switch (r) {
             case R::GAMBLING_CHIP:
-                // todo
-//                addToBot( Actions::SetState(InputState::CHOOSE_GAMBLING_CARDS) );
+                addToBot( Actions::GambleAction() );
                 break;
 
             case R::WARPED_TONGS:
@@ -1391,7 +1390,8 @@ void BattleContext::useSkillCard() {
             addToBot( Actions::GainBlock(calculateCardBlock(up ? 20 : 15)) );
             break;
 
-        case CardId::PURITY: // todo
+        case CardId::PURITY:
+            addToBot( Actions::ExhaustMany(up ? 5 : 3) );
             break;
 
         case CardId::RAGE:
@@ -2284,8 +2284,7 @@ void BattleContext::drinkPotion(int idx, int target) {
             break;
 
         case Potion::ELIXIR_POTION:
-            // todo
-//            addToBot(Actions::SetState(InputState::CHOOSE_CARD_IN_HAND_FOR_EXHAUST_OPTIONAL, hasBark ? 6 : 3));
+            addToBot( Actions::ExhaustMany(10) );
             break;
 
         case Potion::ENERGY_POTION:
@@ -2336,8 +2335,7 @@ void BattleContext::drinkPotion(int idx, int target) {
             break;
 
         case Potion::GAMBLERS_BREW:
-            // todo
-//            addToBot(Actions::SetState(InputState::CHOOSE_GAMBLING_CARDS));
+            addToBot( Actions::GambleAction() );
             break;
 
         case Potion::GHOST_IN_A_JAR:
@@ -2765,6 +2763,14 @@ void BattleContext::noOpRollMove() {
     aiRng.random(99);
 }
 
+void BattleContext::onManualDiscard(const CardInstance &c) {
+    if (c.getId() == CardId::TACTICIAN) {
+        player.gainEnergy(c.isUpgraded() ? 2 : 1);
+    } else if (c.getId() == CardId::REFLEX) {
+        addToBot( Actions::DrawCards(c.isUpgraded() ? 3 : 2) );
+    }
+}
+
 void BattleContext::onShuffle() {
     if (player.hasRelic<R::THE_ABACUS>()) {
         addToBot( Actions::GainBlock(6) );
@@ -2996,6 +3002,30 @@ void BattleContext::chooseDiscoveryCard(CardId id) {
     }
 }
 
+
+void BattleContext::chooseExhaustCards(const fixed_list<int, 10> &idxs) {
+    if (idxs.empty()) {
+        return;
+    }
+    auto listCopy = idxs;
+    std::sort(listCopy.begin(), listCopy.end(), [](auto a, auto b) { return b < a; });
+
+    // assume idxs is sorted in descending order
+    for (const auto handIdx : listCopy) {
+        auto c = cards.hand[handIdx];
+        cards.removeFromHandAtIdx(handIdx);
+        triggerAndMoveToExhaustPile(c);
+    }
+}
+
+
+void BattleContext::chooseExhaustOneCard(int handIdx) {
+    auto c = cards.hand[handIdx];
+    cards.removeFromHandAtIdx(handIdx);
+    triggerAndMoveToExhaustPile(c);
+}
+
+
 void BattleContext::chooseExhumeCard(int exhaustIdx) {
     // todo game handles corruption here
     auto c = cards.exhaustPile[exhaustIdx];
@@ -3014,6 +3044,22 @@ void BattleContext::chooseForethoughtCard(int handIdx) {
     cards.removeFromHandAtIdx(handIdx);
 }
 
+void BattleContext::chooseGambleCards(const fixed_list<int, 10> &idxs) {
+    if (idxs.empty()) {
+        return;
+    }
+    auto listCopy = idxs;
+    std::sort(listCopy.begin(), listCopy.end(), [](auto a, auto b) { return b < a; });
+
+    // assume idxs is sorted in descending order
+    addToTop( Actions::DrawCards(listCopy.size()) );
+    for (const auto handIdx : listCopy) {
+        auto c = cards.hand[handIdx];
+        cards.removeFromHandAtIdx(handIdx);
+        cards.moveToDiscardPile(c);
+        onManualDiscard(c);
+    }
+}
 
 void BattleContext::chooseHeadbuttCard(int discardIdx) {
 #ifdef sts_asserts
@@ -3026,14 +3072,6 @@ void BattleContext::chooseHeadbuttCard(int discardIdx) {
 void BattleContext::chooseRecycleCard(int handIdx) {
     // todo
 }
-
-
-void BattleContext::chooseExhaustOneCard(int handIdx) {
-    auto c = cards.hand[handIdx];
-    cards.removeFromHandAtIdx(handIdx);
-    triggerAndMoveToExhaustPile(c);
-}
-
 
 void BattleContext::chooseWarcryCard(int handIdx) {
 #ifdef sts_asserts
