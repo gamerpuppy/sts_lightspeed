@@ -341,7 +341,11 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
         bc.addToTop( Actions::DebuffEnemy<MS::POISON>(this->idx, bc.player.getStatus<PS::ENVENOM>()) );
     }
 
-    if (hasStatus<MS::PLATED_ARMOR>()) {
+    if (hasStatus<MS::INVINCIBLE>()) {
+        damage = std::min(damage, getStatus<MS::INVINCIBLE>());
+        setStatus<MS::INVINCIBLE>(getStatus<MS::INVINCIBLE>() - damage);
+
+    } else if (hasStatus<MS::PLATED_ARMOR>()) {
         decrementStatus<MS::PLATED_ARMOR>();
         if(!hasStatus<MS::PLATED_ARMOR>() && id == MonsterId::SHELLED_PARASITE) {
             setMove(MMID::SHELLED_PARASITE_STUNNED);
@@ -409,17 +413,6 @@ void Monster::attacked(BattleContext &bc, int damage) {
         buff<MS::STRENGTH>(getStatus<MS::ANGRY>());
     }
 
-    if (hasStatus<MS::INVINCIBLE>()) {
-        int amount = getStatus<MS::INVINCIBLE>();
-        int diff = amount - damage;
-        if (diff >= 0) {
-//            setStatus<MS::INVINCIBLE>(damage); // TODO
-        } else {
-            damage += diff;
-            setStatus<MS::INVINCIBLE>(0);
-        }
-    }
-
     const bool hadBlock = block > 0;
     const int tempDamage = damage;
     damage -= block;
@@ -435,7 +428,12 @@ void Monster::attacked(BattleContext &bc, int damage) {
 }
 
 void Monster::damageUnblockedHelper(BattleContext &bc, int damage) {
-    if (hasStatus<MS::ASLEEP>()) {
+
+    if (hasStatus<MS::INVINCIBLE>()) {
+        damage = std::min(damage, getStatus<MS::INVINCIBLE>());
+        setStatus<MS::INVINCIBLE>(getStatus<MS::INVINCIBLE>() - damage);
+    }
+        if (hasStatus<MS::ASLEEP>()) {
         // lagavulin
         setHasStatus<MS::ASLEEP>(false);
         decrementStatus<MS::METALLICIZE>(8);
@@ -462,21 +460,9 @@ void Monster::damage(BattleContext &bc, int damage) {
         damage = 0;
     }
 
-
     if (hasStatus<MS::INTANGIBLE>()) { // this is probably wrong with potions
         if (damage > 0) {
             damage = 1;
-        }
-    }
-
-    if (hasStatus<MS::INVINCIBLE>()) {
-        int amount = getStatus<MS::INVINCIBLE>();
-        int diff = amount - damage;
-        if (diff >= 0) {
-            decrementStatus<MS::INVINCIBLE>(damage);
-        } else {
-            damage += diff;
-            setStatus<MS::INVINCIBLE>(0);
         }
     }
 
@@ -561,6 +547,13 @@ void Monster::resetAllStatusEffects() {
 int Monster::calculateDamageToPlayer(const BattleContext &bc, int baseDamage) const {
     const auto &p = bc.player;
     auto damage = static_cast<float>(baseDamage + getStatus<MS::STRENGTH>());
+
+    if (p.hasStatus<PS::SURROUNDED>()) { // todo this is probably wrong
+        const bool facingSelf = p.lastTargetedMonster == idx || bc.monsters.arr[p.lastTargetedMonster].isDeadOrEscaped();
+        if (!facingSelf) {
+            damage *= 1.5;
+        }
+    }
 
     if (hasStatus<MS::WEAK>()) {
         if (p.hasRelic<RelicId::PAPER_KRANE>()) {

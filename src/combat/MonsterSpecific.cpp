@@ -258,7 +258,7 @@ void Monster::preBattleAction(BattleContext &bc) {
         }
 
         case MonsterId::SPIRE_SHIELD: {
-            // game adds surrounded power
+            bc.player.buff<PS::SURROUNDED>();
             buff<MS::ARTIFACT>(asc18 ? 2 : 1);
             break;
         }
@@ -1718,7 +1718,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             } else {
                 bc.player.debuff<PS::STRENGTH>(-1);
             }
-            if (lastMoveBefore(MonsterMoveId::SPIRE_SHIELD_SMASH)) {
+            if (lastMoveBefore(MonsterMoveId::SPIRE_SHIELD_SMASH) || lastMoveBefore(MonsterMoveId::INVALID)) {
                 setMove(MonsterMoveId::SPIRE_SHIELD_FORTIFY);
             } else {
                 setMove(MonsterMoveId::SPIRE_SHIELD_SMASH);
@@ -1730,7 +1730,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
         case MMID::SPIRE_SHIELD_FORTIFY: // 2
             addBlock(30);
             bc.monsters.arr[1].addBlock(30);
-            if (lastMoveBefore(MonsterMoveId::SPIRE_SHIELD_SMASH)) {
+            if (lastMoveBefore(MonsterMoveId::SPIRE_SHIELD_SMASH) || lastMoveBefore(MonsterMoveId::INVALID)) {
                 setMove(MonsterMoveId::SPIRE_SHIELD_BASH);
             } else {
                 setMove(MonsterMoveId::SPIRE_SHIELD_SMASH);
@@ -1783,7 +1783,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             if (bc.getMonsterTurnNumber() % 3 == 0) {
                 setMove(MonsterMoveId::CORRUPT_HEART_BUFF);
             } else {
-                setMove(MonsterMoveId::CORRUPT_HEART_BLOOD_SHOTS);
+                setMove(MonsterMoveId::CORRUPT_HEART_ECHO);
             }
             bc.noOpRollMove();
             break;
@@ -3261,9 +3261,9 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             }
             // only called if not going to buff
             if (bc.aiRng.randomBoolean()) {
-                return MonsterMoveId::CORRUPT_HEART_ECHO;
-            } else {
                 return MonsterMoveId::CORRUPT_HEART_BLOOD_SHOTS;
+            } else {
+                return MonsterMoveId::CORRUPT_HEART_ECHO;
             }
         }
 

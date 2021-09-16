@@ -169,6 +169,8 @@ namespace sts {
         static Action SeverSoulExhaustAction();
         static Action SpotWeaknessAction(int target, int strength); // Spot Weakness
         static Action WhirlwindAction(int baseDamage, int energy, bool useEnergy);
+
+        static Action AttackAllMonsterRecursive(DamageMatrix matrix, int timesRemaining);
     };
 
 }

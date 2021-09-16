@@ -1200,6 +1200,10 @@ Action Actions::WhirlwindAction(int baseDamage, int energy, bool useEnergy) {
     return {[=] (BattleContext &bc) {
         // assume bc.curCard is the card being used
 
+        if (useEnergy) {
+            bc.player.useEnergy(bc.player.energy);
+        }
+
         DamageMatrix damageMatrix {0};
         for (int i = 0; i < bc.monsters.monsterCount; ++i) {
             if (!bc.monsters.arr[i].isDeadOrEscaped()) {
@@ -1215,12 +1219,22 @@ Action Actions::WhirlwindAction(int baseDamage, int energy, bool useEnergy) {
         }
 
         const auto effectAmount = energy + (bc.player.hasRelic<R::CHEMICAL_X>() ? 2 : 0);
-        for (int i = 0; i < effectAmount; ++i) {
-            bc.addToBot( Actions::AttackAllEnemy(damageMatrix) ); // todo should this be to the top? test with
+        if (effectAmount > 0) {
+            Actions::AttackAllMonsterRecursive(damageMatrix, effectAmount).actFunc(bc);
+        }
+    }};
+}
+
+Action Actions::AttackAllMonsterRecursive(DamageMatrix matrix, int timesRemaining) {
+    return {[=] (BattleContext &bc) {
+        if (timesRemaining <= 0) {
+            return;
         }
 
-        if (useEnergy) {
-            bc.player.useEnergy(bc.player.energy);
+        Actions::AttackAllEnemy(matrix).actFunc(bc);
+
+        if (timesRemaining > 1) {
+            bc.addToTop(AttackAllMonsterRecursive(matrix, timesRemaining-1)); // todo should this be to the top? test with
         }
     }};
 }

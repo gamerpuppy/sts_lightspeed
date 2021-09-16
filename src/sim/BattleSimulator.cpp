@@ -332,8 +332,8 @@ void BattleSimulator::printCardSelectActions(std::ostream &os) const {
         }
 
         case CardSelectTask::GAMBLE:
-            os << "Gamble Action: Choose cards to discard from your hand and redraw that many. (use descending order separated by spaces)\n";
-            printCardOptionsHelper(os, bc->cards.exhaustPile.begin(), bc->cards.exhaustPile.end());
+            os << "Gamble Action: Choose cards to discard from your hand and redraw that many. (will be sorted to descending order)\n";
+            printCardOptionsHelper(os, bc->cards.hand.begin(), bc->cards.hand.begin() + bc->cards.cardsInHand);
             break;
 
         case CardSelectTask::HEADBUTT:

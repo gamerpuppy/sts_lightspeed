@@ -128,6 +128,7 @@ namespace sts {
         "STRENGTH",
         "VULNERABLE",
         "WEAK",
+
         "ANGRY",
         "BEAT_OF_DEATH",
         "CURIOSITY",
@@ -145,8 +146,10 @@ namespace sts {
         "THIEVERY",
         "THORNS",
         "TIME_WARP",
+
         "INVINCIBLE",
         "SHARP_HIDE",
+
         "ASLEEP",
         "BARRICADE",
         "MINION",

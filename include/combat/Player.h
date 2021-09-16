@@ -43,6 +43,9 @@ namespace sts {
         Stance stance = Stance::NEUTRAL;
         int8_t orbSlots = 0;
 
+        // for spire spear/shield
+        std::int8_t lastTargetedMonster = 1;
+
         // todo rework all of the power data structures...
         int block = 0;
         int artifact = 0;
@@ -109,7 +112,7 @@ namespace sts {
         template <PlayerStatus> [[nodiscard]] bool hasStatus() const;
         template <PlayerStatus> [[nodiscard]] int getStatus() const;
 
-        template <PlayerStatus> void buff(int amount);
+        template <PlayerStatus> void buff(int amount=1);
         template <PlayerStatus> void debuff(int amount, bool isSourceMonster=true);
 
         template <Stance> void changeStance();
@@ -329,7 +332,12 @@ namespace sts {
             return;
         }
 
-        if (s == PlayerStatus::BARRICADE || s == PlayerStatus::CORRUPTION || s == PlayerStatus::CONFUSED || s == PlayerStatus::PEN_NIB) {
+        if (s == PS::BARRICADE ||
+            s == PS::CORRUPTION ||
+            s == PS::CONFUSED ||
+            s == PS::PEN_NIB ||
+            s == PS::SURROUNDED
+            ) {
             setHasStatus<s>(true);
             return;
         }
@@ -342,7 +350,7 @@ namespace sts {
             ++combustHpLoss;
         }
 
-        if (s == PlayerStatus::PANACHE && !hasStatus<PS::PANACHE>()) {
+        if (s == PS::PANACHE && !hasStatus<PS::PANACHE>()) {
             panacheCounter = 5;
         }
 

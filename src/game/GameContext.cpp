@@ -1178,7 +1178,17 @@ void GameContext::afterBattle() {
             break;
 
         case Room::EVENT:
-            regainControl();
+            if (curEvent == Event::MYSTERIOUS_SPHERE) { // todo gold from golden idol?
+                Rewards reward;
+                reward.addGold(info.gold);
+                reward.addRelic(info.bossRelics[0]);
+                addPotionRewards(reward);
+                reward.addCardReward(createCardReward(Room::EVENT));
+                openCombatRewardScreen(reward);
+                regainControlAction = returnToMapAction;
+            } else {
+                regainControl();
+            }
             break;
 
         default:
@@ -3047,14 +3057,10 @@ void GameContext::chooseEventOption(int idx) {
             if (idx == 0) {
                 const int goldAmt = miscRng.random(45, 55);
                 const RelicId rareRelic = returnRandomScreenlessRelic(RelicTier::RARE);
+                info.bossRelics[0] = rareRelic;
+                info.gold = goldAmt;
                 regainControlAction = [=](GameContext &gc) {
-                    Rewards reward;
-                    reward.addGold(goldAmt);
-                    reward.addRelic(rareRelic);
-                    addPotionRewards(reward);
-                    reward.addCardReward(createCardReward(Room::EVENT));
-                    gc.openCombatRewardScreen(reward);
-                    gc.regainControlAction = returnToMapAction;
+                    gc.afterBattle();
                 };
                 enterBattle(MonsterEncounter::MYSTERIOUS_SPHERE_EVENT);
 

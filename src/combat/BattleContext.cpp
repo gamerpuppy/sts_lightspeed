@@ -838,6 +838,10 @@ void BattleContext::playCardQueueItem(CardQueueItem playItem) {
             c.freeToPlayOnce = true;
         }
 
+        if (c.requiresTarget()) {
+            player.lastTargetedMonster = item.target;
+        }
+
         if (!c.requiresTarget() || monsters.arr[item.target].isTargetable()) { // this is redundant right???? -> no i think echo form abilities can queue a card with invalid target
             useCard();
         }

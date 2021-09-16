@@ -338,6 +338,10 @@ void CardManager::draw(BattleContext &bc, int amount) {
             if (fireBreathing) {
                 bc.addToBot( Actions::DamageAllEnemy(fireBreathing) );
             }
+            if (c.getId() == CardId::VOID) {
+                // game adds action to bottom of the queue but I think it is ok to do directly
+                bc.player.energy = std::max(0, bc.player.energy-1);
+            }
 
         } else if (c.getType() == CardType::CURSE) {
             if (fireBreathing) {

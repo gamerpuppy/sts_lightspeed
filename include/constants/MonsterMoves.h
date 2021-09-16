@@ -417,18 +417,33 @@ namespace sts {
             case MMID::ACID_SLIME_L_LICK:
             case MMID::ACID_SLIME_M_LICK:
             case MMID::ACID_SLIME_S_LICK:
+            case MMID::AWAKENED_ONE_REBIRTH:
+            case MMID::BEAR_BEAR_HUG:
             case MMID::BRONZE_ORB_STASIS:
+            case MMID::CHOSEN_HEX:
+            case MMID::CORRUPT_HEART_BUFF:
+            case MMID::CORRUPT_HEART_DEBILITATE:
             case MMID::CULTIST_INCANTATION:
+            case MMID::DARKLING_HARDEN:
+            case MMID::DARKLING_REGROW:
+            case MMID::DARKLING_REINCARNATE:
+            case MMID::DECA_SQUARE_OF_PROTECTION:
+            case MMID::DONU_CIRCLE_OF_POWER:
+            case MMID::EXPLODER_EXPLODE:
             case MMID::FUNGI_BEAST_GROW:
             case MMID::GENERIC_ESCAPE_MOVE:
             case MMID::GREEN_LOUSE_SPIT_WEB:
+            case MMID::GREMLIN_LEADER_ENCOURAGE:
+            case MMID::GREMLIN_LEADER_RALLY:
+            case MMID::GREMLIN_WIZARD_CHARGING:
+            case MMID::HEXAGHOST_ACTIVATE:
             case MMID::INVALID:
             case MMID::JAW_WORM_BELLOW:
             case MMID::RED_LOUSE_GROW:
             case MMID::SPIKE_SLIME_L_LICK:
             case MMID::SPIKE_SLIME_M_LICK:
+            case MMID::WRITHING_MASS_IMPLANT:
                 return false;
-
 
             case MMID::ACID_SLIME_L_CORROSIVE_SPIT:
             case MMID::ACID_SLIME_L_TACKLE:
@@ -438,11 +453,9 @@ namespace sts {
             case MMID::ACID_SLIME_S_TACKLE:
             case MMID::AWAKENED_ONE_SLASH:
             case MMID::AWAKENED_ONE_SOUL_STRIKE:
-            case MMID::AWAKENED_ONE_REBIRTH:
             case MMID::AWAKENED_ONE_DARK_ECHO:
             case MMID::AWAKENED_ONE_SLUDGE:
             case MMID::AWAKENED_ONE_TACKLE:
-            case MMID::BEAR_BEAR_HUG:
             case MMID::BEAR_LUNGE:
             case MMID::BEAR_MAUL:
             case MMID::BLUE_SLAVER_STAB:
@@ -467,40 +480,27 @@ namespace sts {
             case MMID::CHOSEN_ZAP:
             case MMID::CHOSEN_DEBILITATE:
             case MMID::CHOSEN_DRAIN:
-            case MMID::CHOSEN_HEX:
-            case MMID::CORRUPT_HEART_DEBILITATE:
             case MMID::CORRUPT_HEART_BLOOD_SHOTS:
             case MMID::CORRUPT_HEART_ECHO:
-            case MMID::CORRUPT_HEART_BUFF:
             case MMID::CULTIST_DARK_STRIKE:
             case MMID::DAGGER_STAB:
             case MMID::DAGGER_EXPLODE:
             case MMID::DARKLING_NIP:
             case MMID::DARKLING_CHOMP:
-            case MMID::DARKLING_HARDEN:
-            case MMID::DARKLING_REINCARNATE:
-            case MMID::DARKLING_REGROW:
-            case MMID::DECA_SQUARE_OF_PROTECTION:
             case MMID::DECA_BEAM:
-            case MMID::DONU_CIRCLE_OF_POWER:
             case MMID::DONU_BEAM:
             case MMID::EXPLODER_SLAM:
-            case MMID::EXPLODER_EXPLODE:
             case MMID::FAT_GREMLIN_SMASH:
             case MMID::FUNGI_BEAST_BITE:
             case MMID::GIANT_HEAD_COUNT:
             case MMID::GIANT_HEAD_GLARE:
             case MMID::GIANT_HEAD_IT_IS_TIME:
             case MMID::GREEN_LOUSE_BITE:
-            case MMID::GREMLIN_LEADER_ENCOURAGE:
-            case MMID::GREMLIN_LEADER_RALLY:
             case MMID::GREMLIN_LEADER_STAB:
             case MMID::GREMLIN_NOB_BELLOW:
             case MMID::GREMLIN_NOB_RUSH:
             case MMID::GREMLIN_NOB_SKULL_BASH:
-            case MMID::GREMLIN_WIZARD_CHARGING:
             case MMID::GREMLIN_WIZARD_ULTIMATE_BLAST:
-            case MMID::HEXAGHOST_ACTIVATE:
             case MMID::HEXAGHOST_DIVIDER:
             case MMID::HEXAGHOST_INFERNO:
             case MMID::HEXAGHOST_SEAR:
@@ -606,7 +606,7 @@ namespace sts {
             case MMID::TIME_EATER_RIPPLE:
             case MMID::TIME_EATER_HASTE:
             case MMID::TRANSIENT_ATTACK:
-            case MMID::WRITHING_MASS_IMPLANT:
+
             case MMID::WRITHING_MASS_FLAIL:
             case MMID::WRITHING_MASS_WITHER:
             case MMID::WRITHING_MASS_MULTI_STRIKE:
