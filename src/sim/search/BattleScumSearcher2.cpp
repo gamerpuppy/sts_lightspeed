@@ -92,12 +92,12 @@ double search::BattleScumSearcher2::evaluateEdge(const search::BattleScumSearche
 
     double qualityValue = 0;
     if (!bestActionSequence.empty()) {
-        auto avgEvaluation = edge.node.evaluationSum / edge.node.simulationCount;
+        auto avgEvaluation = edge.node.evaluationSum / (edge.node.simulationCount+1);
         qualityValue = avgEvaluation / bestActionValue;
     }
 
     double explorationValue = explorationParameter *
-            std::sqrt(std::log(parent.simulationCount) / (edge.node.simulationCount+1));
+            std::sqrt(std::log(parent.simulationCount+1) / (edge.node.simulationCount+1));
 
     return qualityValue + explorationValue;
 }
