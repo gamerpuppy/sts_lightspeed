@@ -24,6 +24,7 @@
 #include "sim/StateHandler.h"
 #include "sim/BattleScumSearcher.h"
 
+#include "sim/search/BattleScumSearcher2.h"
 
 using namespace sts;
 
@@ -251,6 +252,7 @@ void replayActionList(std::string filename) {
 }
 
 void printSizes() {
+    std::cout << "sizeof Map:" << sizeof(Map) << '\n';
     std::cout << "sizeof Player: " << sizeof(Player) << '\n';
     std::cout << "sizeof Monster: " << sizeof(Monster) << '\n';
     std::cout << "sizeof MonsterGroup : " << sizeof(MonsterGroup) << '\n';
@@ -265,6 +267,8 @@ void printSizes() {
     std::cout << "sizeof Deck: " << sizeof(Deck) << '\n';
     std::cout << "sizeof Card: " << sizeof(Card) << '\n';
     std::cout << "sizeof SelectScreenCard: " << sizeof(SelectScreenCard) << '\n';
+
+    std::cout << "sizeof RandomBattleStateHandler: " << sizeof(RandomBattleStateHandler) << '\n';
 }
 
 void playFromSaveFile(const std::string &fname, const std::string &actionFile) {
@@ -497,8 +501,44 @@ int scumSearch(int argc, const char *argv[]) {
 }
 
 
+int mcts(int argc, const char *argv[]) {
+    const auto saveFilePath = argv[2];
+    const auto simulationCount = std::stoll(argv[3]);
+
+    SaveFile saveFile = SaveFile::loadFromPath(saveFilePath, sts::CharacterClass::IRONCLAD);
+    GameContext gc;
+    gc.initFromSave(saveFile);
+
+    std::cout << SeedHelper::getString(gc.seed) << std::endl;
+
+    BattleContext bc = BattleContext();
+    bc.init(gc);
+
+    search::BattleScumSearcher2 searcher(bc);
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+    searcher.search(simulationCount);
+    auto endTime = std::chrono::high_resolution_clock::now();
+    double duration = std::chrono::duration<double>(endTime-startTime).count();
+
+    std::cout << "steps: " << simulationCount << " search time: " << duration << "s\n";
+
+    std::cout << "best search value: " << searcher.bestActionValue << " depth: " << searcher.bestActionSequence.size() << '\n';
+    if (searcher.bestActionSequence.empty()) {
+        std::cout << "bestActionSequenceIsEmpty" << std::endl;
+        return 0;
+    }
+
+    for (auto bestAction : searcher.bestActionSequence) {
+        bestAction.printDesc(std::cout, bc) << '\n';
+        bestAction.execute(bc);
+    }
+    std::cout.flush();
+
+    return 0;
+}
+
 int main(int argc, const char* argv[]) {
-//    printSizes();
 
     if (argc < 2) {
         std::cout << "incorrect arguments" << std::endl;
@@ -558,8 +598,9 @@ int main(int argc, const char* argv[]) {
         }
 
 
+    } else if (command == "mcts_save") {
+        return mcts(argc, argv);
     }
-
 
     //    printSizes();
 //    std::cout << SeedHelper::getString(77) << '\n';

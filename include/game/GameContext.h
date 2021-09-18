@@ -8,6 +8,7 @@
 #include <vector>
 #include <array>
 #include <functional>
+#include <memory>
 
 #include "data_structure/fixed_list.h"
 
@@ -136,6 +137,8 @@ namespace sts {
         Shop shop;
     };
 
+
+    class GameContext;
     typedef std::function<void(GameContext&)> GameContextAction;
 
     class BattleContext;
@@ -143,8 +146,7 @@ namespace sts {
 
     struct GameContext {
         static constexpr float SHRINE_CHANCE = 0.25F;
-        const sts::Card noteForYourselfCard = Card(CardId::IRON_WAVE);
-        static const GameContextAction returnToMapAction;
+        static inline const sts::Card noteForYourselfCard = Card(CardId::IRON_WAVE);
 
         bool prismaticShardEnabled = false;
         bool skipBattles = false;
@@ -206,7 +208,7 @@ namespace sts {
         int floorNum = 0;
         int curMapNodeX = -1;
         int curMapNodeY = -1;
-        Map *map;
+        Map *map = nullptr; // todo fix memory leak
         int act = 1;
         int ascension = 0;
         bool speedrunPace = false; // todo load from save

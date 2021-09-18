@@ -10,17 +10,14 @@
 #include "constants/RelicPools.h"
 #include "constants/CardPools.h"
 #include "combat/BattleContext.h"
-
 #include "game/SaveFile.h"
 #include "game/Game.h"
-
 #include "sim/PrintHelpers.h"
-
 #include "sts_common.h"
 
 using namespace sts;
 
-const GameContextAction GameContext::returnToMapAction = [](auto &gs) {
+const GameContextAction returnToMapAction = [](auto &gs) {
     gs.screenState = ScreenState::MAP_SCREEN;
     gs.regainControlAction = nullptr;
 };
@@ -50,14 +47,15 @@ GameContext::GameContext(std::uint64_t seed, CharacterClass cc, int ascension)
     miscRng(seed),
     mathUtilRng(seed-897897), // uses a time based seed -_-
     cc(cc),
-    ascension(ascension)
-{
+    ascension(ascension) {
     eventList.insert(eventList.end(), EventPools::Act1::events.begin(), EventPools::Act1::events.end());
     shrineList.insert(shrineList.end(), EventPools::Act1::shrines.begin(), EventPools::Act1::shrines.end());
     if (ascension < 15) {
-        specialOneTimeEventList.insert(specialOneTimeEventList.end(), EventPools::oneTimeEventsAsc0.begin(), EventPools::oneTimeEventsAsc0.end());
+        specialOneTimeEventList.insert(specialOneTimeEventList.end(), EventPools::oneTimeEventsAsc0.begin(),
+                                       EventPools::oneTimeEventsAsc0.end());
     } else {
-        specialOneTimeEventList.insert(specialOneTimeEventList.end(), EventPools::oneTimeEventsAsc15.begin(), EventPools::oneTimeEventsAsc15.end());
+        specialOneTimeEventList.insert(specialOneTimeEventList.end(), EventPools::oneTimeEventsAsc15.begin(),
+                                       EventPools::oneTimeEventsAsc15.end());
     }
 
     generateMonsters();
@@ -74,7 +72,6 @@ GameContext::GameContext(std::uint64_t seed, CharacterClass cc, int ascension)
     info.neowRewards = Neow::getOptions(neowRng);
     screenState = ScreenState::EVENT_SCREEN;
 }
-
 
 void GameContext::initFromSave(const SaveFile &s) {
     seed = s.seed;
@@ -2225,7 +2222,7 @@ void GameContext::chooseNeowOption(const Neow::Option &o) {
             int roll = gc.cardRng.random(static_cast<int>(9));
             gc.deck.obtain(gc, curseCardPool[roll]);
             gc.screenState = ScreenState::MAP_SCREEN;
-            gc.regainControlAction = gc.returnToMapAction;
+            gc.regainControlAction = returnToMapAction;
         };
     } else {
         regainControlAction = returnToMapAction;

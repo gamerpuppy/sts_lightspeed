@@ -550,7 +550,6 @@ Action Actions::DiscoveryAction(CardType type, int amount) {
     }};
 }
 
-
 Action Actions::InfernalBladeAction() {
     return {[=] (BattleContext &bc) {
         const auto cid = getTrulyRandomCardInCombat(bc.cardRandomRng, bc.player.cc, CardType::ATTACK);
@@ -734,7 +733,7 @@ Action Actions::DualWieldAction(int copyCount) {
     }};
 }
 
-Action Actions::ExhumeAction() {
+Action Actions::ExhumeAction() { // todo this is bugged because the selected card cannot be exhume
     return {[=] (BattleContext &bc) {
         if (bc.cards.exhaustPile.empty() || bc.cards.cardsInHand == 10) {
             return;
@@ -757,20 +756,24 @@ Action Actions::ForethoughtAction(bool upgraded) {
             return;
         }
 
-        if (upgraded) {
-            bc.cardSelectInfo.cardSelectTask = CardSelectTask::FORETHOUGHT;
-            bc.cardSelectInfo.canPickAnyNumber = true;
-            bc.inputState = InputState::CARD_SELECT;
-
+        // todo implement Upgraded version
+//        //
+//        if (upgraded) {
+//            bc.cardSelectInfo.cardSelectTask = CardSelectTask::FORETHOUGHT;
+//            bc.cardSelectInfo.canPickAnyNumber = true;
+//            bc.inputState = InputState::CARD_SELECT;
+//
+//        } else {
+        if (bc.cards.cardsInHand == 1) {
+            bc.chooseForethoughtCard(0);
         } else {
-            if (bc.cards.cardsInHand == 1) {
-                bc.chooseForethoughtCard(0);
-            } else {
-                bc.cardSelectInfo.cardSelectTask = CardSelectTask::FORETHOUGHT;
-                bc.cardSelectInfo.canPickAnyNumber = false;
-                bc.inputState = InputState::CARD_SELECT;
-            }
+            bc.cardSelectInfo.cardSelectTask = CardSelectTask::FORETHOUGHT;
+            bc.cardSelectInfo.canPickAnyNumber = false;
+            bc.inputState = InputState::CARD_SELECT;
         }
+//        }
+
+
     }};
 }
 

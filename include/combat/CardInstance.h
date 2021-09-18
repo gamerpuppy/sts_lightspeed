@@ -67,7 +67,7 @@ namespace sts {
         void upgrade();
         void tookDamage(); // only call this on "Masterful Stab" and "Blood for Blood"
 
-        std::ostream& printName(std::ostream &o) const;
+        std::ostream& printSimpleDesc(std::ostream &o) const;
 
         void triggerOnExhaust(BattleContext &bc);
         void triggerOnManualDiscard(BattleContext &bc);

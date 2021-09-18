@@ -112,7 +112,9 @@ void Shop::buyRelic(GameContext &gc, int idx) {
     if (openedScreen) {
         gc.regainControlAction = [](GameContext &gc) {
             gc.screenState = ScreenState::SHOP_ROOM;
-            gc.regainControlAction = GameContext::returnToMapAction;
+            gc.regainControlAction = [] (auto &gc) {
+                gc.screenState = ScreenState::MAP_SCREEN;
+            };
         };
     }
 

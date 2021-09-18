@@ -786,6 +786,7 @@ namespace sts {
             case CardId::BLUDGEON:
             case CardId::OMEGA:
             case CardId::WRAITH_FORM:
+            case CardId::DEMON_FORM:
                 return 3;
 
             case CardId::BLOOD_FOR_BLOOD:

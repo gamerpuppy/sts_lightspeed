@@ -8,7 +8,6 @@
 
 using namespace sts;
 
-
 // assume all bc fields have just been initialized by in class member initializers
 void BattleContext::init(const GameContext &gc) {
     undefinedBehaviorEvoked = false;
@@ -2876,20 +2875,7 @@ void BattleContext::openSimpleCardSelectScreen(CardSelectTask task, int count) {
     cardSelectInfo.canPickZero = false;
 }
 
-void BattleContext::chooseDrawToHandCards(const int *idxs, int cardCount) {
-    for (int i = 0; i < cardCount; ++i) {
-        const auto drawIdx = idxs[i];
-        auto c = cards.drawPile[drawIdx];
-        cards.removeFromDrawPileAtIdx(drawIdx);
-        moveToHandHelper(c);
-    }
-}
 
-void BattleContext::chooseExhaustCards(const int *idxs, int cardCount) {
-//    auto c = cards.hand[handIdx];
-//    cards.removeFromHandAtIdx(handIdx);
-//    triggerAndMoveToExhaustPile(c);
-}
 
 void BattleContext::chooseArmamentsCard(int handIdx) {
     // todo cleaner solution
@@ -3006,23 +2992,6 @@ void BattleContext::chooseDiscoveryCard(CardId id) {
     }
 }
 
-
-void BattleContext::chooseExhaustCards(const fixed_list<int, 10> &idxs) {
-    if (idxs.empty()) {
-        return;
-    }
-    auto listCopy = idxs;
-    std::sort(listCopy.begin(), listCopy.end(), [](auto a, auto b) { return b < a; });
-
-    // assume idxs is sorted in descending order
-    for (const auto handIdx : listCopy) {
-        auto c = cards.hand[handIdx];
-        cards.removeFromHandAtIdx(handIdx);
-        triggerAndMoveToExhaustPile(c);
-    }
-}
-
-
 void BattleContext::chooseExhaustOneCard(int handIdx) {
     auto c = cards.hand[handIdx];
     cards.removeFromHandAtIdx(handIdx);
@@ -3048,23 +3017,6 @@ void BattleContext::chooseForethoughtCard(int handIdx) {
     cards.removeFromHandAtIdx(handIdx);
 }
 
-void BattleContext::chooseGambleCards(const fixed_list<int, 10> &idxs) {
-    if (idxs.empty()) {
-        return;
-    }
-    auto listCopy = idxs;
-    std::sort(listCopy.begin(), listCopy.end(), [](auto a, auto b) { return b < a; });
-
-    // assume idxs is sorted in descending order
-    addToTop( Actions::DrawCards(listCopy.size()) );
-    for (const auto handIdx : listCopy) {
-        auto c = cards.hand[handIdx];
-        cards.removeFromHandAtIdx(handIdx);
-        cards.moveToDiscardPile(c);
-        onManualDiscard(c);
-    }
-}
-
 void BattleContext::chooseHeadbuttCard(int discardIdx) {
 #ifdef sts_asserts
     assert(discardIdx >= 0 && discardIdx < cards.discardPile.size());
@@ -3084,6 +3036,48 @@ void BattleContext::chooseWarcryCard(int handIdx) {
     cards.moveToDrawPileTop(cards.hand[handIdx]);
     cards.removeFromHandAtIdx(handIdx);
 }
+
+void BattleContext::chooseDrawToHandCards(const int *idxs, int cardCount) {
+    for (int i = 0; i < cardCount; ++i) {
+        const auto drawIdx = idxs[i];
+        auto c = cards.drawPile[drawIdx];
+        cards.removeFromDrawPileAtIdx(drawIdx);
+        moveToHandHelper(c);
+    }
+}
+
+void BattleContext::chooseExhaustCards(const fixed_list<int, 10> &idxs) {
+    if (idxs.empty()) {
+        return;
+    }
+    auto listCopy = idxs;
+    std::sort(listCopy.begin(), listCopy.end(), [](auto a, auto b) { return b < a; });
+
+    // assume idxs is sorted in descending order
+    for (const auto handIdx : listCopy) {
+        auto c = cards.hand[handIdx];
+        cards.removeFromHandAtIdx(handIdx);
+        triggerAndMoveToExhaustPile(c);
+    }
+}
+
+void BattleContext::chooseGambleCards(const fixed_list<int, 10> &idxs) {
+    if (idxs.empty()) {
+        return;
+    }
+    auto listCopy = idxs;
+    std::sort(listCopy.begin(), listCopy.end(), [](auto a, auto b) { return b < a; });
+
+    // assume idxs is sorted in descending order
+    addToTop( Actions::DrawCards(listCopy.size()) );
+    for (const auto handIdx : listCopy) {
+        auto c = cards.hand[handIdx];
+        cards.removeFromHandAtIdx(handIdx);
+        cards.moveToDiscardPile(c);
+        onManualDiscard(c);
+    }
+}
+
 
 namespace sts {
 

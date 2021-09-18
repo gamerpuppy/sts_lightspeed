@@ -134,6 +134,10 @@ void Monster::construct(BattleContext &bc, MonsterId monsterId, int monsterIdx) 
     }
 }
 
+const char *Monster::getName() const {
+    return monsterIdStrings[static_cast<int>(id)];
+}
+
 bool Monster::hasStatusInternal(MonsterStatus s) const {
     return statusBits & (1ULL << (int)s);
 }

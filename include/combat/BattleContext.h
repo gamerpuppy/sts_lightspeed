@@ -71,7 +71,7 @@ namespace sts {
 
         int potionCount = 0;
         int potionCapacity = 3;
-        std::array<Potion, 5> potions { Potion::EMPTY_POTION_SLOT };
+        std::array<Potion, 5> potions;
 
         int turn = 0;
         Player player;
@@ -181,23 +181,24 @@ namespace sts {
         void openDiscoveryScreen(std::array<CardId, 3> discoveryCards, int copyCount);
         void openSimpleCardSelectScreen(CardSelectTask task, int count);
 
-        // card select helpers
-        void chooseDrawToHandCards(const int *idxs, int cardCount);
-        void chooseExhaustCards(const int *idxs, int cardCount);
-
+        // single card select helpers
         void chooseArmamentsCard(int handIdx);
         void chooseCodexCard(CardId id);
         void chooseDiscardToHandCard(int discardIdx, bool forZeroCost);
         void chooseDiscoveryCard(CardId id);
         void chooseDualWieldCard(int handIdx);
-        void chooseExhaustCards(const fixed_list<int,10> &idxs);
         void chooseExhaustOneCard(int handIdx);
         void chooseExhumeCard(int exhaustIdx);
         void chooseForethoughtCard(int handIdx);
-        void chooseGambleCards(const fixed_list<int,10> &idxs);
         void chooseHeadbuttCard(int discardIdx);
         void chooseRecycleCard(int handIdx);
         void chooseWarcryCard(int handIdx);
+
+        // multi card helpers
+        void chooseDrawToHandCards(const int *idxs, int cardCount);
+        void chooseExhaustCards(const fixed_list<int,10> &idxs);
+        void chooseGambleCards(const fixed_list<int,10> &idxs);
+
     };
 
     std::ostream& operator<<(std::ostream &os, const BattleContext &bc);

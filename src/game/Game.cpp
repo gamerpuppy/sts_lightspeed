@@ -100,7 +100,7 @@ int SeedHelper::getDigitValue(char c) {
     return c - 'A' + 9;
 }
 
-std::string SeedHelper::getString(std::int64_t seed) {
+std::string SeedHelper::getString(std::uint64_t seed) {
     constexpr auto chars = "0123456789ABCDEFGHIJKLMNPQRSTUVWXYZ";
 
     auto uSeed = static_cast<std::uint64_t>(seed);
@@ -118,11 +118,11 @@ std::string SeedHelper::getString(std::int64_t seed) {
     return str;
 }
 
-std::int64_t SeedHelper::getLong(const std::string &seed) {
-    std::int64_t ret = 0;
+std::uint64_t SeedHelper::getLong(const std::string &seed) {
+    std::uint64_t ret = 0;
     for (auto it = seed.begin(); it != seed.end(); ++it) {
         ret *= SEED_BASE;
-        char c = toupper(*it);
+        int c = toupper(*it);
         int value = getDigitValue(c);
         ret += value;
     }

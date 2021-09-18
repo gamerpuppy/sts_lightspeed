@@ -728,7 +728,6 @@ void RandomBattleStateHandler::chooseOption(BattleContext &bc, int option) const
 //
 //}
 
-
 int RandomBattleStateHandler::setupNormalOptions(const BattleContext &bc) {
     optionFunctions.clear();
 
@@ -744,7 +743,7 @@ int RandomBattleStateHandler::setupNormalOptions(const BattleContext &bc) {
                 continue;
             }
             optionFunctions.push_back([=](BattleContext &bc) {
-                bc.drinkPotion(i);
+                bc.drinkPotion(i); // this is wrong
             });
             optionFunctions.push_back([=](BattleContext &bc) {
                 bc.discardPotion(i);

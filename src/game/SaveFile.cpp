@@ -260,9 +260,9 @@ std::string SaveFile::getJsonFromSaveFile(const std::string &path) {
     auto dataBits = Base64::decode(utf8Content);
     auto json = xorWithKey(dataBits);
 
-//#ifdef sts_print_debug
+#ifdef sts_print_debug
     std::cout << json;
-//#endif
+#endif
     return json;
 }
 

@@ -182,16 +182,25 @@ void CardInstance::tookDamage() {
 
 }
 
+std::ostream &CardInstance::printSimpleDesc(std::ostream &os) const {
+    os << getName();
+    switch (id) {
+        case CardId::RITUAL_DAGGER:
+        case CardId::RAMPAGE:
+            os << "=" << specialData;
+            break;
 
-std::ostream &CardInstance::printName(std::ostream &o) const {
-    o << getName();
+        default:
+            break;
+    }
+
     if (upgraded) {
-        o << "+";
+        os << "+";
         if (id == CardId::SEARING_BLOW) {
-            o << upgraded;
+            os << upgraded;
         }
     }
-    return o;
+    return os;
 }
 
 void CardInstance::triggerOnExhaust(BattleContext &bc) {

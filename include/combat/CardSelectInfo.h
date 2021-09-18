@@ -12,6 +12,7 @@
 namespace sts {
 
     enum class CardSelectTask {
+        INVALID=0,
         ARMAMENTS,
         CODEX,
         DISCOVERY,
@@ -32,6 +33,30 @@ namespace sts {
         SEEK,
         SETUP,
         WARCRY,
+    };
+
+    static constexpr const char* cardSelectTaskStrings[] = {
+            "INVALID",
+            "ARMAMENTS",
+            "CODEX",
+            "DISCOVERY",
+            "DUAL_WIELD",
+            "EXHAUST_ONE",
+            "EXHAUST_MANY",
+            "EXHUME",
+            "FORETHOUGHT",
+            "GAMBLE",
+            "HEADBUTT",
+            "HOLOGRAM",
+            "LIQUID_MEMORIES_POTION",
+            "MEDITATE",
+            "NIGHTMARE",
+            "RECYCLE",
+            "SECRET_TECHNIQUE",
+            "SECRET_WEAPON",
+            "SEEK",
+            "SETUP",
+            "WARCRY",
     };
 
     struct CardSelectInfo {

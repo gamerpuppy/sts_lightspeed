@@ -397,7 +397,7 @@ void ConsoleSimulator::takeShopRoomAction(const std::string &action) {
 
     auto &shop = gc->info.shop;
     if (actionType == "proceed") {
-        GameContext::returnToMapAction(*gc);
+        gc->screenState = ScreenState::MAP_SCREEN;
         return;
     } else if (actionType == "remove") {
         shop.buyCardRemove(*gc);
