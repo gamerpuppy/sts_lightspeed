@@ -518,36 +518,23 @@ void GameContext::generateMonsters() {
 }
 
 void GameContext::generateWeakMonsters() {
-    constexpr MonsterEncounter weakEnemies[3][5] = {
-            { ME::CULTIST, ME::JAW_WORM, ME::TWO_LOUSE, ME::SMALL_SLIMES },
-            { ME::SPHERIC_GUARDIAN, ME::CHOSEN, ME::SHELL_PARASITE, ME::THREE_BYRDS, ME::TWO_THIEVES },
-            { ME::THREE_DARKLINGS, ME::ORB_WALKER, ME::THREE_SHAPES },
-    };
-    constexpr float weakWeights[3][5] = {
-            { 1.0f/4, 1.0f/4, 1.0f/4, 1.0f/4 },
-            { 1.0f/5, 1.0f/5, 1.0f/5, 1.0f/5, 1.0f/5 },
-            { 1.0f/3, 1.0f/3, 1.0f/3 }
-    };
-    constexpr int weakCount[3] {4,5,3};
-
-    populateMonsterList(weakEnemies[act-1], weakWeights[act - 1], weakCount[act - 1], act == 1 ? 3 : 2);
+    populateMonsterList(
+            MonsterEncounterPool::weakEnemies[act-1],
+            MonsterEncounterPool::weakWeights[act - 1],
+            MonsterEncounterPool::weakCount[act - 1],
+            act == 1 ? 3 : 2);
 }
 
 void GameContext::generateStrongMonsters() {
-    constexpr MonsterEncounter strongEnemies[3][10] = {
-            { ME::GREMLIN_GANG, ME::LOTS_OF_SLIMES, ME::RED_SLAVER, ME::EXORDIUM_THUGS, ME::EXORDIUM_WILDLIFE, ME::BLUE_SLAVER, ME::LOOTER, ME::LARGE_SLIME, ME::THREE_LOUSE, ME::TWO_FUNGI_BEASTS },
-            { ME::CHOSEN_AND_BYRDS, ME::SENTRY_AND_SPHERE, ME::CULTIST_AND_CHOSEN, ME::THREE_CULTIST, ME::SHELLED_PARASITE_AND_FUNGI, ME::SNECKO, ME::SNAKE_PLANT, ME::CENTURION_AND_HEALER },
-            { ME::SPIRE_GROWTH, ME::TRANSIENT, ME::FOUR_SHAPES, ME::MAW, ME::SPHERE_AND_TWO_SHAPES, ME::JAW_WORM_HORDE, ME::THREE_DARKLINGS, ME::WRITHING_MASS }
-    };
-    constexpr float strongWeights[3][10] = {
-            { 1.0f/16, 1.0f/16, 1.0f/16, 1.5f/16, 1.5f/16, 2.0f/16, 2.0f/16, 2.0f/16, 2.0f/16, 2.0f/16 },
-            { 2.0f/29, 2.0f/29, 3.0f/29, 3.0f/29, 3.0f/29, 4.0f/29, 6.0f/29, 6.0f/29 },
-            { 1.0f/8, 1.0f/8, 1.0f/8, 1.0f/8, 1.0f/8, 1.0f/8, 1.0f/8, 1.0f/8,},
-    };
-    constexpr int strongCount[3] {10, 8, 8};
+    populateFirstStrongEnemy(
+            MonsterEncounterPool::strongEnemies[act-1],
+            MonsterEncounterPool::strongWeights[act-1],
+            MonsterEncounterPool::strongCount[act-1]);
 
-    populateFirstStrongEnemy(strongEnemies[act-1], strongWeights[act-1], strongCount[act-1]);
-    populateMonsterList(strongEnemies[act-1], strongWeights[act-1], strongCount[act-1], 12);
+    populateMonsterList(
+            MonsterEncounterPool::strongEnemies[act-1],
+            MonsterEncounterPool::strongWeights[act-1],
+            MonsterEncounterPool::strongCount[act-1], 12);
 }
 
 int rollElite(Random &monsterRng) {

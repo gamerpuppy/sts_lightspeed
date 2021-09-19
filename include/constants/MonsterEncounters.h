@@ -155,6 +155,37 @@ namespace sts {
     static constexpr const char *monsterEncounterEnumNames[] = {"INVALID","CULTIST","JAW_WORM","TWO_LOUSE","SMALL_SLIMES","BLUE_SLAVER","GREMLIN_GANG","LOOTER","LARGE_SLIME","LOTS_OF_SLIMES","EXORDIUM_THUGS","EXORDIUM_WILDLIFE","RED_SLAVER","THREE_LOUSE","TWO_FUNGI_BEASTS","GREMLIN_NOB","LAGAVULIN","THREE_SENTRIES","SLIME_BOSS","THE_GUARDIAN","HEXAGHOST","SPHERIC_GUARDIAN","CHOSEN","SHELL_PARASITE","THREE_BYRDS","TWO_THIEVES","CHOSEN_AND_BYRDS","SENTRY_AND_SPHERE","SNAKE_PLANT","SNECKO","CENTURION_AND_HEALER","CULTIST_AND_CHOSEN","THREE_CULTIST","SHELLED_PARASITE_AND_FUNGI","GREMLIN_LEADER","SLAVERS","BOOK_OF_STABBING","AUTOMATON","COLLECTOR","CHAMP","THREE_DARKLINGS","ORB_WALKER","THREE_SHAPES","SPIRE_GROWTH","TRANSIENT","FOUR_SHAPES","MAW","SPHERE_AND_TWO_SHAPES","JAW_WORM_HORDE","WRITHING_MASS","GIANT_HEAD","NEMESIS","REPTOMANCER","AWAKENED_ONE","TIME_EATER","DONU_AND_DECA","SHIELD_AND_SPEAR","THE_HEART",};
     typedef MonsterEncounter ME;
 
+    namespace MonsterEncounterPool {
+
+        static constexpr MonsterEncounter weakEnemies[3][5] = {
+                { ME::CULTIST, ME::JAW_WORM, ME::TWO_LOUSE, ME::SMALL_SLIMES },
+                { ME::SPHERIC_GUARDIAN, ME::CHOSEN, ME::SHELL_PARASITE, ME::THREE_BYRDS, ME::TWO_THIEVES },
+                { ME::THREE_DARKLINGS, ME::ORB_WALKER, ME::THREE_SHAPES },
+        };
+        static constexpr float weakWeights[3][5] = {
+                { 1.0f/4, 1.0f/4, 1.0f/4, 1.0f/4 },
+                { 1.0f/5, 1.0f/5, 1.0f/5, 1.0f/5, 1.0f/5 },
+                { 1.0f/3, 1.0f/3, 1.0f/3 }
+        };
+        constexpr int weakCount[3] {4,5,3};
+
+        static constexpr MonsterEncounter strongEnemies[3][10] = {
+                { ME::GREMLIN_GANG, ME::LOTS_OF_SLIMES, ME::RED_SLAVER, ME::EXORDIUM_THUGS, ME::EXORDIUM_WILDLIFE, ME::BLUE_SLAVER, ME::LOOTER, ME::LARGE_SLIME, ME::THREE_LOUSE, ME::TWO_FUNGI_BEASTS },
+                { ME::CHOSEN_AND_BYRDS, ME::SENTRY_AND_SPHERE, ME::CULTIST_AND_CHOSEN, ME::THREE_CULTIST, ME::SHELLED_PARASITE_AND_FUNGI, ME::SNECKO, ME::SNAKE_PLANT, ME::CENTURION_AND_HEALER },
+                { ME::SPIRE_GROWTH, ME::TRANSIENT, ME::FOUR_SHAPES, ME::MAW, ME::SPHERE_AND_TWO_SHAPES, ME::JAW_WORM_HORDE, ME::THREE_DARKLINGS, ME::WRITHING_MASS }
+        };
+        static constexpr float strongWeights[3][10] = {
+                { 1.0f/16, 1.0f/16, 1.0f/16, 1.5f/16, 1.5f/16, 2.0f/16, 2.0f/16, 2.0f/16, 2.0f/16, 2.0f/16 },
+                { 2.0f/29, 2.0f/29, 3.0f/29, 3.0f/29, 3.0f/29, 4.0f/29, 6.0f/29, 6.0f/29 },
+                { 1.0f/8, 1.0f/8, 1.0f/8, 1.0f/8, 1.0f/8, 1.0f/8, 1.0f/8, 1.0f/8,},
+        };
+        static constexpr int strongCount[3] {10, 8, 8};
+
+    }
+
+
+
+
 }
 
 #endif //STS_LIGHTSPEED_MONSTERENCOUNTERS_H
