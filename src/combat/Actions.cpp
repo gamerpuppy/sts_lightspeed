@@ -739,8 +739,20 @@ Action Actions::ExhumeAction() { // todo this is bugged because the selected car
             return;
         }
 
-        if (bc.cards.exhaustPile.size() == 1) {
-            bc.chooseExhumeCard(0);
+        int nonExhumeCards = 0;
+        int lastNonExhumeIdx = -1;
+        for (int i = 0; i < bc.cards.exhaustPile.size(); ++i) {
+            if (bc.cards.exhaustPile[i].id != CardId::EXHUME) {
+                ++nonExhumeCards;
+                lastNonExhumeIdx = i;
+            }
+        }
+
+        if (nonExhumeCards == 0) {
+            return;
+
+        } else if (nonExhumeCards == 1) {
+            bc.chooseExhumeCard(lastNonExhumeIdx);
 
         } else {
             bc.cardSelectInfo.cardSelectTask = CardSelectTask::EXHUME;

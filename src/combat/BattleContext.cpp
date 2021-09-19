@@ -13,6 +13,8 @@ void BattleContext::init(const GameContext &gc) {
     undefinedBehaviorEvoked = false;
     haveUsedDiscoveryAction = false;
     seed = gc.seed;
+    floorNum = gc.floorNum;
+    encounter = gc.info.encounter;
 
     auto startRandom = Random(gc.seed+gc.floorNum);
     aiRng = startRandom;
@@ -2412,7 +2414,7 @@ void BattleContext::drinkPotion(int idx, int target) {
         case Potion::EMPTY_POTION_SLOT:
         case Potion::FAIRY_POTION:
         default:
-            std::cerr << seed << std::endl;
+            std::cerr << seed << "invalid drink potion: " << static_cast<int>(p) << std::endl;
             assert(false);
             break;
     }

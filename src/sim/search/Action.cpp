@@ -8,20 +8,20 @@
 
 using namespace sts;
 
-//search::Action::Action(search::ActionType actionType) : bits(static_cast<int>(actionType) << 29) {}
-//search::Action::Action(search::ActionType actionType, int idx1) : bits((static_cast<int>(actionType) << 29) | (idx1 & 0xFFFF)) {}
-//search::Action::Action(search::ActionType actionType, int idx1, int idx2) : bits((static_cast<int>(actionType) << 29) | ((idx2 & 0x1FFF) << 16) | (idx1 & 0xFFFF)) {}
-
-search::Action::Action(search::ActionType actionType) : Action(actionType, 0, 0) {}
-
-search::Action::Action(search::ActionType actionType, int idx1) : Action(actionType, idx1, 0) {}
-
-search::Action::Action(search::ActionType actionType, int idx1, int idx2) : actionType(actionType), idx1(idx1),
-                                                                            idx2(idx2) {}
+search::Action::Action(search::ActionType actionType) : bits(static_cast<int>(actionType) << 29) {}
+search::Action::Action(search::ActionType actionType, int idx1) : bits((static_cast<int>(actionType) << 29) | (idx1 & 0xFFFF)) {}
+search::Action::Action(search::ActionType actionType, int idx1, int idx2) : bits((static_cast<int>(actionType) << 29) | ((idx2 & 0x1FFF) << 16) | (idx1 & 0xFFFF)) {}
+//
+//search::Action::Action(search::ActionType actionType) : Action(actionType, 0, 0) {}
+//
+//search::Action::Action(search::ActionType actionType, int idx1) : Action(actionType, idx1, 0) {}
+//
+//search::Action::Action(search::ActionType actionType, int idx1, int idx2) : actionType(actionType), idx1(idx1),
+//                                                                            idx2(idx2) {}
 
 bool search::Action::operator==(const search::Action &rhs) const {
-//    return bits == rhs.bits;
-    return actionType == rhs.actionType && idx1 == rhs.idx1 && idx2 == rhs.idx2;
+    return bits == rhs.bits;
+//    return actionType == rhs.actionType && idx1 == rhs.idx1 && idx2 == rhs.idx2;
 }
 
 bool search::Action::operator!=(const search::Action &rhs) const {
@@ -29,29 +29,29 @@ bool search::Action::operator!=(const search::Action &rhs) const {
 }
 
 search::ActionType search::Action::getActionType() const {
-//    return static_cast<ActionType>((bits >> 29) & 0xF);
-    return actionType;
+    return static_cast<ActionType>((bits >> 29) & 0xF);
+//    return actionType;
 }
 
 int search::Action::getSourceIdx() const {
-    return idx1;
-//    return bits & 0xFFFF;
+//    return idx1;
+    return bits & 0xFFFF;
 }
 
 int search::Action::getTargetIdx() const {
-    return idx2;
-//    return (bits >> 16) & 0x1FFF;
+//    return idx2;
+    return (bits >> 16) & 0x1FFF;
 }
 
 int search::Action::getSelectIdx() const {
-    return idx1;
-//    return bits & 0xFFFF;
+//    return idx1;
+    return bits & 0xFFFF;
 }
 
 fixed_list<int, 10> search::Action::getSelectedIdxs() const {
     fixed_list<int,10> ret;
     int i = 0;
-    int bitsCopy = idx1 & 0x3FF;
+    int bitsCopy = bits & 0x3FF;
     while (bitsCopy) {
         if (bitsCopy & 0x1) {
             ret.push_back(i);
@@ -76,19 +76,28 @@ bool isValidPotionAction(const BattleContext &bc, const search::Action &a) {
         return false;
     }
 
-    if (!potionRequiresTarget(p)) {
+    if (a.getTargetIdx() > 5) {
+        // discard action
         return true;
+
+    } else {
+
+        if (p == sts::Potion::FAIRY_POTION) {
+            return false;
+        }
+
+        if (!potionRequiresTarget(p)) {
+            return true;
+        }
+
+        if (a.getTargetIdx() < 0) {
+            return false;
+        }
+
+        return bc.monsters.arr[a.getTargetIdx()].isTargetable();
     }
 
-    if (a.getTargetIdx() == -1) { // discard action
-        return true;
-    }
 
-    if (a.getTargetIdx() < 0 || a.getTargetIdx() > 4) {
-        return false;
-    }
-
-    return bc.monsters.arr[a.getTargetIdx()].isTargetable();
 }
 
 bool isValidCardAction(const BattleContext &bc, const search::Action &a) {
@@ -120,6 +129,8 @@ bool isValidSingleCardSelectAction(const BattleContext &bc, const search::Action
 
     switch (bc.cardSelectInfo.cardSelectTask) {
         case CardSelectTask::CODEX:
+            return a.getSelectIdx() >= 0 && a.getSelectIdx() < 4;
+
         case CardSelectTask::DISCOVERY:
             return a.getSelectIdx() >= 0 && a.getSelectIdx() < 3;
 
@@ -158,17 +169,17 @@ bool isValidSingleCardSelectAction(const BattleContext &bc, const search::Action
         }
 
         case CardSelectTask::SECRET_TECHNIQUE: {
-            if (a.getSelectIdx() < 0 || a.getSelectIdx() >= bc.cards.discardPile.size()) {
+            if (a.getSelectIdx() < 0 || a.getSelectIdx() >= bc.cards.drawPile.size()) {
                 return false;
             }
-            return bc.cards.discardPile[a.getSelectIdx()].getType() == CardType::SKILL;
+            return bc.cards.drawPile[a.getSelectIdx()].getType() == CardType::SKILL;
         }
 
         case CardSelectTask::SECRET_WEAPON: {
-            if (a.getSelectIdx() < 0 || a.getSelectIdx() >= bc.cards.discardPile.size()) {
+            if (a.getSelectIdx() < 0 || a.getSelectIdx() >= bc.cards.drawPile.size()) {
                 return false;
             }
-            return bc.cards.discardPile[a.getSelectIdx()].getType() == CardType::ATTACK;
+            return bc.cards.drawPile[a.getSelectIdx()].getType() == CardType::ATTACK;
         }
 
         case CardSelectTask::SEEK:
@@ -408,6 +419,8 @@ void executeMultiCardSelectActionHelper(BattleContext &bc, search::Action a) {
 void search::Action::execute(BattleContext &bc) const {
 #ifdef sts_asserts
     if (!isValidAction(bc)) {
+        std::cerr << bc.seed << " " << static_cast<int>(getActionType()) << " " << getSourceIdx() << " " << getTargetIdx() << std::endl;
+        std::cerr <<  cardSelectTaskStrings[static_cast<int>(bc.cardSelectInfo.cardSelectTask)] << std::endl;
         assert(false);
     }
 #endif
@@ -420,7 +433,7 @@ void search::Action::execute(BattleContext &bc) const {
         }
 
         case ActionType::POTION: {
-            if (getTargetIdx() == -1) {
+            if (getTargetIdx() > 5) {
                 bc.discardPotion(getSourceIdx());
             } else {
                 bc.drinkPotion(getSourceIdx(), getTargetIdx());

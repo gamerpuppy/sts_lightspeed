@@ -33,11 +33,12 @@ namespace sts::search {
         Node root;
 
         EvalFnc evalFnc;
-        double explorationParameter = sqrt(2);
+        double explorationParameter = 3*sqrt(2);
 
         double bestActionValue = 1.0;
         std::vector<Action> bestActionSequence;
         std::default_random_engine randGen;
+
 
         explicit BattleScumSearcher2(const BattleContext &bc, EvalFnc evalFnc=&evaluateEndState);
 

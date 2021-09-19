@@ -8,6 +8,9 @@
 
 using namespace sts;
 
+std::int64_t simulationIdx = 0; // for debugging
+
+
 search::BattleScumSearcher2::BattleScumSearcher2(const BattleContext &bc,
                                                       search::EvalFnc _evalFnc)  : rootState(new BattleContext(bc)), evalFnc(std::move(_evalFnc)),
                                                                                    randGen(bc.seed+bc.loopCount+bc.player.curHp+bc.aiRng.counter) {
@@ -42,6 +45,7 @@ void search::BattleScumSearcher2::step() {
         const bool isLeaf = curNode.edges.empty();
         if (isLeaf) {
 
+            ++simulationIdx;
             enumerateActionsForNode(curNode, curState);
             const auto selectIdx = selectFirstActionForLeafNode(curNode);
             auto &edgeTaken = curNode.edges[selectIdx];
@@ -128,16 +132,23 @@ int search::BattleScumSearcher2::selectFirstActionForLeafNode(const search::Batt
 double search::BattleScumSearcher2::randomPlayout(BattleContext &state, std::vector<Action> &actionStack) {
     Node tempNode; // temp
     while (!isTerminalState(state)) {
+        ++simulationIdx;
         enumerateActionsForNode(tempNode, state);
+        if (tempNode.edges.empty()) {
+            std::cerr << state.seed << " " << simulationIdx << std::endl;
+            std::cerr << state.monsters.arr[0].getName() << " " << state.floorNum << " " << monsterEncounterStrings[static_cast<int>(state.encounter)] << std::endl;
+            assert(false);
+        }
+
         auto dist = std::uniform_int_distribution<int>(0, static_cast<int>(tempNode.edges.size())-1);
         const int selectedIdx = dist(randGen);
 
         const auto action = tempNode.edges[selectedIdx].action;
 //        action.printDesc(std::cout, state) << std::endl;
-        tempNode.edges.clear();
-
-        actionStack.emplace_back(action);
+        actionStack.push_back(action);
         action.execute(state);
+
+        tempNode.edges.clear();
     }
     return evaluateEndState(state);
 }
@@ -157,6 +168,7 @@ void search::BattleScumSearcher2::enumerateActionsForNode(search::BattleScumSear
 
         default:
 #ifdef sts_asserts
+            std::cerr << "enumerateActionsForNode: invalid input state: " << static_cast<int>(bc.inputState) << std::endl;
             assert(false);
 #endif
             break;
@@ -199,11 +211,11 @@ void search::BattleScumSearcher2::enumerateCardActions(search::BattleScumSearche
 
 void search::BattleScumSearcher2::enumeratePotionActions(search::BattleScumSearcher2::Node &node,
                                                               const BattleContext &bc) {
-    // not enumerating the discard of a potion if it can be used
+
     const auto hasValidTarget = bc.monsters.getTargetableCount() > 0;
 
     int foundPotions = 0;
-    for (int pIdx = 0; foundPotions < bc.potionCount && pIdx < bc.potionCapacity; ++pIdx) {
+    for (int pIdx = 0; pIdx < bc.potionCapacity; ++pIdx) {
 
         const auto p = bc.potions[pIdx];
         if (p == Potion::EMPTY_POTION_SLOT) {
@@ -211,7 +223,8 @@ void search::BattleScumSearcher2::enumeratePotionActions(search::BattleScumSearc
         }
         ++foundPotions;
 
-        if (p == Potion::FAIRY_POTION) { // todo you
+        // not enumerating the discard of a potion if it can be used
+        if (p == Potion::FAIRY_POTION) {
             node.edges.push_back({Action(ActionType::POTION, pIdx, -1)});
             continue;
         }

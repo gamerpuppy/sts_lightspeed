@@ -7,6 +7,7 @@
 
 #include <utility>
 #include <functional>
+#include <cstdint>
 
 #include "constants/PlayerStatusEffects.h"
 #include "constants/MonsterStatusEffects.h"

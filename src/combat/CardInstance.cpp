@@ -101,9 +101,9 @@ bool CardInstance::usesSpecialData() const {
 
 void CardInstance::upgradeBaseCost(int newBaseCost) {
     int diff = costForTurn - cost;
-    cost = newBaseCost;
+    cost = static_cast<int8_t>(newBaseCost);
     if (costForTurn > 0) {
-        costForTurn = std::max(0, cost + diff);
+        costForTurn = static_cast<int8_t>(std::max(0, cost + diff));
     }
 }
 
@@ -112,27 +112,27 @@ void CardInstance::updateCost(int amount) {
     int diff = cost - costForTurn;
 
     if (tmpCost != cost) {
-        cost = tmpCost;
-        costForTurn = std::max(0, cost-diff);
+        cost = static_cast<int8_t>(tmpCost);
+        costForTurn = static_cast<int8_t>(std::max(0, static_cast<int>(cost)-diff));
     }
 }
 
 void CardInstance::setCostForCombat(int newCost) {
     // todo should this set costForTurn to newCost? this isn't used exactly like this in game
-    cost = newCost;
+    cost = static_cast<int8_t>(newCost);
 }
 
 void CardInstance::setCostForTurn(int newCost) {
 //#ifdef sts_asserts
 //    assert(newCost >= 0);
 //#endif
-    if (costForTurn > 0) {
-        costForTurn = std::max(0,newCost);
+    if (costForTurn >= 0) {
+        costForTurn = static_cast<int8_t>(std::max(0,newCost));
     }
 }
 
 void CardInstance::setUniqueId(int _uniqueId) {
-    this->uniqueId = _uniqueId;
+    this->uniqueId = static_cast<int16_t>(_uniqueId);
 }
 
 void CardInstance::upgrade() {

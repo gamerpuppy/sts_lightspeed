@@ -4,6 +4,7 @@
 
 
 #include "sim/BattleScumSearcher.h"
+#include "sim/search/BattleScumSearcher2.h"
 
 #include "game/Game.h"
 #include "game/GameContext.h"
@@ -107,10 +108,6 @@ StateValue BattleScumSearcher::evaluateState(const BattleContext &bc) {
         }
     }
 
-//    if (bc.monsters.arr[0].id == MonsterId::GREMLIN_NOB) {
-//        return {(double)(-combinedHp) + (bc.player.curHp)};
-//    }
-
     double normalizedCurHp = (double)bc.player.curHp/bc.player.maxHp;
     double weightedHp = 0.5 * normalizedCurHp + 0.5;
     double hpScore = weightedHp * weightedHp;
@@ -156,31 +153,58 @@ void ScumSearcherAgent::playout(GameContext &gc) {
 }
 
 void ScumSearcherAgent::playoutBattle(BattleContext &bc) {
-    BattleScumSearcher searcher(searchDepth, minTurnLookahead);
 
     while (bc.outcome == Outcome::UNDECIDED) {
         ++choiceCount;
 
-        searcher.search(bc);
+        search::BattleScumSearcher2 searcher(bc);
+        searcher.search(searchDepth);
 
-        const auto &bestInfo = searcher.bestInfos.at(0);
+        sts::search::Action bestAction;
+        if (searcher.bestActionSequence.empty()) {
+            std::int64_t maxSimulations = -1;
+            for (const auto &edge : searcher.root.edges) {
+                if (edge.node.simulationCount > maxSimulations) {
+                    maxSimulations = edge.node.simulationCount;
+                    bestAction = edge.action;
+                }
+            }
 
-        if (print) {
-            std::cout << choiceCount
-                      << " choice: " << bestInfo.optionIdx
-                      << " turn: " << bc.turn
-                      << " energy: " << bc.player.energy
-                      << " cardsPlayedThisTurn: " << bc.player.cardsPlayedThisTurn
-                      << " state: " << (bc.inputState == InputState::PLAYER_NORMAL ? "normal" : " probably card select")
-                      << std::endl;
+            if (print) {
+                std::cout << choiceCount << " ";
+                bestAction.printDesc(std::cout, bc) << " ";
+                if (choiceCount == 151) {
+                    std::cout << bestAction.getSourceIdx() << " " << bestAction.getTargetIdx()
+                    << " " << static_cast<int>(bc.inputState)
+                    << " " << static_cast<int>(bc.cardSelectInfo.cardSelectTask) << std::endl;
+                }
+                std::cout
+                          << " turn: " << bc.turn
+                          << " energy: " << bc.player.energy
+                          << " cardsPlayedThisTurn: " << bc.player.cardsPlayedThisTurn
+                          << " state: " << (bc.inputState == InputState::PLAYER_NORMAL ? "normal" : " probably card select")
+                          << std::endl;
 
-            std::cout << bc << '\n';
+                std::cout << bc << std::endl;
+            }
+
+            bestAction.execute(bc);
+
+        } else {
+//            searcher.bestActionSequence.front().execute(bc);
+//
+            for (auto x : searcher.bestActionSequence) {
+                x.execute(bc);
+            }
         }
 
 
-        bestInfo.handler.chooseOption(bc, bestInfo.optionIdx);
+
+//        bestAction.execute(bc);
+//        nodesEvaluated += searchDepth;
+//        bestAction.handler.chooseOption(bc, bestAction.optionIdx);
     }
-    nodesEvaluated += searcher.nodesEvaluated;
+
 }
 
 void ScumSearcherAgent::chooseRandom(GameContext &gc) {
@@ -199,6 +223,7 @@ void ScumSearcherAgent::pickGoodEventOutcome(GameContext &gc) {
             switch (gc.curEvent) {
 
                 case Event::NEOW:
+//                    gc.chooseEventOption(3);
                     if (gc.info.neowRewards[1].d == Neow::Drawback::CURSE || gc.info.neowRewards[2].d == Neow::Drawback::CURSE) {
                         gc.chooseEventOption(0);
                     } else {

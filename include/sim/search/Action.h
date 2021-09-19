@@ -25,11 +25,10 @@ namespace sts::search {
 
     // couldn't make a union work in only 32 bits
     class Action {
-        ActionType actionType;
-        int idx1;
-        int idx2;
-
-//        std::uint32_t bits = -1;
+//        ActionType actionType;
+//        int idx1;
+//        int idx2;
+        std::uint32_t bits = -1;
 
     public:
         Action() = default;

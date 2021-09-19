@@ -381,14 +381,15 @@ void playRandom4(PlayRandomInfo *info) {
         //        std::cout << seed << std::endl;
         ScumSearcherAgent agent(std::default_random_engine(seed), g_searchDepth);
         agent.print = false;
-        agent.minTurnLookahead = g_minTurnLookahead;
+//        agent.minTurnLookahead = g_minTurnLookahead;
 
         GameContext gc(seed, CharacterClass::IRONCLAD, g_searchAscension);
-        gc.deck.obtain(gc, {CardId::IMMOLATE, true});
-        gc.deck.obtain(gc, {CardId::IMPERVIOUS, true});
-        gc.obtainRelic(sts::RelicId::BRIMSTONE);
-        gc.playerIncreaseMaxHp(100);
-//        std::cout << "starting " << seed << std::endl;
+//        gc.deck.obtain(gc, {CardId::IMMOLATE, true});
+//        gc.deck.obtain(gc, {CardId::IMPERVIOUS, true});
+//        gc.obtainRelic(sts::RelicId::BRIMSTONE);
+//        gc.obtainRelic(RelicId::ODDLY_SMOOTH_STONE);
+//        gc.playerIncreaseMaxHp(100);
+        std::cout << "starting " << seed << std::endl;
         agent.playout(gc);
 
         info->floorSum += gc.floorNum;
@@ -401,16 +402,9 @@ void playRandom4(PlayRandomInfo *info) {
         } else {
             ++info->lossCount;
         }
-//        std::cout << "finished " << seed << std::endl;
+        std::cout << "finished seed " << gc.seed << " at floor: " << gc.floorNum << std::endl;
     }
-//        ScumSearcherAgent agent( (std::default_random_engine(seed)) );
-//        agent.print = true;
-//
-//        GameContext gc(seed, CharacterClass::IRONCLAD, 0);
-//        agent.playout(gc);
-//
-//        std::cout << "finished at floor: " << gc.floorNum << std::endl;
-//}
+
 }
 
 void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {

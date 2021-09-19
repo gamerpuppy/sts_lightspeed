@@ -170,30 +170,37 @@ void RandomStateHandler::setupRestOptions(const GameContext &gc) {
     optionFunctions.clear();
 
     if (!gc.relics.has(RelicId::COFFEE_DRIPPER)) {
+        std::cout << "rest" << std::endl;
         optionFunctions.push_back(restOperator(0));
     }
 
     if (!gc.relics.has(RelicId::FUSION_HAMMER) && gc.deck.getUpgradeableCount() > 0) {
+        std::cout << "upgrade" << std::endl;
         optionFunctions.push_back(restOperator(1));
     }
 
     if (!gc.hasKey(Key::RUBY_KEY)) {
+        std::cout << "ruby" << std::endl;
         optionFunctions.push_back(restOperator(2));
     }
 
     if (gc.relics.has(RelicId::GIRYA) && gc.relics.getRelicValue(RelicId::GIRYA) != 3) {
+        std::cout << "girya" << std::endl;
         optionFunctions.push_back(restOperator(3));
     }
 
     if (gc.relics.has(RelicId::PEACE_PIPE)) { // assume we have card to remove
+        std::cout << "peace pipe" << std::endl;
         optionFunctions.push_back(restOperator(4));
     }
 
     if (gc.relics.has(RelicId::SHOVEL)) { // assume we have card to remove
+        std::cout << "shovel" << std::endl;
         optionFunctions.push_back(restOperator(5));
     }
 
     if (optionFunctions.empty()) {
+        std::cout << "empty" << std::endl;
         optionFunctions.push_back(restOperator(6));
     }
 }
