@@ -12,7 +12,6 @@
 
 using namespace sts;
 
-
 void Deck::initFromSaveFile(const SaveFile &s) {
     // the first card with a matching id will be bottled
     CardId bottledCardIds[] {s.bottledCards[0], s.bottledCards[1], s.bottledCards[2], CardId::INVALID};
@@ -26,7 +25,6 @@ void Deck::initFromSaveFile(const SaveFile &s) {
         }
     }
 }
-
 
 int Deck::size() const {
     return cards.size();
@@ -100,7 +98,8 @@ fixed_list<int, Deck::MAX_SIZE> Deck::getIdxsMatching(const CardPredicate &p) co
 
 void Deck::upgradeStrikesAndDefends() {
     for (auto &c : cards) {
-        if (c.isStarterStrikeOrDefend()) {
+        if (c.isStarterStrikeOrDefend() && c.canUpgrade()) {
+            --upgradeableCount;
             c.upgrade();
         }
     }
@@ -111,7 +110,8 @@ void Deck::upgradeRandomCards(Random &miscRng, int count) {
     java::Collections::shuffle(list.begin(), list.end(), java::Random(miscRng.randomLong()));
     const int end = std::min(list.size(), count);
     for (int i = 0; i < end; ++i) {
-            cards[list[i]].upgrade();
+        --upgradeableCount;
+        cards[list[i]].upgrade();
     }
 }
 

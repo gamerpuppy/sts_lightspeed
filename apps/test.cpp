@@ -389,7 +389,7 @@ void playRandom4(PlayRandomInfo *info) {
 //        gc.obtainRelic(sts::RelicId::BRIMSTONE);
 //        gc.obtainRelic(RelicId::ODDLY_SMOOTH_STONE);
 //        gc.playerIncreaseMaxHp(100);
-        std::cout << "starting " << seed << std::endl;
+//        std::cout << "starting " << seed << std::endl;
         agent.playout(gc);
 
         info->floorSum += gc.floorNum;
@@ -402,7 +402,7 @@ void playRandom4(PlayRandomInfo *info) {
         } else {
             ++info->lossCount;
         }
-        std::cout << "finished seed " << gc.seed << " at floor: " << gc.floorNum << std::endl;
+//        std::cout << "finished seed " << gc.seed << " at floor: " << gc.floorNum << std::endl;
     }
 
 }

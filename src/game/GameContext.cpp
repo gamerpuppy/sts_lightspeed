@@ -1249,9 +1249,8 @@ void upgradeRandomCardsMatching(GameContext &gc, CardType type) {
 
 // relics with screens will call regainControl() after obtaining a relic with a screen
 bool GameContext::obtainRelic(RelicId r) {
-
-    std::cout << "obtained relic: " << relicNames[static_cast<int>(r)] << std::endl;
-    std::cout << *this << std::endl;
+//    std::cout << "obtained relic: " << relicNames[static_cast<int>(r)] << std::endl;
+//    std::cout << *this << std::endl;
 
     if (relics.has(r)) {
         return false;
@@ -1260,7 +1259,6 @@ bool GameContext::obtainRelic(RelicId r) {
 #ifdef sts_asserts
     assert(!relics.has(r));
 #endif
-
 
     relics.setHasRelic(r, true);
 
@@ -3008,15 +3006,11 @@ void GameContext::chooseEventOption(int idx) {
                 }
 
                 case 1:
-                    std::cout << "upgradecount before: " << deck.getUpgradeableCount() << std::endl;
-                    std::cout << deck << std::endl;
                     for (int i = 0; i < deck.cards.size(); ++i) {
                         if (deck.cards[i].canUpgrade()) {
                             deck.upgrade(i);
                         }
                     }
-                    std::cout << "upgradecount after: " << deck.getUpgradeableCount() << std::endl;
-                    std::cout << deck << std::endl;
 
                     obtainRelic(RelicId::MARK_OF_THE_BLOOM);
                     regainControl();
@@ -3787,7 +3781,6 @@ void GameContext::openCardSelectScreen(CardSelectScreenType type, int selectCoun
 
             case CardSelectScreenType::UPGRADE:
                 deck.addMatchingToSelectList(info.toSelectCards, [](auto c){ return c.canUpgrade(); });
-                std::cout << info.toSelectCards.size() << " cards added for upgrade" << std::endl;
                 break;
 
             case CardSelectScreenType::TRANSFORM_UPGRADE:
