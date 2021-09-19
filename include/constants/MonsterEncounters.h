@@ -156,7 +156,6 @@ namespace sts {
     typedef MonsterEncounter ME;
 
     namespace MonsterEncounterPool {
-
         static constexpr MonsterEncounter weakEnemies[3][5] = {
                 { ME::CULTIST, ME::JAW_WORM, ME::TWO_LOUSE, ME::SMALL_SLIMES },
                 { ME::SPHERIC_GUARDIAN, ME::CHOSEN, ME::SHELL_PARASITE, ME::THREE_BYRDS, ME::TWO_THIEVES },
@@ -181,6 +180,11 @@ namespace sts {
         };
         static constexpr int strongCount[3] {10, 8, 8};
 
+        static const MonsterEncounter elites[3][3] = {
+                { ME::GREMLIN_NOB, ME::LAGAVULIN, ME::THREE_SENTRIES },
+                { ME::GREMLIN_LEADER, ME::SLAVERS, ME::BOOK_OF_STABBING },
+                { ME::GIANT_HEAD, ME::NEMESIS, ME::REPTOMANCER },
+        };
     }
 
 

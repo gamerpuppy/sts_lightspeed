@@ -554,17 +554,11 @@ int rollElite(Random &monsterRng) {
 }
 
 void GameContext::generateElites() {
-    static const MonsterEncounter elites[3][3] = {
-            { ME::GREMLIN_NOB, ME::LAGAVULIN, ME::THREE_SENTRIES },
-            { ME::GREMLIN_LEADER, ME::SLAVERS, ME::BOOK_OF_STABBING },
-            { ME::GIANT_HEAD, ME::NEMESIS, ME::REPTOMANCER },
-    };
-
     for(int i = 0; i < 10; ++i) {
         if (eliteMonsterList.empty()) {
-            eliteMonsterList.push_back(elites[act-1][rollElite(monsterRng)]);
+            eliteMonsterList.push_back(MonsterEncounterPool::elites[act-1][rollElite(monsterRng)]);
         } else {
-            auto toAdd = elites[act-1][rollElite(monsterRng)];
+            auto toAdd = MonsterEncounterPool::elites[act-1][rollElite(monsterRng)];
             if (toAdd != eliteMonsterList.back()) {
                 eliteMonsterList.push_back(toAdd);
             } else {
@@ -573,7 +567,6 @@ void GameContext::generateElites() {
         }
     }
 }
-
 
 void GameContext::generateBoss() {
     static const MonsterEncounter bosses[3][3] = {
