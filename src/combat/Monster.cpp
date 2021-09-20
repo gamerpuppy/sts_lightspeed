@@ -211,6 +211,7 @@ int Monster::getStatusInternal(MonsterStatus s) const {
             return uniquePower0;
 
         case MS::INVINCIBLE:
+        case MS::REACTIVE:
         case MS::SHARP_HIDE:
             return uniquePower1;
 
@@ -220,7 +221,6 @@ int Monster::getStatusInternal(MonsterStatus s) const {
         case MS::MINION:
         case MS::MINION_LEADER:
         case MS::PAINFUL_STABS:
-        case MS::REACTIVE:
         case MS::REGROW:
         case MS::SHIFTING:
         case MS::STASIS:
@@ -373,7 +373,13 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
             setStatus<MS::MALLEABLE>(malleable+1);
         }
         if (hasStatus<MS::REACTIVE>()) {
-            bc.addToBot( Actions::RollMove(idx) );
+            if (getStatus<MS::REACTIVE>() == 0) {
+                setStatus<MS::REACTIVE>(1);
+                bc.addToBot( Actions::ReactiveRollMove() );
+
+            } else {
+                setStatus<MS::REACTIVE>(getStatus<MS::REACTIVE>()+1);
+            }
         }
 
     } else if (hasStatus<MS::THORNS>()) {

@@ -49,7 +49,7 @@ namespace sts::search {
 
         // private helpers
         void updateSearchStack(const std::vector<Node*> &stack, const std::vector<Action> &actionStack, double evaluation);
-        bool isTerminalState(const BattleContext &bc) const;
+        [[nodiscard]] bool isTerminalState(const BattleContext &bc) const;
 
         double evaluateEdge(const Node &parent, int edgeIdx);
         int selectBestEdgeToSearch(const Node &cur);

@@ -385,20 +385,26 @@ double getNonMinionMonsterCurHpRatio(const BattleContext &bc) {
     return (double)curHpTotal / maxHpTotal;
 }
 
-
 double search::BattleScumSearcher2::evaluateEndState(const BattleContext &bc) {
-//    int potionScore = bc.potionCount * 4;
-//
-//    if (bc.outcome == Outcome::PLAYER_VICTORY) {
-//        return 100 * (35 + bc.player.curHp + potionScore - (bc.turn * 0.01));
-//
-//    } else {
-//        return (1-getNonMinionMonsterCurHpRatio(bc)*2) + potionScore + (bc.turn * .2);
-//    }
-    const double winBonus = bc.outcome == Outcome::PLAYER_VICTORY ? 35 : 0;
-    const double turnBonus = bc.outcome == Outcome::PLAYER_VICTORY ? -(bc.turn * 0.001) : (bc.turn * 0.01);
+    double potionScore = bc.potionCount * 4;
 
-    return winBonus + bc.player.curHp + (bc.potionCount * 4) + turnBonus;
+    if (bc.outcome == Outcome::PLAYER_VICTORY) {
+        return 100 * (35 + bc.player.curHp + potionScore - (bc.turn * 0.01));
+
+    } else {
+//        double statusScore =
+//                (bc.player.getStatus<PS::STRENGTH>() * .5) +
+//                (bc.player.getStatus<PS::DEXTERITY>() * .6) +
+//                (bc.player.getStatus<PS::FEEL_NO_PAIN>() * .2) +
+//                (bc.player.hasStatus<PS::CORRUPTION>() * 2) +
+//                (bc.player.hasStatus<PS::BARRICADE>() * 1);
+
+        return (1-getNonMinionMonsterCurHpRatio(bc))*10 + potionScore/2 + (bc.turn * .2);
+    }
+//    const double winBonus = bc.outcome == Outcome::PLAYER_VICTORY ? 35 : 0;
+//    const double turnBonus = bc.outcome == Outcome::PLAYER_VICTORY ? -(bc.turn * 0.001) : (bc.turn * 0.01);
+//
+//    return winBonus + bc.player.curHp + (bc.potionCount * 4) + turnBonus;
 }
 
 

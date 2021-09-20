@@ -245,7 +245,73 @@ void search::ScumSearchAgent2::stepRewardsPolicy(GameContext &gc) {
         return;
     }
 
-    stepRandom(gc);
+//    stepRandom(gc);
+    weightedCardRewardPolicy(gc);
+}
+
+double getAvgDeckWeight(const GameContext &gc) {
+    int sum = 0;
+    for (const auto &c : gc.deck.cards) {
+        sum += search::Expert::getObtainWeight(c.getId(), c.isUpgraded());
+    }
+    return (double) sum / gc.deck.size();
+}
+
+void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
+    auto &r = gc.info.rewardsContainer;
+    for (int rIdx = r.cardRewardCount-1; rIdx >= 0; --rIdx) {
+
+        const auto deckWeight = getAvgDeckWeight(gc);
+        if (settings.printLogs) {
+            std::cout << "evaluating card reward " << rIdx << " avgDeckWeight: " << deckWeight << std::endl;
+        }
+        fixed_list<std::pair<int,double>,4> weights;
+        double weightSum = 0;
+        for (int cIdx = 0; cIdx < r.cardRewards[rIdx].size(); ++cIdx) {
+            constexpr double act1AttackMultiplier = 1.4;
+
+            const auto &c = r.cardRewards[rIdx][cIdx];
+            double weight = search::Expert::getObtainWeight(c.getId(), c.isUpgraded());
+            if (gc.act == 1 && c.getType() == CardType::ATTACK) {
+                weight *= act1AttackMultiplier;
+            }
+
+            weights.push_back({cIdx, weight});
+            weightSum += weight;
+
+            if (settings.printLogs) {
+                std::cout << "card:" << r.cardRewards[rIdx][cIdx] << " eval: " << weight << std::endl;
+            }
+        }
+
+        // choose a weighted card
+        int selection = 0;
+        {
+            std::uniform_real_distribution<double> distr(0,weightSum);
+            double roll = distr(settings.rng);
+            double acc = 0;
+            for (int i = 0; i < weights.size(); ++i) {
+                acc += weights[i].second;
+                if (roll <= acc) {
+                    selection = weights[i].first;
+                }
+            }
+        }
+
+        bool skipCard = true;
+        {
+            std::uniform_real_distribution<double> distr(0,weights[selection].second+deckWeight);
+            double roll = distr(settings.rng);
+            if (roll < weights[selection].second) {
+                skipCard = false;
+            }
+        }
+
+        if (!skipCard) {
+            gc.deck.obtain(gc, r.cardRewards[rIdx][weights[selection].first]);
+        }
+        gc.info.rewardsContainer.removeCardReward(rIdx);
+    }
 }
 
 void search::ScumSearchAgent2::stepEventPolicy(GameContext &gc) {

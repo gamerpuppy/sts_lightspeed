@@ -42,8 +42,9 @@ namespace sts {
         THORNS,
         TIME_WARP,
 
-        // special case for the heart's second unique power
+        // unique powers 2
         INVINCIBLE,
+        REACTIVE,
         SHARP_HIDE,
 
         // bool powers, stored in statusbits
@@ -52,7 +53,6 @@ namespace sts {
         MINION,
         MINION_LEADER,
         PAINFUL_STABS,
-        REACTIVE,
         REGROW,
         SHIFTING,
         STASIS,
@@ -98,6 +98,7 @@ namespace sts {
         "Time Warp",
 
         "Invincible",
+        "Reactive",
         "Sharp Hide",
 
         "Asleep",
@@ -105,7 +106,7 @@ namespace sts {
         "Minion",
         "Minion Leader",
         "Painful Stabs",
-        "Reactive",
+
         "Regrow",
         "Shifting",
         "Stasis",
@@ -169,7 +170,6 @@ namespace sts {
             case MS::MINION:
             case MS::MINION_LEADER:
             case MS::PAINFUL_STABS:
-            case MS::REACTIVE:
             case MS::REGROW:
             case MS::SHIFTING:
             case MS::STASIS:

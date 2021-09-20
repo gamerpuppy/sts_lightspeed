@@ -208,7 +208,8 @@ void Monster::preBattleAction(BattleContext &bc) {
         }
 
         case MonsterId::WRITHING_MASS: {
-            buff<MS::REACTIVE>();
+            setHasStatus<MS::REACTIVE>(true);
+            setStatus<MS::REACTIVE>(0);
             buff<MS::MALLEABLE>(3);
             break;
         }
@@ -1505,12 +1506,18 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
         // ************ WRITHING MASS ************
 
         case MMID::WRITHING_MASS_FLAIL: // 2
+#ifdef sts_asserts
+            assert(getStatus<MS::REACTIVE>() == 0);
+#endif
             attackPlayerHelper(bc, asc2 ? 16 : 15);
             bc.addToBot( Actions::MonsterGainBlock(idx, asc2 ? 18 : 16) );
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::WRITHING_MASS_IMPLANT: // 4
+#ifdef sts_asserts
+            assert(getStatus<MS::REACTIVE>() == 0);
+#endif
             miscInfo = true;
             if (!bc.player.hasRelic<R::OMAMORI>()) {
                 if (bc.player.hasRelic<R::DARKSTONE_PERIAPT>()) {
@@ -1521,16 +1528,25 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             break;
 
         case MMID::WRITHING_MASS_MULTI_STRIKE: // 1
+#ifdef sts_asserts
+            assert(getStatus<MS::REACTIVE>() == 0);
+#endif
             attackPlayerHelper(bc, asc2 ? 9 : 7, 3);
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::WRITHING_MASS_STRONG_STRIKE: // 0
+#ifdef sts_asserts
+            assert(getStatus<MS::REACTIVE>() == 0);
+#endif
             attackPlayerHelper(bc, asc2 ? 38 : 32);
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::WRITHING_MASS_WITHER: // 3
+#ifdef sts_asserts
+            assert(getStatus<MS::REACTIVE>() == 0);
+#endif
             attackPlayerHelper(bc, asc2 ? 12 : 10);
             bc.addToBot( Actions::DebuffPlayer<PS::WEAK>(2, true) );
             bc.addToBot( Actions::DebuffPlayer<PS::VULNERABLE>(2, true) );

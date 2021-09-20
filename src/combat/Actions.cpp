@@ -128,9 +128,20 @@ Action Actions::MonsterGainBlock(int idx, int amount) {
 
 Action Actions::RollMove(int monsterIdx) {
     return {[=] (BattleContext &bc) {
-        // todo this shouldn't be here find a better place
         Monster &m = bc.monsters.arr[monsterIdx];
-        bc.monsters.arr[monsterIdx].rollMove(bc);
+        m.rollMove(bc);
+    }};
+}
+
+Action Actions::ReactiveRollMove() {
+    return {[=] (BattleContext &bc) {
+        // writhing mass is always monster 0
+        Monster &m = bc.monsters.arr[0];
+
+        for (int i = 0 ; i < m.getStatus<MS::REACTIVE>(); ++i) {
+            m.rollMove(bc);
+        }
+        m.setStatus<MS::REACTIVE>(0);
     }};
 }
 

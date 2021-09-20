@@ -269,6 +269,7 @@ namespace sts {
                 return;
 
             case MonsterStatus::INVINCIBLE:
+            case MonsterStatus::REACTIVE:
             case MonsterStatus::SHARP_HIDE:
                 uniquePower1 = amount;
                 return;
@@ -475,6 +476,7 @@ namespace sts {
                 return uniquePower0;
 
             case MonsterStatus::INVINCIBLE:
+            case MonsterStatus::REACTIVE:
             case MonsterStatus::SHARP_HIDE:
                 return uniquePower1;
 
@@ -556,6 +558,7 @@ namespace sts {
                 return;
 
             case MonsterStatus::INVINCIBLE:
+            case MonsterStatus::REACTIVE:
             case MonsterStatus::SHARP_HIDE:
                 setHasStatus<s>(true);
                 uniquePower1 += amount;

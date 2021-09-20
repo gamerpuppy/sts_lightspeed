@@ -382,7 +382,7 @@ void playRandom4(PlayRandomInfo *info) {
         search::ScumSearchAgent2::Settings settings;
         settings.simulationCountBase = g_simulationCount;
         settings.rng = std::default_random_engine(gc.seed);
-//        settings.printLogs = true;
+        settings.printLogs = false;
 
         search::ScumSearchAgent2 agent(settings);
         agent.playout(gc);

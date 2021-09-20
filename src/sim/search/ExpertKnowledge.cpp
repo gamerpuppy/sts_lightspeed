@@ -47,7 +47,6 @@ int sts::search::Expert::getPlayOrdering(CardId id) {
         case CardId::MASTER_OF_STRATEGY:
             return 4;
 
-
         case CardId::SADISTIC_NATURE:
         case CardId::PANACEA:
         case CardId::OFFERING:
@@ -243,3 +242,183 @@ int search::Expert::getBossRelicOrdering(RelicId id) {
             return 100;
     }
 }
+
+int search::Expert::getObtainWeight(CardId id) {
+    switch (id) {
+        case CardId::APOTHEOSIS:
+        case CardId::APPARITION:
+        case CardId::CORRUPTION:
+            return 100;
+
+        case CardId::IMPERVIOUS:
+        case CardId::DEMON_FORM:
+            return 95;
+
+        case CardId::BARRICADE:
+            return 90;
+
+        case CardId::DARK_EMBRACE:
+        case CardId::FEEL_NO_PAIN:
+            return 89;
+
+        case CardId::RITUAL_DAGGER:
+        case CardId::MASTER_OF_STRATEGY:
+            return 70;
+
+        case CardId::BRUTALITY:
+        case CardId::FIEND_FIRE:
+        case CardId::SECRET_TECHNIQUE:
+        case CardId::BLUDGEON:
+        case CardId::IMMOLATE:
+        case CardId::OFFERING:
+            return 65;
+
+        case CardId::REAPER:
+        case CardId::LIMIT_BREAK:
+            return 40;
+
+        case CardId::BERSERK:
+            return 35;
+
+        case CardId::MAYHEM:
+        case CardId::PANACEA:
+        case CardId::SECRET_WEAPON:
+        case CardId::INFLAME:
+        case CardId::UPPERCUT:
+        case CardId::CARNAGE:
+        case CardId::DRAMATIC_ENTRANCE:
+        case CardId::FEED:
+        case CardId::SPOT_WEAKNESS:
+            return 30;
+
+        case CardId::FLASH_OF_STEEL:
+            return 25;
+
+        case CardId::BLOOD_FOR_BLOOD:
+        case CardId::RUPTURE:
+        case CardId::SEVER_SOUL:
+        case CardId::WHIRLWIND:
+        case CardId::ARMAMENTS:
+        case CardId::DARK_SHACKLES:
+        case CardId::FINESSE:
+        case CardId::BATTLE_TRANCE:
+        case CardId::DISARM:
+        case CardId::INTIMIDATE:
+        case CardId::BLIND:
+        case CardId::TRIP:
+        case CardId::SHOCKWAVE:
+        case CardId::PERFECTED_STRIKE:
+        case CardId::FIRE_BREATHING:
+        case CardId::EVOLVE:
+            return 20;
+
+        case CardId::JAX:
+        case CardId::POWER_THROUGH:
+        case CardId::SECOND_WIND:
+            return 18;
+
+        case CardId::JUGGERNAUT:
+        case CardId::MADNESS:
+        case CardId::RAGE:
+        case CardId::TRANSMUTATION:
+        case CardId::HAND_OF_GREED:
+        case CardId::METALLICIZE:
+        case CardId::COMBUST:
+        case CardId::SHRUG_IT_OFF:
+            return 15;
+
+        case CardId::FLAME_BARRIER:
+        case CardId::ENTRENCH:
+        case CardId::ENLIGHTENMENT:
+            return 12;
+
+        case CardId::HEMOKINESIS:
+            return 10;
+
+        case CardId::PANACHE:
+        case CardId::EXHUME:
+        case CardId::SEEING_RED:
+        case CardId::SADISTIC_NATURE:
+        case CardId::PANIC_BUTTON:
+        case CardId::BURNING_PACT:
+        case CardId::DOUBLE_TAP:
+        case CardId::DUAL_WIELD:
+        case CardId::CHRYSALIS:
+        case CardId::DISCOVERY:
+        case CardId::INFERNAL_BLADE:
+        case CardId::FLEX:
+        case CardId::METAMORPHOSIS:
+        case CardId::HAVOC:
+        case CardId::SENTINEL:
+            return 8;
+
+        case CardId::ANGER:
+        case CardId::THINKING_AHEAD:
+        case CardId::BLOODLETTING:
+        case CardId::MAGNETISM:
+        case CardId::JACK_OF_ALL_TRADES:
+        case CardId::DEEP_BREATH:
+        case CardId::IMPATIENCE:
+        case CardId::TRUE_GRIT:
+        case CardId::THE_BOMB:
+        case CardId::WARCRY:
+        case CardId::GHOSTLY_ARMOR:
+        case CardId::WILD_STRIKE:
+        case CardId::POMMEL_STRIKE:
+            return 6;
+
+        case CardId::THUNDERCLAP:
+        case CardId::GOOD_INSTINCTS:
+        case CardId::VIOLENCE:
+        case CardId::SWIFT_STRIKE:
+        case CardId::FORETHOUGHT:
+        case CardId::HEADBUTT:
+            return 5;
+
+        case CardId::CLASH:
+        case CardId::CLOTHESLINE:
+        case CardId::PUMMEL:
+        case CardId::BODY_SLAM:
+            return 4;
+
+        case CardId::RAMPAGE:
+        case CardId::HEAVY_BLADE:
+        case CardId::SWORD_BOOMERANG:
+            return 3;
+
+        case CardId::DROPKICK:
+        case CardId::CLEAVE:
+        case CardId::RECKLESS_CHARGE:
+        case CardId::IRON_WAVE:
+            return 2;
+
+        case CardId::TWIN_STRIKE:
+        case CardId::BITE:
+        case CardId::BANDAGE_UP:
+            return 1;
+
+        case CardId::MIND_BLAST:
+        case CardId::PURITY:
+        case CardId::SEARING_BLOW:
+        case CardId::BASH:
+        case CardId::STRIKE_RED:
+        case CardId::DEFEND_RED:
+        default:
+            return 0;
+    }
+}
+
+
+int search::Expert::getObtainWeight(CardId id, bool upgraded) {
+    if (upgraded) {
+        return getObtainWeight(id) * 2;
+    } else {
+        return getObtainWeight(id);
+    }
+}
+
+
+
+
+
+

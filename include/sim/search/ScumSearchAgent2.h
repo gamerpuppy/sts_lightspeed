@@ -36,6 +36,7 @@ namespace sts::search {
         void stepEventPolicy(GameContext &gc);
         void stepRandom(GameContext &gc);
         void stepRewardsPolicy(GameContext &gc);
+        void weightedCardRewardPolicy(GameContext &gc);
     };
 
 }

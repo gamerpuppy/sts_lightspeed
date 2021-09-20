@@ -84,7 +84,9 @@ namespace sts {
     template<int capacity>
     void ActionQueue<capacity>::pushBack(Action a) {
 #ifdef sts_asserts
-        assert(size != capacity);
+        if (size >= capacity) {
+            assert(false);
+        }
 #endif
         if (back >= capacity) {
             back = 0;

@@ -66,6 +66,8 @@ namespace sts {
 
         static Action MonsterGainBlock(int idx, int amount);
         static Action RollMove(int monsterIdx);
+        static Action ReactiveRollMove(); // for writhing mass
+
         static Action NoOpRollMove();
 
         static Action ChangeStance(Stance stance);

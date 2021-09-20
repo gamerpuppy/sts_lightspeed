@@ -126,7 +126,7 @@ void ConsoleSimulator::handleInputLine(const std::string &line, std::ostream &os
         c.quitCommandGiven = true;
         return;
 
-    } else if (line.length() >= 6 && line.substr(0, 6) == "printLogs ") {
+    } else if (line.length() >= 6 && line.substr(0, 6) == "print ") {
         if (c.printLogActions) {
 //            c.tookAction = true;
             doPrintCommand(os, line.substr(6));
