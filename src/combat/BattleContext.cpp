@@ -10,11 +10,15 @@ using namespace sts;
 
 // assume all bc fields have just been initialized by in class member initializers
 void BattleContext::init(const GameContext &gc) {
+    init(gc, gc.info.encounter);
+}
+
+void BattleContext::init(const GameContext &gc, MonsterEncounter encounterToInit) {
     undefinedBehaviorEvoked = false;
     haveUsedDiscoveryAction = false;
     seed = gc.seed;
     floorNum = gc.floorNum;
-    encounter = gc.info.encounter;
+    encounter = encounterToInit;
 
     auto startRandom = Random(gc.seed+gc.floorNum);
     aiRng = startRandom;
@@ -45,7 +49,7 @@ void BattleContext::init(const GameContext &gc) {
     player.maxHp = gc.maxHp;
     player.gold = gc.gold;
 
-    monsters.init(*this, gc.info.encounter);
+    monsters.init(*this, encounterToInit);
     if (gc.map->burningEliteX == gc.curMapNodeX && gc.map->burningEliteY == gc.curMapNodeY) {
         monsters.applyEmeraldEliteBuff(*this, gc.map->burningEliteBuff, gc.act);
     }
@@ -715,13 +719,12 @@ void BattleContext::executeActions() {
 
     while (true)
     {
-        if (++loopCount > 100000 || monsters.monstersAlive < 0 || turn > 1000) {
+        if (++loopCount > 100000 || monsters.monstersAlive < 0 || turn > 500) {
             // something went wrong
-            if (turn > 1000) {
+            if (turn > 500) {
                 outcome = Outcome::PLAYER_LOSS;
                 break;
             }
-
 
             std::cerr << seed << std::endl;
             std::cout << *this << '\n';
@@ -756,16 +759,17 @@ void BattleContext::executeActions() {
 
         // can't win check
         if (cards.cardsInHand + cards.discardPile.size() + cards.drawPile.size() == 0) {
-            bool hasDamageWithoutCards = player.hasStatus<PS::OMEGA>()
-                                         || player.bomb1
-                                         || player.bomb2
-                                         || player.bomb3;
-            if (!hasDamageWithoutCards) {
+            bool hasDamageWithoutCards = player.hasStatus<PS::OMEGA>() ||
+                    player.hasStatus<PS::THORNS>() ||
+                    player.bomb1 ||
+                    player.bomb2 ||
+                    player.bomb3;
+
+            if (!hasDamageWithoutCards && monsters.arr[0].id != MonsterId::TRANSIENT) {
                 outcome = Outcome::PLAYER_LOSS;
                 break;
             }
         }
-
 
         if (outcome != Outcome::UNDECIDED) {
             break;

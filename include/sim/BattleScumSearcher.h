@@ -55,10 +55,11 @@ namespace sts {
     };
 
     struct ScumSearcherAgent {
-        bool print = false;
+        bool printLogs = false;
         int searchDepth = 3;
         int minTurnLookahead;
 
+        int bossSearchMultiplier = 3;
 
         std::default_random_engine rng;
         int choiceCount = 0;
@@ -68,9 +69,13 @@ namespace sts {
         explicit ScumSearcherAgent(const std::default_random_engine &rng, int searchDepth);
 
         void playout(GameContext &gc);
-        void playoutBattle(BattleContext &gc);
+        void playoutBattle(BattleContext &gc, bool print=false);
 
+
+        fixed_list<MonsterEncounter, 10> getEncountersToTest(const GameContext &gc);
+        double evaluateFights(const GameContext &gc, const fixed_list<MonsterEncounter, 10> &encounters);
         void chooseRandom(GameContext &gc);
+        void chooseRewardAction(GameContext &gc);
         void pickGoodEventOutcome(GameContext &gc);
 
     };

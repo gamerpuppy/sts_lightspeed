@@ -58,12 +58,29 @@ void printCardIdOrder() {
 //    }
 //}
 
+void printCardsForOrdering() {
+    for (int i = static_cast<int>(CardId::INVALID); i <= static_cast<int>(CardId::ZAP); ++i) {
+        auto id = static_cast<CardId>(i);
+        switch (getCardColor(id)) {
+            case CardColor::RED:
+            case CardColor::COLORLESS:
+            case CardColor::CURSE:
+            case CardColor::INVALID:
+                std::cout << "case CardId::" << getCardEnumName(id) << ":\n";
+                break;
+
+            case CardColor::GREEN:
+            case CardColor::BLUE:
+            case CardColor::PURPLE:
+            default:
+                break;
+        }
+    }
+}
 
 int main(int argc, const char *argv[]) {
 
-    std::cout << static_cast<int>(SimHelpers::getMonsterIdForString(argv[1])) << '\n';
-    std::cout << static_cast<int>(SimHelpers::getMonsterStatusForString(argv[2])) << '\n';
-    std::cout << static_cast<int>(SimHelpers::getMonsterMoveForString(argv[3])) << '\n';
+    printCardsForOrdering();
 
 //    printCardIdOrder();
 //    findShovelSeed();

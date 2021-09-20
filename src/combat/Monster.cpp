@@ -400,6 +400,8 @@ void Monster::attackedUnblockedHelper(BattleContext &bc, int damage) { // todo, 
 
 void Monster::attacked(BattleContext &bc, int damage) {
     if (isDeadOrEscaped()) { // these probably shouldn't happen
+        std::cerr << bc.seed << " was dead when attacked" << idx << "\n" << bc;
+        assert(false);
         return;
     }
 
@@ -456,7 +458,9 @@ void Monster::damageUnblockedHelper(BattleContext &bc, int damage) {
 }
 
 void Monster::damage(BattleContext &bc, int damage) {
-    if (isDeadOrEscaped()) {
+    if (isDeadOrEscaped()) { // these probably shouldn't happen
+        std::cerr << bc.seed << " was dead when damaged" << idx << "\n" << bc;
+        assert(false);
         return;
     }
 

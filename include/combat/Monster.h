@@ -95,8 +95,8 @@ namespace sts {
 
         [[nodiscard]] const char *getName() const;
 
-        [[nodiscard]] bool hasStatusInternal(MonsterStatus s) const; // only to be used by print methods
-        [[nodiscard]] int getStatusInternal(MonsterStatus s) const; // only to be used by print methods
+        [[nodiscard]] bool hasStatusInternal(MonsterStatus s) const; // only to be used by printLogs methods
+        [[nodiscard]] int getStatusInternal(MonsterStatus s) const; // only to be used by printLogs methods
 
 
         template <MonsterStatus> [[nodiscard]] bool hasStatus() const;

@@ -10,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include <random>
+#include <iostream>
 
 namespace sts::search {
 
@@ -60,8 +61,9 @@ namespace sts::search {
         void enumerateCardActions(Node &node, const BattleContext &bc);
         void enumeratePotionActions(Node &node, const BattleContext &bc);
         void enumerateCardSelectActions(Node &node, const BattleContext &bc);
-
         static double evaluateEndState(const BattleContext &bc);
+
+        void printSearchTree(std::ostream &os, int levels);
     };
 
 

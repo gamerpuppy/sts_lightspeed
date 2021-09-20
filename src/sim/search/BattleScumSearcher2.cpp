@@ -3,8 +3,11 @@
 //
 
 #include "sim/search/BattleScumSearcher2.h"
+#include "sim/search/ExpertKnowledge.h"
 
 #include <utility>
+#include <string>
+#include <memory>
 
 using namespace sts;
 
@@ -189,24 +192,54 @@ void search::BattleScumSearcher2::enumerateCardActions(search::BattleScumSearche
         return;
     }
 
+    fixed_list<std::pair<int,int>, 10> playableHandIdxs;
     for (int handIdx = 0; handIdx < bc.cards.cardsInHand; ++handIdx) {
-        const auto &card = bc.cards.hand[handIdx];
-        if (!card.canUseOnAnyTarget(bc)) {
+        const auto &c = bc.cards.hand[handIdx];
+        if (!c.canUseOnAnyTarget(bc)) {
             continue;
         }
 
-        if (card.requiresTarget()) {
-            for (int tIdx = 0; tIdx < bc.monsters.monsterCount; ++tIdx) {
+        bool isUniqueAction = true;
+
+        if (handIdx > 0) {
+            const auto &lastCard = bc.cards.hand[handIdx-1];
+
+            bool isEqualToLastCard = c.id == lastCard.id &&
+                    c.getUpgradeCount() == lastCard.getUpgradeCount() &&
+                    // both should be less than deck size c.uniqueId < bc.cards.deck
+                    c.costForTurn == lastCard.costForTurn &&
+                    c.cost == lastCard.cost &&
+                    c.freeToPlayOnce == lastCard.freeToPlayOnce &&
+                    c.specialData == lastCard.specialData;
+
+            if (isEqualToLastCard) {
+                isUniqueAction = false;
+            }
+        }
+
+        if (isUniqueAction) {
+            playableHandIdxs.push_back( {handIdx, search::Expert::getPlayOrdering(c.getId())} );
+        }
+    }
+
+    std::sort(playableHandIdxs.begin(), playableHandIdxs.end(), [](auto a, auto b) { return a.second < b.second; });
+
+    for (auto pair : playableHandIdxs) {
+        const auto handIdx = pair.first;
+        const auto &c = bc.cards.hand[handIdx];
+
+        if (c.requiresTarget()) {
+            for (int tIdx = bc.monsters.monsterCount-1; tIdx >= 0; --tIdx) {
                 if (!bc.monsters.arr[tIdx].isTargetable()) {
                     continue;
                 }
                 node.edges.push_back({Action(ActionType::CARD, handIdx, tIdx)});
             }
-
         } else {
             node.edges.push_back({Action(ActionType::CARD, handIdx)});
         }
     }
+
 }
 
 void search::BattleScumSearcher2::enumeratePotionActions(search::BattleScumSearcher2::Node &node,
@@ -337,7 +370,160 @@ void search::BattleScumSearcher2::enumerateCardSelectActions(search::BattleScumS
     }
 }
 
-double search::BattleScumSearcher2::evaluateEndState(const BattleContext &bc) {
-    const double winBonus = bc.outcome == Outcome::PLAYER_VICTORY ? 35 : 0;
-    return winBonus + bc.player.curHp + (bc.potionCount * 4) - (bc.turn * 0.01);
+double getNonMinionMonsterCurHpRatio(const BattleContext &bc) {
+    int curHpTotal = 0;
+    int maxHpTotal = 0;
+
+    for (int i = 0; i < bc.monsters.monsterCount; ++i) {
+        const auto &m = bc.monsters.arr[i];
+        if (!m.hasStatus<MS::MINION>() && m.id != sts::MonsterId::INVALID) {
+            curHpTotal += m.curHp;
+            maxHpTotal += m.maxHp;
+        }
+    }
+
+    if (curHpTotal == 0 || maxHpTotal == 0) {
+        return 0;
+    }
+
+    return (double)curHpTotal / maxHpTotal;
 }
+
+
+double search::BattleScumSearcher2::evaluateEndState(const BattleContext &bc) {
+//    int potionScore = bc.potionCount * 4;
+//
+//    if (bc.outcome == Outcome::PLAYER_VICTORY) {
+//        return 100 * (35 + bc.player.curHp + potionScore - (bc.turn * 0.01));
+//
+//    } else {
+//        return (1-getNonMinionMonsterCurHpRatio(bc)*2) + potionScore + (bc.turn * .2);
+//    }
+    const double winBonus = bc.outcome == Outcome::PLAYER_VICTORY ? 35 : 0;
+    const double turnBonus = bc.outcome == Outcome::PLAYER_VICTORY ? -(bc.turn * 0.001) : (bc.turn * 0.01);
+
+    return winBonus + bc.player.curHp + (bc.potionCount * 4) + turnBonus;
+}
+
+
+
+struct LayerStruct {
+    const search::BattleScumSearcher2::Node *node;
+    BattleContext *bc;
+    int edgeIdx;
+};
+
+typedef std::pair<search::BattleScumSearcher2::Edge, std::unique_ptr<const BattleContext>> EdgeInfo;
+
+std::vector<EdgeInfo> getEdgesForLayer(const search::BattleScumSearcher2 &s, int layerNum) {
+    if (layerNum <= 0) {
+        return {};
+    }
+
+    std::vector<EdgeInfo> layerEdges;
+
+    std::vector<LayerStruct> curStack { {&s.root, new BattleContext(*s.rootState), 0} };
+
+    while (!curStack.empty()) {
+        if (curStack.size() == layerNum) {
+            for (const auto &edge : curStack.back().node->edges) {
+                layerEdges.emplace_back(edge, new BattleContext(*curStack.back().bc));
+            }
+        }
+
+       // curStack size less than layerNum
+       const bool visitedAll = curStack.back().edgeIdx >= curStack.back().node->edges.size();
+       if (visitedAll || curStack.size() == layerNum) {
+           delete curStack.back().bc;
+           curStack.pop_back();
+           continue;
+       }
+
+        // visit next edge
+        auto &nextIdx = curStack.back().edgeIdx;
+        const auto action = curStack.back().node->edges[nextIdx].action;
+
+        BattleContext bc(*curStack.back().bc);
+        action.execute(bc);
+
+        curStack.push_back( {&curStack.back().node->edges[nextIdx++].node, new BattleContext(bc), 0} );
+    }
+
+    return layerEdges;
+}
+
+void search::BattleScumSearcher2::printSearchTree(std::ostream &os, int levels) {
+    std::vector<std::vector<EdgeInfo>> layerEdges;
+    for (int depth = 1; depth <= levels; ++depth) {
+        layerEdges.push_back(getEdgesForLayer(*this, depth));
+    }
+
+//    auto maxIt = std::max(layerEdges.begin(), layerEdges.end(), [](auto a, auto b) { return a->size() < b->size(); });
+//    if (maxIt == layerEdges.end()) {
+//        return;
+//    }
+//    // maxIt points to something
+//    const auto maxSize = maxIt->size();
+//    constexpr auto edgeWidth = 30;
+
+    for (int depth = 0; depth < levels; ++depth) {
+        for (const auto &x : layerEdges[depth]) {
+            os << "(" << x.first.node.simulationCount << ")";
+            x.first.action.printDesc(os, *x.second) << "\t";
+        }
+        std::cout << '\n';
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -23,6 +23,7 @@
 #include "sim/RandomAgent.h"
 #include "sim/StateHandler.h"
 #include "sim/BattleScumSearcher.h"
+#include "sim/search/ScumSearchAgent2.h"
 
 #include "sim/search/BattleScumSearcher2.h"
 
@@ -373,38 +374,40 @@ void playRandom3(PlayRandomInfo *info) {
 }
 
 static int g_searchAscension = 0;
-static int g_searchDepth = 5;
-static int g_minTurnLookahead = 1;
+static int g_simulationCount = 5;
 
 void playRandom4(PlayRandomInfo *info) {
     for (std::uint64_t seed = info->startSeed + info->seedOffset; seed < info->endSeed; seed += info->seedIncrement) {
-        //        std::cout << seed << std::endl;
-        ScumSearcherAgent agent(std::default_random_engine(seed), g_searchDepth);
-        agent.print = false;
-//        agent.minTurnLookahead = g_minTurnLookahead;
-
         GameContext gc(seed, CharacterClass::IRONCLAD, g_searchAscension);
-//        gc.deck.obtain(gc, {CardId::IMMOLATE, true});
-//        gc.deck.obtain(gc, {CardId::IMPERVIOUS, true});
-//        gc.obtainRelic(sts::RelicId::BRIMSTONE);
-//        gc.obtainRelic(RelicId::ODDLY_SMOOTH_STONE);
-//        gc.playerIncreaseMaxHp(100);
-//        std::cout << "starting " << seed << std::endl;
+        search::ScumSearchAgent2::Settings settings;
+        settings.simulationCountBase = g_simulationCount;
+        settings.rng = std::default_random_engine(gc.seed);
+//        settings.printLogs = true;
+
+        search::ScumSearchAgent2 agent(settings);
         agent.playout(gc);
 
         info->floorSum += gc.floorNum;
-        info->nodeEvalTotal += agent.nodesEvaluated;
 
         if (gc.outcome == sts::GameOutcome::PLAYER_VICTORY) {
             ++info->winCount;
 //            std::cout << gc << std::endl;
+            std::cout << seed << " won at floor " << gc.floorNum << " against "
+                << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
+            std::cout << " " << gc.deck << " " << gc.relics << std::endl;
 
         } else {
             ++info->lossCount;
+            std::cout << seed << " lost at floor " << gc.floorNum << " "
+                << roomStrings[static_cast<int>(gc.curRoom)] << " ";
+            if (gc.curRoom == sts::Room::EVENT) {
+                std::cout << eventGameNames[static_cast<int>(gc.curEvent)];
+            } else if (gc.curRoom == Room::BOSS || gc.curRoom == Room::ELITE || gc.curRoom == Room::MONSTER) {
+                std::cout << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
+            }
+            std::cout << " " << gc.deck << " " << gc.relics << std::endl;
         }
-//        std::cout << "finished seed " << gc.seed << " at floor: " << gc.floorNum << std::endl;
     }
-
 }
 
 void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
@@ -456,9 +459,8 @@ void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
         << " nodesSearched: " << nodeSearchSum << " avgPerFloor: " << (double)nodeSearchSum/floorSum << '\n';
 
     std::cout << "threads: " << threadCount
-        << " playoutCount: " << playoutCount
-        << " depth: " << g_searchDepth
-        << " minTurnLook: " << g_minTurnLookahead
+              << " playoutCount: " << playoutCount
+              << " depth: " << g_simulationCount
         << " asc: " << g_searchAscension
         << " elapsed: " << duration
         << std::endl;
@@ -516,7 +518,6 @@ int mcts(int argc, const char *argv[]) {
     double duration = std::chrono::duration<double>(endTime-startTime).count();
 
     std::cout << "steps: " << simulationCount << " search time: " << duration << "s\n";
-
     std::cout << "best search value: " << searcher.bestActionValue << " depth: " << searcher.bestActionSequence.size() << '\n';
     if (searcher.bestActionSequence.empty()) {
         std::cout << "bestActionSequenceIsEmpty" << std::endl;
@@ -527,8 +528,12 @@ int mcts(int argc, const char *argv[]) {
         bestAction.printDesc(std::cout, bc) << '\n';
         bestAction.execute(bc);
     }
-    std::cout.flush();
 
+    std::cout << "ending hp: " << bc.player.curHp << '\n';
+
+    searcher.printSearchTree(std::cout, 3);
+
+    std::cout.flush();
     return 0;
 }
 
@@ -555,14 +560,12 @@ int main(int argc, const char* argv[]) {
     } else if (command == "random_mt") { // actually doing tree search now
         const int threadCount(std::stoi(argv[2]));
         const int depthArg = std::stoi(argv[3]);
-        const int minTurnLookahead = std::stoi(argv[4]);
-        const int ascensionIn = std::stoi(argv[5]);
-        const std::uint64_t startSeedLong(std::stoull(argv[6]));
-        const int playoutCount(std::stoi(argv[7]));
+        const int ascensionIn = std::stoi(argv[4]);
+        const std::uint64_t startSeedLong(std::stoull(argv[5]));
+        const int playoutCount(std::stoi(argv[6]));
 
         g_searchAscension = ascensionIn;
-        g_searchDepth = depthArg;
-        g_minTurnLookahead = minTurnLookahead;
+        g_simulationCount = depthArg;
 
         playRandomMt(threadCount, startSeedLong, playoutCount);
 

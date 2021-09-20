@@ -187,6 +187,19 @@ namespace sts {
         };
     }
 
+    static constexpr bool isBossEncounter(MonsterEncounter e) {
+        return e == sts::MonsterEncounter::SLIME_BOSS ||
+               e == sts::MonsterEncounter::HEXAGHOST ||
+               e == sts::MonsterEncounter::THE_GUARDIAN ||
+               e == sts::MonsterEncounter::CHAMP ||
+               e == sts::MonsterEncounter::COLLECTOR ||
+               e == sts::MonsterEncounter::AUTOMATON ||
+               e == sts::MonsterEncounter::DONU_AND_DECA ||
+               e == sts::MonsterEncounter::TIME_EATER ||
+               e == sts::MonsterEncounter::AWAKENED_ONE ||
+               e == sts::MonsterEncounter::THE_HEART;
+    }
+
 
 
 

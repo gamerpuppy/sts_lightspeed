@@ -61,7 +61,7 @@ void BattleSimulator::handleInputLine(const std::string &line, std::ostream &os,
         return;
     }
 
-    if (line.length() >= 6 && line.substr(0, 6) == "print ") {
+    if (line.length() >= 6 && line.substr(0, 6) == "printLogs ") {
         if (c.printLogActions) {
             doPrintCommand(os, line.substr(6));
         }

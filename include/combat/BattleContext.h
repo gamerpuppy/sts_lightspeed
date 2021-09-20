@@ -93,6 +93,8 @@ namespace sts {
 // ****************************************
 
         void init(const GameContext &gc);
+        void init(const GameContext &gc, MonsterEncounter encounterToInit);
+
         void initRelics(const GameContext &gc);
 
         void exitBattle(GameContext &g) const;

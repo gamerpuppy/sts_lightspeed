@@ -1683,6 +1683,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             halfDead = false;
             miscInfo = true;
             strength = std::max(0,strength);
+            ++bc.monsters.monstersAlive;
             buff<MS::MINION_LEADER>();
 
             moveHistory[0] = MonsterMoveId::INVALID; // for first turn condition
@@ -3475,6 +3476,9 @@ void Monster::returnStasisCard(BattleContext &bc) {
     auto &stasisCard = bc.cards.stasisCards[std::min(idx,1)];
 
 #ifdef sts_asserts
+    if (stasisCard.id == CardId::INVALID) {
+        std::cerr << bc.seed << " " << bc.loopCount << " stasis card invalid" << idx << "\n" << bc << std::endl;
+    }
     assert(stasisCard.id != CardId::INVALID);
 #endif
 
