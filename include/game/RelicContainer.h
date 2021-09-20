@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstdint>
 
+#include "sts_common.h"
 #include "constants/Relics.h"
 
 namespace sts {

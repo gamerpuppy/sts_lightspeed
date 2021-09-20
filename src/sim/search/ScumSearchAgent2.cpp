@@ -206,13 +206,9 @@ void search::ScumSearchAgent2::cardSelectPolicy(GameContext &gc) {
             case CardSelectScreenType::UPGRADE:
             case CardSelectScreenType::DUPLICATE:
             case CardSelectScreenType::OBTAIN:
+            case CardSelectScreenType::BOTTLE:
                 selectOrder.push_back( {i, playOrder} );
                 break;
-
-            case CardSelectScreenType::BOTTLE:
-                selectOrder.push_back( {i, -playOrder} );
-                break;
-
 
             case CardSelectScreenType::INVALID:
             default:

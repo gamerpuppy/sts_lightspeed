@@ -7,6 +7,7 @@
 #include "game/Game.h"
 
 #include <algorithm>
+#include <cassert>
 
 using namespace sts;
 
@@ -253,6 +254,14 @@ std::array<CardId, 3> sts::generateDiscoveryCards(Random &cardRandomRng, Charact
             cards[cardCount++] = id;
         }
     }
+
+#ifdef sts_asserts
+    for (auto x: cards) {
+        if (x == CardId::INVALID) {
+            assert(false);
+        }
+    }
+#endif
     return cards;
 }
 

@@ -338,7 +338,9 @@ void executeSingleCardSelectActionHelper(BattleContext &bc, search::Action a) {
             break;
 
         case CardSelectTask::CODEX:
-            bc.chooseCodexCard(bc.cardSelectInfo.codexCards()[idx]);
+            if (idx != 3) { // idx 3 means skip
+                bc.chooseCodexCard(bc.cardSelectInfo.codexCards()[idx]);
+            }
             break;
 
         case CardSelectTask::DISCOVERY:

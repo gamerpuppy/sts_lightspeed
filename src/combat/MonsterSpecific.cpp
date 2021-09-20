@@ -1673,6 +1673,10 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
         }
 
         case MMID::AWAKENED_ONE_DARK_ECHO:
+            if (halfDead) {
+                std::cerr << bc << std::endl;
+                assert(false);
+            }
             attackPlayerHelper(bc, 40);
             bc.addToBot( Actions::RollMove(idx) );
             break;
@@ -1685,29 +1689,44 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             strength = std::max(0,strength);
             ++bc.monsters.monstersAlive;
             buff<MS::MINION_LEADER>();
-
-            moveHistory[0] = MonsterMoveId::INVALID; // for first turn condition
-            rollMove(bc);
+            setMove(MonsterMoveId::AWAKENED_ONE_DARK_ECHO);
+            bc.noOpRollMove();
             break;
         }
 
         case MMID::AWAKENED_ONE_SLASH:
+            if (halfDead) {
+                std::cerr << bc << std::endl;
+                assert(false);
+            }
             attackPlayerHelper(bc, 20);
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::AWAKENED_ONE_SLUDGE:
+            if (halfDead) {
+                std::cerr << bc << std::endl;
+                assert(false);
+            }
             attackPlayerHelper(bc, 18);
             bc.addToBot( Actions::ShuffleTempCardIntoDrawPile(CardId::VOID) );
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::AWAKENED_ONE_SOUL_STRIKE:
+            if (halfDead) {
+                std::cerr << bc << std::endl;
+                assert(false);
+            }
             attackPlayerHelper(bc, 6, 4);
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::AWAKENED_ONE_TACKLE:
+            if (halfDead) {
+                std::cerr << bc << std::endl;
+                assert(false);
+            }
             attackPlayerHelper(bc, 10, 3);
             bc.addToBot( Actions::RollMove(idx) );
             break;
@@ -3214,6 +3233,9 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             // 6 sludge
             // 8 tackle
 
+            if (halfDead) {
+                return MonsterMoveId::AWAKENED_ONE_REBIRTH;
+            }
 
             const bool phase2 = miscInfo;
             if (!phase2) {
@@ -3237,9 +3259,6 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             }
 
             // phase 2
-            if (firstTurn()) {
-                return MonsterMoveId::AWAKENED_ONE_DARK_ECHO;
-            }
 
             if (roll < 50) {
                 if (!lastTwoMoves(MonsterMoveId::AWAKENED_ONE_SLUDGE)) {
@@ -3468,6 +3487,12 @@ void Monster::stasisAction(BattleContext &bc) {
     cards.notifyRemoveFromCombat(stasisCard);
     cards.stasisCards[std::min(1, idx)] = stasisCard;
 
+#ifdef sts_asserts
+    if (stasisCard.getId() == CardId::INVALID) {
+        std::cerr << bc << std::endl;
+        assert(false);
+    }
+#endif
     buff<MS::STASIS>();
 }
 

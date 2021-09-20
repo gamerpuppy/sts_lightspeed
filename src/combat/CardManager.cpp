@@ -70,11 +70,24 @@ void CardManager::createDeckCardInstanceInDrawPile(const Card &card, int deckIdx
     auto &c = drawPile[drawIdx];
     c = CardInstance(card);
     c.setUniqueId(deckIdx);
+#ifdef sts_asserts
+    if (card.getId() == CardId::INVALID) {
+        std::cerr << "attempted to create invalid deck instance in draw pile" << std::endl;
+        assert(false);
+    }
+#endif
     notifyAddCardToCombat(c);
     notifyAddToDrawPile(c);
 }
 
 void CardManager::createTempCardInDrawPile(int idx, CardInstance c) {
+#ifdef sts_asserts
+    if (c.getId() == CardId::INVALID) {
+        std::cerr << "attempted to create invalid card in draw pile" << std::endl;
+        assert(false);
+    }
+#endif
+
     c.uniqueId = static_cast<std::int16_t>(nextUniqueCardId++);
     notifyAddCardToCombat(c);
     notifyAddToDrawPile(c);
@@ -83,6 +96,12 @@ void CardManager::createTempCardInDrawPile(int idx, CardInstance c) {
 
 void CardManager::createTempCardInDiscard(CardInstance c) {
     c.uniqueId = static_cast<std::int16_t>(nextUniqueCardId++);
+#ifdef sts_asserts
+    if (c.getId() == CardId::INVALID) {
+        std::cerr << "attempted to create invalid card in discard" << std::endl;
+        assert(false);
+    }
+#endif
     notifyAddCardToCombat(c);
     notifyAddToDiscardPile(c);
     discardPile.push_back(c);
@@ -90,6 +109,12 @@ void CardManager::createTempCardInDiscard(CardInstance c) {
 
 void CardManager::createTempCardInHand(CardInstance c) {
     c.uniqueId = static_cast<std::int16_t>(nextUniqueCardId++);
+#ifdef sts_asserts
+    if (c.getId() == CardId::INVALID) {
+        std::cerr << "attempted to create invalid card in hand" << std::endl;
+        assert(false);
+    }
+#endif
     notifyAddCardToCombat(c);
     notifyAddToHand(c);
     hand[cardsInHand++] = c;
@@ -151,11 +176,23 @@ void CardManager::moveToExhaustPile(const CardInstance &c) {
 
 
 void CardManager::insertToDrawPile(int drawPileIdx, const CardInstance &c) {
+#ifdef sts_asserts
+    if (c.getId() == CardId::INVALID) {
+        std::cerr << "attempted to insert invalid card to draw pile" << std::endl;
+        assert(false);
+    }
+#endif
     notifyAddToDrawPile(c);
     drawPile.insert(drawPile.begin()+drawPileIdx, c);
 }
 
 void CardManager::moveToDrawPileTop(const CardInstance &c) {
+#ifdef sts_asserts
+    if (c.getId() == CardId::INVALID) {
+        std::cerr << "attempted to move invalid card to draw pile" << std::endl;
+        assert(false);
+    }
+#endif
     notifyAddToDrawPile(c);
     drawPile.push_back(c);
 }
@@ -171,6 +208,12 @@ void CardManager::shuffleIntoDrawPile(Random &cardRandomRng, const CardInstance 
 
 void CardManager::moveToDiscardPile(const CardInstance &c) {
     // todo check flurries, weave
+#ifdef sts_asserts
+    if (c.getId() == CardId::INVALID) {
+        std::cerr << "attempted to move invalid card to discard pile" << std::endl;
+        assert(false);
+    }
+#endif
     notifyAddToDiscardPile(c);
     discardPile.push_back(c);
 }
@@ -208,6 +251,13 @@ void CardManager::notifyRemoveFromCombat(const CardInstance &c) {
 }
 
 void CardManager::notifyAddToHand(const CardInstance &c) {
+#ifdef sts_asserts
+    if (c.getId() == CardId::INVALID) {
+        std::cerr << "attempted to notify of invalid card in hand" << std::endl;
+        assert(false);
+    }
+#endif
+
     if (c.isBloodCard()) {
         ++handBloodCardCount;
     }
@@ -246,6 +296,14 @@ void CardManager::notifyRemoveFromHand(const CardInstance &c) {
 }
 
 void CardManager::notifyAddToDrawPile(const CardInstance &c) {
+
+#ifdef sts_asserts
+    if (c.getId() == CardId::INVALID) {
+        std::cerr << "attempted to notify of invalid card in draw pile" << std::endl;
+        assert(false);
+    }
+#endif
+
     if (c.isBloodCard()) {
         ++drawPileBloodCardCount;
     }
@@ -258,6 +316,13 @@ void CardManager::notifyRemoveFromDrawPile(const CardInstance &c) {
 }
 
 void CardManager::notifyAddToDiscardPile(const CardInstance &c) {
+#ifdef sts_asserts
+    if (c.getId() == CardId::INVALID) {
+        std::cerr << "attempted to notify of invalid card in discard pile" << std::endl;
+        assert(false);
+    }
+#endif
+
     if (c.isBloodCard()) {
         ++discardPileBloodCardCount;
     }
@@ -309,8 +374,6 @@ void CardManager::resetAttributesAtEndOfTurn() {
 void CardManager::draw(BattleContext &bc, int amount) {
     int evolve = bc.player.getStatus<PS::EVOLVE>();
     int fireBreathing = bc.player.getStatus<PS::FIRE_BREATHING>();
-
-    int confusedCount = 0;
 
     for (int i = 0; i < amount; i++) {
         auto c = popFromDrawPile();

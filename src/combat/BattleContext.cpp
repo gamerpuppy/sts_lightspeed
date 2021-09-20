@@ -739,6 +739,10 @@ void BattleContext::executeActions() {
             break;
         }
 
+        if (loopCount > 80000) {
+            std::cerr << "high loop count" << std::endl;
+        }
+
         if (!actionQueue.isEmpty()) {
             // do a action
             auto a = std::move(actionQueue.popFront());
@@ -3095,9 +3099,6 @@ namespace sts {
         os << "aiRng: " << bc.aiRng.counter << separator;
         os << "cardRandomRng: " << bc.cardRandomRng.counter << separator;
         os << "shuffleRng: " << bc.shuffleRng.counter << separator;
-
-        os << "     ";
-
         os << "miscRng: " << bc.miscRng.counter << separator;
         os << "monsterHpRng: " << bc.monsterHpRng.counter << separator;
         os << "potionRng: " << bc.potionRng.counter << separator;
@@ -3125,7 +3126,9 @@ namespace sts {
         os << "\tactionQueueSize: " << bc.actionQueue.size
             << ", cardQueueSize: " << bc.cardQueue.size
             << ", turn: " << bc.turn
-            << ", g_searchAscension: " << bc.ascension
+            << ", ascension " << bc.ascension
+            << ", loopCount: " << bc.loopCount
+            << ", sum: " << bc.sum
             << "\n";
 
         os << bc.monsters;
