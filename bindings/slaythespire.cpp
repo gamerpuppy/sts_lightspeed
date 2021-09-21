@@ -724,6 +724,9 @@ PYBIND11_MODULE(slaythespire, m) {
         .value("MUSHROOMS_EVENT", ME::MUSHROOMS_EVENT)
         .value("MYSTERIOUS_SPHERE_EVENT", ME::MYSTERIOUS_SPHERE_EVENT);
 
+
+
+
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else

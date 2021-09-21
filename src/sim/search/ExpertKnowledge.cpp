@@ -292,7 +292,7 @@ int search::Expert::getObtainWeight(CardId id) {
             return 30;
 
         case CardId::FLASH_OF_STEEL:
-            return 25;
+            return 28;
 
         case CardId::BLOOD_FOR_BLOOD:
         case CardId::RUPTURE:
@@ -310,12 +310,12 @@ int search::Expert::getObtainWeight(CardId id) {
         case CardId::PERFECTED_STRIKE:
         case CardId::FIRE_BREATHING:
         case CardId::EVOLVE:
-            return 20;
+            return 25;
 
         case CardId::JAX:
         case CardId::POWER_THROUGH:
         case CardId::SECOND_WIND:
-            return 18;
+            return 24;
 
         case CardId::JUGGERNAUT:
         case CardId::MADNESS:
@@ -325,15 +325,15 @@ int search::Expert::getObtainWeight(CardId id) {
         case CardId::METALLICIZE:
         case CardId::COMBUST:
         case CardId::SHRUG_IT_OFF:
-            return 15;
+            return 22;
 
         case CardId::FLAME_BARRIER:
         case CardId::ENTRENCH:
         case CardId::ENLIGHTENMENT:
-            return 12;
+            return 20;
 
         case CardId::HEMOKINESIS:
-            return 10;
+            return 18;
 
         case CardId::PANACHE:
         case CardId::EXHUME:
@@ -350,7 +350,7 @@ int search::Expert::getObtainWeight(CardId id) {
         case CardId::METAMORPHOSIS:
         case CardId::HAVOC:
         case CardId::SENTINEL:
-            return 8;
+            return 15;
 
         case CardId::ANGER:
         case CardId::THINKING_AHEAD:
@@ -365,7 +365,7 @@ int search::Expert::getObtainWeight(CardId id) {
         case CardId::GHOSTLY_ARMOR:
         case CardId::WILD_STRIKE:
         case CardId::POMMEL_STRIKE:
-            return 6;
+            return 13;
 
         case CardId::THUNDERCLAP:
         case CardId::GOOD_INSTINCTS:
@@ -373,36 +373,38 @@ int search::Expert::getObtainWeight(CardId id) {
         case CardId::SWIFT_STRIKE:
         case CardId::FORETHOUGHT:
         case CardId::HEADBUTT:
-            return 5;
+            return 12;
 
         case CardId::CLASH:
         case CardId::CLOTHESLINE:
         case CardId::PUMMEL:
         case CardId::BODY_SLAM:
-            return 4;
+            return 10;
 
         case CardId::RAMPAGE:
         case CardId::HEAVY_BLADE:
         case CardId::SWORD_BOOMERANG:
-            return 3;
+            return 8;
 
         case CardId::DROPKICK:
         case CardId::CLEAVE:
         case CardId::RECKLESS_CHARGE:
         case CardId::IRON_WAVE:
-            return 2;
+            return 7;
 
         case CardId::TWIN_STRIKE:
         case CardId::BITE:
         case CardId::BANDAGE_UP:
-            return 1;
+        case CardId::BASH:
+            return 6;
 
         case CardId::MIND_BLAST:
         case CardId::PURITY:
         case CardId::SEARING_BLOW:
-        case CardId::BASH:
         case CardId::STRIKE_RED:
         case CardId::DEFEND_RED:
+            return 5;
+
         default:
             return 0;
     }

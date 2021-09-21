@@ -13,7 +13,6 @@ using namespace sts;
 
 std::int64_t simulationIdx = 0; // for debugging
 
-
 search::BattleScumSearcher2::BattleScumSearcher2(const BattleContext &bc,
                                                       search::EvalFnc _evalFnc)  : rootState(new BattleContext(bc)), evalFnc(std::move(_evalFnc)),
                                                                                    randGen(bc.seed+bc.loopCount+bc.player.curHp+bc.aiRng.counter) {
@@ -66,6 +65,8 @@ void search::BattleScumSearcher2::step() {
         } else {
             const auto selectIdx = selectBestEdgeToSearch(curNode);
             auto &edgeTaken = curNode.edges[selectIdx];
+
+
 
 //            edgeTaken.action.printDesc(std::cout, curState) << std::endl;
             edgeTaken.action.execute(curState);
@@ -304,7 +305,7 @@ void search::BattleScumSearcher2::enumerateCardSelectActions(search::BattleScumS
             break;
 
         case CardSelectTask::CODEX:
-            for (int i = 0; i < 4; ++i) {
+            for (int i = 0; i < 4; ++i) { // i -> 3 action means skip
                 node.edges.push_back({Action(search::ActionType::SINGLE_CARD_SELECT, i)});
             }
             break;
@@ -328,6 +329,9 @@ void search::BattleScumSearcher2::enumerateCardSelectActions(search::BattleScumS
             break;
 
         case CardSelectTask::EXHAUST_ONE:
+            setupCardOptionsHelper(node, bc.cards.hand.begin(), bc.cards.hand.begin() + bc.cards.cardsInHand);
+            break;
+
         case CardSelectTask::FORETHOUGHT:
         case CardSelectTask::WARCRY:
             setupCardOptionsHelper(node, bc.cards.hand.begin(), bc.cards.hand.begin() + bc.cards.cardsInHand);
@@ -398,8 +402,12 @@ double search::BattleScumSearcher2::evaluateEndState(const BattleContext &bc) {
 //                (bc.player.getStatus<PS::FEEL_NO_PAIN>() * .2) +
 //                (bc.player.hasStatus<PS::CORRUPTION>() * 2) +
 //                (bc.player.hasStatus<PS::BARRICADE>() * 1);
+        const bool couldHaveSpikers = bc.encounter == MonsterEncounter::THREE_SHAPES || bc.encounter == MonsterEncounter::FOUR_SHAPES;
+        double energyPenalty = bc.energyWasted * -0.2 * (couldHaveSpikers ? 0 : 1);
+        double drawBonus = bc.cardsDrawn * 0.03;
+        double aliveScore = bc.monsters.monstersAlive*-1;
 
-        return (1-getNonMinionMonsterCurHpRatio(bc))*10 + potionScore/2 + (bc.turn * .2);
+        return (1-getNonMinionMonsterCurHpRatio(bc))*10 + aliveScore + energyPenalty + drawBonus + potionScore / 2 + (bc.turn * .2);
     }
 //    const double winBonus = bc.outcome == Outcome::PLAYER_VICTORY ? 35 : 0;
 //    const double turnBonus = bc.outcome == Outcome::PLAYER_VICTORY ? -(bc.turn * 0.001) : (bc.turn * 0.01);

@@ -184,6 +184,7 @@ void search::ScumSearchAgent2::cardSelectPolicy(GameContext &gc) {
         const auto &c = gc.info.toSelectCards[i].card;
 
         auto playOrder = search::Expert::getPlayOrdering(c.getId());
+        auto obtainWeight = search::Expert::getObtainWeight(c.getId());
 
         switch (gc.info.selectScreenType) {
             case CardSelectScreenType::TRANSFORM:
@@ -191,20 +192,20 @@ void search::ScumSearchAgent2::cardSelectPolicy(GameContext &gc) {
                 if (c.getType() == CardType::CURSE) {
                     selectOrder.push_back( {i, playOrder} );
                 } else {
-                    selectOrder.push_back( {i, -playOrder} );
+                    selectOrder.push_back( {i, obtainWeight} );
                 }
                 break;
 
             case CardSelectScreenType::BONFIRE_SPIRITS:
             case CardSelectScreenType::REMOVE:
-                selectOrder.push_back( {i, -playOrder} );
+                selectOrder.push_back( {i, -obtainWeight} );
                 break;
 
             case CardSelectScreenType::UPGRADE:
             case CardSelectScreenType::DUPLICATE:
             case CardSelectScreenType::OBTAIN:
             case CardSelectScreenType::BOTTLE:
-                selectOrder.push_back( {i, playOrder} );
+                selectOrder.push_back( {i, -obtainWeight} );
                 break;
 
             case CardSelectScreenType::INVALID:
@@ -303,7 +304,7 @@ void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
 
         bool skipCard = true;
         {
-            std::uniform_real_distribution<double> distr(0,weights[selection].second+deckWeight);
+            std::uniform_real_distribution<double> distr(0,weights[selection].second + deckWeight*0.75);
             double roll = distr(rng);
             if (roll < weights[selection].second) {
                 skipCard = false;

@@ -16,6 +16,7 @@ namespace sts::search {
 
     typedef std::function<double (const BattleContext&)> EvalFnc;
 
+
     // to find a solution to a battle with tree pruning
     struct BattleScumSearcher2 {
         class Edge;

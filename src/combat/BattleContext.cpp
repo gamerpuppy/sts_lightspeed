@@ -2018,6 +2018,7 @@ void BattleContext::endTurn() {
     assert(!endTurnQueued);
 #endif //sts_assert
     // todo probably dont need a card queue item for this
+    energyWasted += player.energy;
     cardQueue.pushBack(CardQueueItem::endTurnItem());
     endTurnQueued = true;
 }
@@ -2451,6 +2452,7 @@ void BattleContext::drawCards(int count) {
         return;
     }
 
+    cardsDrawn += amountToDraw; // statistic for monte carlo search
     cards.draw(*this, amountToDraw);
 }
 
