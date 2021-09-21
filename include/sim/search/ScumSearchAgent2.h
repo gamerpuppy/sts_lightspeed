@@ -13,19 +13,15 @@
 namespace sts::search {
 
     struct ScumSearchAgent2 {
-        struct Settings {
-            int simulationCountBase = 50000;
-            double bossSimulationMultiplier = 3;
-            bool pauseOnCardReward = false;
-            bool printLogs = false;
-            std::default_random_engine rng;
-        };
-
-        Settings settings;
         int stepCount = 0;
+        int simulationCountBase = 50000;
+        double bossSimulationMultiplier = 3;
+        bool pauseOnCardReward = false;
+        bool paused = false;
+        bool printLogs = false;
+        std::default_random_engine rng;
 
         // public interface
-        ScumSearchAgent2(Settings settings);
         void playout(GameContext &gc);
 
         // private methods

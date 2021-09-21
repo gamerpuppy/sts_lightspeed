@@ -146,9 +146,9 @@ namespace sts {
 
     struct GameContext {
         static constexpr float SHRINE_CHANCE = 0.25F;
-        static inline const sts::Card noteForYourselfCard = Card(CardId::IRON_WAVE);
 
-        bool prismaticShardEnabled = false;
+        sts::Card noteForYourselfCard = Card(CardId::IRON_WAVE);
+        static constexpr bool prismaticShardEnabled = false;
         bool skipBattles = false;
 
         // ********* hidden from player *********
@@ -198,26 +198,27 @@ namespace sts {
         Event curEvent = Event::INVALID;
         Room curRoom = Room::INVALID;
         MonsterEncounter boss = MonsterEncounter::INVALID;
+
         float monsterChance = 0.1f;
         float shopChance = 0.03f;
         float treasureChance = 0.02f;
         int potionChance = 0;
         int cardRarityFactor = 5;
         int shopRemoveCount = 0;
+        bool speedrunPace = false; // todo load from save
 
-        int floorNum = 0;
         int curMapNodeX = -1;
         int curMapNodeY = -1;
         Map *map = nullptr; // todo fix memory leak
+
         int act = 1;
         int ascension = 0;
-        bool speedrunPace = false; // todo load from save
+        int floorNum = 0;
 
+        CharacterClass cc;
         int curHp = 80;
         int maxHp = 80;
         int gold = 99;
-        int keyBits = 0;
-        CharacterClass cc;
 
         int potionCount = 0;
         int potionCapacity = 0;
@@ -226,10 +227,14 @@ namespace sts {
         RelicContainer relics;
         Deck deck;
 
+        bool blueKey = false;
+        bool greenKey = false;
+        bool redKey = false;
+
         GameContextAction regainControlAction = nullptr;
 
         GameContext() = default;
-        GameContext(std::uint64_t seed, CharacterClass cc, int ascensionLevel);
+        GameContext(CharacterClass cc, std::uint64_t seed, int ascensionLevel);
 
         void initFromSave(const SaveFile &s);
         void initRelicsFromSave(const SaveFile &s);

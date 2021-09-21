@@ -34,7 +34,7 @@ CharacterClass getCharacterClassFromString(const std::string &s) {
 
 void ConsoleSimulator::setupGame(std::uint64_t seed, CharacterClass c, int ascension) {
     delete gc;
-    gc = new GameContext(seed, c, ascension);
+    gc = new GameContext(c, seed, ascension);
 }
 
 void ConsoleSimulator::setupGameFromSaveFile(const SaveFile &save) {
@@ -59,12 +59,12 @@ void ConsoleSimulator::play(std::istream &is, std::ostream &os, SimulatorContext
         std::string character;
         int ascensionLevel;
 
-        is >> seedStr;
         is >> character;
+        is >> seedStr;
         is >> ascensionLevel;
 
         if (c.printInput) {
-            std::cout << seedStr << " " << character << " " << ascensionLevel << "\n";
+            std::cout << character << " " << seedStr << " " << ascensionLevel << "\n";
         }
         setupGame(SeedHelper::getLong(seedStr), getCharacterClassFromString(character), ascensionLevel);
     }

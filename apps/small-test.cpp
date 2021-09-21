@@ -78,9 +78,80 @@ void printCardsForOrdering() {
     }
 }
 
+void printCardsForBinding() {
+    for (int i = static_cast<int>(CardId::INVALID); i <= static_cast<int>(CardId::ZAP); ++i) {
+        auto id = static_cast<CardId>(i);
+        printf(".value(\"%s\", CardId::%s)\n", getCardEnumName(id), getCardEnumName(id));
+    }
+}
+
+void printAllCardInfo(std::ostream &os) {
+    const auto s = ",";
+
+    os << "MyEnumName" << s
+        << "Name" << s
+        << "StringId" << s
+        << "Rarity" << s
+        << "Color" << s
+        << "Type" << s
+        << "cost" << s
+        << "costUp" << s
+        << "baseDamage" << s
+        << "baseDamageUp" << s
+        << "isEthereal" << s
+        << "isEtherealUp" << s
+        << "doesExhaust" << s
+        << "doesExhaustUp" << s
+        << "isInnate" << s
+        << "isInnateUp" << s
+        << "hasSelfRetain" << s
+        << "hasSelfRetainUp" << s
+        << "targetsEnemy" << s
+        << "targetsEnemyUp" << s
+        << "IsStrike" << s
+        << "IsStarterStrikeOrDefend" << "\n";
+
+    for (int i = static_cast<int>(CardId::INVALID); i <= static_cast<int>(CardId::ZAP); ++i) {
+        auto id = static_cast<CardId>(i);
+        os << getCardEnumName(id) << s
+            << getCardName(id) << s
+            << getCardStringId(id) << s
+            << cardRarityStrings[static_cast<int>(getCardRarity(id))] << s
+            << cardColorStrings[static_cast<int>(getCardColor(id))]  << s
+            << cardTypeStrings[static_cast<int>(getCardType(id))] << s
+            << getEnergyCost(id, false) << s
+            << getEnergyCost(id, true) << s
+            << getBaseDamage(id, false) << s
+            << getBaseDamage(id, true) << s
+            << isCardEthereal(id, false) << s
+            << isCardEthereal(id, true) << s
+            << doesCardExhaust(id, false) << s
+            << doesCardExhaust(id, true) << s
+            << isCardInnate(id, false) << s
+            << isCardInnate(id, true) << s
+            << doesCardSelfRetain(id, false) << s
+            << doesCardSelfRetain(id, true) << s
+            << cardTargetsEnemy(id, false) << s
+            << cardTargetsEnemy(id, true) << s
+            << isCardStrikeCard(id) << s
+            << isStarterStrikeOrDefend(id) << '\n';
+    }
+}
+
+void printEncountersForBinding() {
+    for (auto i = static_cast<int8_t>(ME::INVALID); i <= static_cast<std::int8_t>(ME::MYSTERIOUS_SPHERE_EVENT); ++i) {
+        std::cout << ".value(\"" << monsterEncounterEnumNames[i] << "\", "
+        << "ME::" << monsterEncounterEnumNames[i] << ")\n";
+    }
+
+}
+
 int main(int argc, const char *argv[]) {
 
-    printCardsForOrdering();
+    printEncountersForBinding();
+//    printAllCardInfo(std::cout);
+//    printCardsForOrdering();
+//    printCardsForBinding();
 
 //    printCardIdOrder();
 //    findShovelSeed();

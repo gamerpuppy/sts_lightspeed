@@ -14,29 +14,26 @@
 
 using namespace sts;
 
-search::ScumSearchAgent2::ScumSearchAgent2(Settings settings)
-    : settings(settings) {}
-
-
 void search::ScumSearchAgent2::playout(GameContext &gc) {
+    paused = false;
     RandomStateHandler handler;
     BattleContext bc;
     const auto seedStr = std::string(SeedHelper::getString(gc.seed));
 
-    while (gc.outcome == GameOutcome::UNDECIDED) {
+    while (gc.outcome == GameOutcome::UNDECIDED && !paused) {
         if (gc.screenState == ScreenState::BATTLE) {
             bc = BattleContext();
             bc.init(gc);
 
             playoutBattle(bc);
             bc.exitBattle(gc);
-
-        } else {
-            if (settings.printLogs) {
-                std::cout << gc << std::endl;
-            }
-            stepOutOfCombatPolicy(gc);
+            continue;
         }
+
+        if (printLogs) {
+            std::cout << gc << std::endl;
+        }
+        stepOutOfCombatPolicy(gc);
     }
 }
 
@@ -44,12 +41,12 @@ void search::ScumSearchAgent2::playoutBattle(BattleContext &bc) {
     while (bc.outcome == Outcome::UNDECIDED) {
         search::BattleScumSearcher2 searcher(bc);
 
-        const std::int64_t simulationCount = (isBossEncounter(bc.encounter) ? settings.bossSimulationMultiplier : 1)  * settings.simulationCountBase;
+        const std::int64_t simulationCount = (isBossEncounter(bc.encounter) ? bossSimulationMultiplier : 1)  * simulationCountBase;
         searcher.search(simulationCount);
 
         if (!searcher.bestActionSequence.empty()) {
             for (auto x : searcher.bestActionSequence) {
-                if (settings.printLogs) {
+                if (printLogs) {
                     x.printDesc(std::cout, bc) << " ";
                     std::cout
                             << " turn: " << bc.turn
@@ -75,7 +72,7 @@ void search::ScumSearchAgent2::playoutBattle(BattleContext &bc) {
                 bestAction = edge.action;
             }
         }
-        if (settings.printLogs) {
+        if (printLogs) {
             bestAction.printDesc(std::cout, bc) << " ";
             std::cout
                     << " turn: " << bc.turn
@@ -97,7 +94,7 @@ void search::ScumSearchAgent2::stepRandom(GameContext &gc) {
     handler.setupState(gc);
     const auto stateSize = handler.getStateSize(gc);
     std::uniform_int_distribution<int> distr(0, stateSize - 1);
-    const int randomChoice = distr(settings.rng);
+    const int randomChoice = distr(rng);
     handler.chooseOption(gc, randomChoice);
 }
 
@@ -245,6 +242,12 @@ void search::ScumSearchAgent2::stepRewardsPolicy(GameContext &gc) {
         return;
     }
 
+    if (pauseOnCardReward) {
+        paused = true;
+        return;
+    }
+
+
 //    stepRandom(gc);
     weightedCardRewardPolicy(gc);
 }
@@ -262,7 +265,7 @@ void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
     for (int rIdx = r.cardRewardCount-1; rIdx >= 0; --rIdx) {
 
         const auto deckWeight = getAvgDeckWeight(gc);
-        if (settings.printLogs) {
+        if (printLogs) {
             std::cout << "evaluating card reward " << rIdx << " avgDeckWeight: " << deckWeight << std::endl;
         }
         fixed_list<std::pair<int,double>,4> weights;
@@ -279,7 +282,7 @@ void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
             weights.push_back({cIdx, weight});
             weightSum += weight;
 
-            if (settings.printLogs) {
+            if (printLogs) {
                 std::cout << "card:" << r.cardRewards[rIdx][cIdx] << " eval: " << weight << std::endl;
             }
         }
@@ -288,7 +291,7 @@ void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
         int selection = 0;
         {
             std::uniform_real_distribution<double> distr(0,weightSum);
-            double roll = distr(settings.rng);
+            double roll = distr(rng);
             double acc = 0;
             for (int i = 0; i < weights.size(); ++i) {
                 acc += weights[i].second;
@@ -301,7 +304,7 @@ void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
         bool skipCard = true;
         {
             std::uniform_real_distribution<double> distr(0,weights[selection].second+deckWeight);
-            double roll = distr(settings.rng);
+            double roll = distr(rng);
             if (roll < weights[selection].second) {
                 skipCard = false;
             }

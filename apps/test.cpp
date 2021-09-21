@@ -171,7 +171,7 @@ void printAnyColorCardPools() {
 
 void searchForNeowsBossRelic(RelicId id, CharacterClass cc) {
     for (std::uint64_t seed = 0; seed < 10000; seed++) {
-        GameContext gc(seed, cc, 0);
+        GameContext gc(cc, seed, 0);
         gc.chooseNeowOption(gc.info.neowRewards[3]);
 
         if (gc.relics.has(id)) {
@@ -230,7 +230,7 @@ void runBenchmark3(std::string saveFile, std::string actionList, int loopCountTh
 std::string getSeedWithGuardian() {
     std::uint64_t seed = 40;
     while (true) {
-        GameContext gc(seed, sts::CharacterClass::IRONCLAD, 0);
+        GameContext gc(sts::CharacterClass::IRONCLAD, seed, 0);
         if (gc.boss == sts::MonsterEncounter::THE_GUARDIAN) {
             break;
         }
@@ -318,7 +318,7 @@ void playRandom2(std::uint64_t startSeed, int playoutCount) {
         RandomAgent agent((std::default_random_engine(seed)));
         agent.print = true;
         agent.printStartingAt = 0;
-        GameContext gc(seed, CharacterClass::IRONCLAD, 0);
+        GameContext gc(CharacterClass::IRONCLAD, seed, 0);
         agent.playoutWithBattles(gc);
 
         if (gc.act == 2) {
@@ -358,7 +358,7 @@ void playRandom3(PlayRandomInfo *info) {
         RandomAgent agent( (std::default_random_engine(seed)) );
         agent.print = false;
 
-        GameContext gc(seed, CharacterClass::IRONCLAD, 20);
+        GameContext gc(CharacterClass::IRONCLAD, seed, 20);
         agent.playoutWithBattles(gc);
 
         if (gc.act == 2) {
@@ -378,13 +378,12 @@ static int g_simulationCount = 5;
 
 void playRandom4(PlayRandomInfo *info) {
     for (std::uint64_t seed = info->startSeed + info->seedOffset; seed < info->endSeed; seed += info->seedIncrement) {
-        GameContext gc(seed, CharacterClass::IRONCLAD, g_searchAscension);
-        search::ScumSearchAgent2::Settings settings;
-        settings.simulationCountBase = g_simulationCount;
-        settings.rng = std::default_random_engine(gc.seed);
-        settings.printLogs = false;
+        GameContext gc(CharacterClass::IRONCLAD, seed, g_searchAscension);
 
-        search::ScumSearchAgent2 agent(settings);
+        search::ScumSearchAgent2 agent;
+        agent.simulationCountBase = g_simulationCount;
+        agent.rng = std::default_random_engine(gc.seed);
+        agent.printLogs = false;
         agent.playout(gc);
 
         info->floorSum += gc.floorNum;

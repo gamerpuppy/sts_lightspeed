@@ -32,7 +32,7 @@ SelectScreenCard::SelectScreenCard(const Card &card) : card(card) {}
 
 SelectScreenCard::SelectScreenCard(const Card &card, int deckIdx) : card(card), deckIdx(deckIdx) {}
 
-GameContext::GameContext(std::uint64_t seed, CharacterClass cc, int ascension)
+GameContext::GameContext(CharacterClass cc, std::uint64_t seed, int ascension)
     : seed(seed),
     neowRng(seed),
     treasureRng(seed),
@@ -260,7 +260,22 @@ bool GameContext::hasRelic(RelicId r) const {
 }
 
 bool GameContext::hasKey(Key key) const {
-    return keyBits & (1 << static_cast<int>(key));
+    switch (key) {
+        case Key::EMERALD_KEY:
+            return greenKey;
+
+        case Key::SAPPHIRE_KEY:
+            return blueKey;
+
+        case Key::RUBY_KEY:
+            return redKey;
+
+        default:
+#ifdef sts_asserts
+            assert(false);
+#endif
+            return false;
+    }
 }
 
 bool GameContext::hasLessThanTwoCampfireRelics() const {
@@ -1177,7 +1192,25 @@ void GameContext::afterBattle() {
 }
 
 void GameContext::obtainKey(Key key) {
-    keyBits |= (1 << static_cast<int>(key));
+    switch (key) {
+        case Key::EMERALD_KEY:
+            greenKey = true;
+            break;
+
+        case Key::SAPPHIRE_KEY:
+            blueKey = true;
+            break;
+
+        case Key::RUBY_KEY:
+            redKey = true;
+            break;
+
+        default:
+            break;
+#ifdef sts_asserts
+            assert(false);
+#endif
+    }
 }
 
 void GameContext::obtainPotion(Potion p) {
