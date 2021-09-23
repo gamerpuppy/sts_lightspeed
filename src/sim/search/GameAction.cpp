@@ -8,35 +8,38 @@
 #include "sim/search/GameAction.h"
 
 #include "game/GameContext.h"
+#include "sim/PrintHelpers.h"
 
 using namespace sts;
 
-int search::GameAction::getSelectIdx() const {
-    return bits & 0xFF;
-}
+search::GameAction::GameAction(std::uint32_t bits) : bits(bits) {}
+search::GameAction::GameAction(int idx1, int idx2) : bits( (idx2 & 0xFF) << 8 | (idx1 & 0xFF) ) {}
+
+search::GameAction::GameAction(search::GameAction::RewardsActionType type, int idx1, int idx2)
+    : bits( static_cast<int>(type) <<  27 | (idx2 & 0xFF) << 8 | (idx1 & 0xFF) ) {}
 
 bool search::GameAction::isPotionAction() const {
-    return (bits >> 29) & 0x1;
+    return bits & 0x80000000U;
 }
 
 bool search::GameAction::isPotionDiscard() const {
-    return (bits >> 30) & 0x1;
+    return bits & 0x40000000U;
 }
 
 search::GameAction::RewardsActionType search::GameAction::getRewardsActionType() const {
-    return static_cast<RewardsActionType>((bits >> 28) & 0x3);
+    return static_cast<RewardsActionType>((bits >> 27) & 0x7);
 }
 
 int search::GameAction::getIdx1() const {
-    return bits & 0xFF;
+    return static_cast<int>(bits & 0xFF);
 }
 
 int search::GameAction::getIdx2() const {
-    return (bits >> 8) & 0xFF;
+    return static_cast<int>((bits >> 8) & 0xFF);
 }
 
 int search::GameAction::getIdx3() const {
-    return (bits >> 16) & 0xFF;
+    return static_cast<int>((bits >> 16) & 0xFF);
 }
 
 std::ostream &search::GameAction::printDesc(std::ostream &os, const GameContext &gc) const {
@@ -57,7 +60,7 @@ bool isValidDesignerInSpireEventAction(const GameContext &gc, const search::Game
     const bool unfavorable = gc.ascension >= 15;
     const bool upgradeOne = gc.info.upgradeOne;
     const bool cleanUpIsRemoveCard = gc.info.cleanUpIsRemoveCard;
-    const auto select = a.getSelectIdx();
+    const auto select = a.getIdx1();
 
     const auto goldCost0 = unfavorable ? 50 : 40;
     if (gc.gold >= goldCost0 && gc.deck.getUpgradeableCount() > 0) {
@@ -100,214 +103,11 @@ bool isValidDesignerInSpireEventAction(const GameContext &gc, const search::Game
     return select == 5;
 }
 
-bool isValidEventScreenAction(const sts::GameContext &gc, const search::GameAction a) {
-    // given that game outcome is not undecided and screen state is event
-
-    const auto select = a.getSelectIdx();
-
-    switch (gc.curEvent) {
-        case Event::LAB:
-        case Event::WHEEL_OF_CHANGE:
-            return select == 0;
-
-        case Event::ANCIENT_WRITING:
-        case Event::DEAD_ADVENTURER:
-        case Event::DUPLICATOR:
-        case Event::OLD_BEGGAR:
-        case Event::THE_DIVINE_FOUNTAIN:
-        case Event::GHOSTS:
-        case Event::THE_SSSSSERPENT:
-        case Event::MASKED_BANDITS:
-        case Event::HYPNOTIZING_COLORED_MUSHROOMS:
-        case Event::MYSTERIOUS_SPHERE:
-        case Event::THE_NEST:
-        case Event::NOTE_FOR_YOURSELF:
-        case Event::SCRAP_OOZE:
-        case Event::SECRET_PORTAL:
-        case Event::SHINING_LIGHT:
-        case Event::THE_JOUST:
-        case Event::THE_LIBRARY:
-        case Event::THE_MAUSOLEUM:
-        case Event::WORLD_OF_GOOP:
-            return select == 0 || select == 1;
-
-        case Event::BIG_FISH:
-        case Event::FACE_TRADER:
-        case Event::OMINOUS_FORGE:
-        case Event::GOLDEN_SHRINE:
-        case Event::NLOTH:
-        case Event::SENSORY_STONE:
-        case Event::WINDING_HALLS:
-            return select == 0 || select == 1 || select == 2;
-
-        case Event::NEOW:
-        case Event::KNOWING_SKULL:
-        case Event::THE_WOMAN_IN_BLUE:
-            return select >= 0 && select < 4;
-
-        case Event::PLEADING_VAGRANT:
-            return (select == 0 && gc.gold >= 85) ||
-                   select == 1 || select == 2;
-
-        case Event::COLOSSEUM:
-            if (gc.info.eventData == 0) { // first phase
-                return select == 0;
-            } else {
-                return select >= 0 && select < 2;
-            }
-
-        case Event::CURSED_TOME:
-            switch (gc.info.eventData) { // event phase
-                case 0:
-                    return select >= 0 && select < 2;
-                case 1:
-                case 2:
-                case 3:
-                    return select == 0;
-                case 4:
-                    return select >= 0 && select < 2;
-                default:
-                    return false;
-            }
-
-        case Event::DESIGNER_IN_SPIRE:{
-            return isValidDesignerInSpireEventAction(gc, a);
-        }
-
-        case Event::AUGMENTER:
-            if (gc.deck.getTransformableCount(2) >= 2) {
-                return select == 0 || select == 1 || select == 2;
-            } else {
-                return select == 0 || select == 2;
-            }
-
-        case Event::FALLING:
-            return
-                select == 0 && gc.info.skillCardDeckIdx != -1 ||
-                select == 1 && gc.info.powerCardDeckIdx != -1 ||
-                select == 2 && gc.info.attackCardDeckIdx != -1 ||
-                (select == 3 &&
-                gc.info.skillCardDeckIdx != -1 &&
-                gc.info.powerCardDeckIdx != -1 &&
-                gc.info.attackCardDeckIdx != -1);
-
-
-        case Event::FORGOTTEN_ALTAR:
-            if (gc.relics.has(sts::RelicId::GOLDEN_IDOL)) {
-                return select >= 0 && select < 3;
-            } else {
-                return select >= 1 && select < 3;
-            }
-
-        case Event::GOLDEN_IDOL:
-            if (!gc.relics.has(sts::RelicId::GOLDEN_IDOL)) { // phase 1
-                return select >= 0 && select < 2;
-            } else { // phase 2
-                return select >= 0 && select < 3;
-            }
-
-        case Event::WING_STATUE:
-            if (gc.deck.hasCardForWingStatue()) {
-                return select == 0 || select == 1 || select == 2;
-            } else {
-                return select == 0 || select == 2;
-            }
-
-        case Event::LIVING_WALL:
-            if (gc.deck.getUpgradeableCount() > 0) {
-                return select >= 0 && select < 3;
-            } else {
-                return select == 0 || select == 1;
-            }
-
-        case Event::MATCH_AND_KEEP:
-            return isValidMatchAndKeepEventAction(gc, a);
-
-        case Event::MINDBLOOM:
-            if (gc.floorNum <= 40) {
-                return select >= 0 && select < 3;
-            } else {
-                return select == 0 || select == 1 || select == 3;
-            }
-
-        case Event::PURIFIER:
-        case Event::TRANSMORGRIFIER:
-            if (gc.deck.getTransformableCount() > 0) {
-                return select == 0 || select == 1;
-            } else {
-                return select == 1;
-            }
-
-        case Event::THE_CLERIC:
-            if (gc.gold >= (gc.ascension >= 15 ? 75 : 50)) {
-                return select >= 0 && select < 3;
-            } else {
-                return select == 0 || select == 2;
-            }
-
-        case Event::THE_MOAI_HEAD:
-            if (gc.hasRelic(sts::RelicId::GOLDEN_IDOL)) {
-                return select >= 0 && select < 3;
-            } else {
-                return select == 0 || select == 2;
-            }
-
-        case Event::TOMB_OF_LORD_RED_MASK:
-            if (gc.hasRelic(sts::RelicId::RED_MASK)) {
-                return select == 0 || select == 2;
-            } else {
-                return select == 1 || select == 2;
-            }
-
-        case Event::UPGRADE_SHRINE:
-            if (gc.deck.getUpgradeableCount() > 0) {
-                return select == 0 || select == 1;
-            } else {
-                return select == 1;
-            }
-
-        case Event::VAMPIRES:
-            if (gc.relics.has(sts::RelicId::BLOOD_VIAL)) {
-                return select >= 0 && select < 3;
-            } else {
-                return select == 1 || select == 2;
-            }
-
-        case Event::WE_MEET_AGAIN: {
-            if (gc.info.potionIdx != -1) {
-                if (select == 0) {
-                    return true;
-                }
-            }
-            if (gc.info.gold != -1) {
-                if (select == 1) {
-                    return true;
-                }
-            }
-            if (gc.info.cardIdx != -1) {
-                if (select == 2) {
-                    return true;
-                }
-            }
-            return select == 3;
-        }
-
-        case Event::BONFIRE_SPIRITS: // we skip the select phase of this event
-        case Event::INVALID:
-        case Event::MONSTER:
-        case Event::REST:
-        case Event::SHOP:
-        case Event::TREASURE:
-        default:
-            return false;
-    }
-}
-
 bool isValidRestAction(const GameContext &gc, const search::GameAction a) {
-    if (a.getSelectIdx() < 0 || a.getSelectIdx() > 6) {
+    if (a.getIdx1() < 0 || a.getIdx1() > 6) {
         return false;
     }
-    std::bitset<6> bits;
+    std::bitset<7> bits;
 
     if (!gc.relics.has(RelicId::COFFEE_DRIPPER)) {
         bits.set(0);
@@ -337,12 +137,28 @@ bool isValidRestAction(const GameContext &gc, const search::GameAction a) {
         bits.set(6);
     }
 
-    return bits.test(a.getSelectIdx());
+    return bits.test(a.getIdx1());
+}
+
+bool isValidEventScreenAction(const GameContext &gc, const search::GameAction a) {
+    // do not handle match and keep
+
+    auto bits = search::GameAction::getValidEventSelectBits(gc);
+    int curIdx = 0;
+
+    while (bits) {
+        if (bits & 0x1 && curIdx == a.getIdx1()) {
+            return true;
+        }
+        ++curIdx;
+        bits >>= 1;
+    }
+    return false;
 }
 
 bool isValidMapAction(const GameContext &gc, const search::GameAction a) {
-    const auto select = a.getSelectIdx();
-    if (select < 0 || select > 6) {
+    const auto select = a.getIdx1();
+    if (select > 6) {
         return false;
     }
 
@@ -368,26 +184,26 @@ bool isValidRewardsAction(const GameContext &gc, const search::GameAction a) {
     switch (a.getRewardsActionType()) {
 
         case search::GameAction::RewardsActionType::CARD: {
-            if (a.getIdx1() < 0 && a.getIdx1() >= r.cardRewardCount) {
+            if (a.getIdx1() >= r.cardRewardCount) {
                 return false;
             }
-            if (gc.hasRelic(sts::RelicId::SINGING_BOWL) && a.getIdx2() == 5) {
+            if (a.getIdx2() == 5) {
                 return true;
             }
-            return a.getIdx2() >= 0 && a.getIdx2() < r.cardRewards[a.getIdx1()].size();
+            return a.getIdx2() < r.cardRewards[a.getIdx1()].size();
         }
 
         case search::GameAction::RewardsActionType::KEY:
             return r.sapphireKey || r.emeraldKey;
 
         case search::GameAction::RewardsActionType::POTION:
-            return a.getIdx1() >= 0 && a.getIdx1() < r.potionCount;
+            return a.getIdx1() < r.potionCount;
 
         case search::GameAction::RewardsActionType::GOLD:
-            return a.getIdx1() >= 0 && a.getIdx1() < r.goldRewardCount;
+            return a.getIdx1() < r.goldRewardCount;
 
         case search::GameAction::RewardsActionType::RELIC:
-            return a.getIdx1() >= 0 && a.getIdx1() < r.relicCount;
+            return a.getIdx1() < r.relicCount;
 
         case search::GameAction::RewardsActionType::SKIP:
             return true;
@@ -403,20 +219,20 @@ bool isValidShopAction(const GameContext &gc, const search::GameAction a) {
     const auto select = a.getIdx1();
     switch (a.getRewardsActionType()) {
         case search::GameAction::RewardsActionType::CARD:
-            if (select < 0 || select >= 7) {
+            if (select > 6) {
                 return false;
             }
             return s.cardPrice(select) != -1 && gc.gold >= s.cardPrice(select);
 
         case search::GameAction::RewardsActionType::POTION:
-            if (select < 0 || select >= 3) {
+            if (select > 2) {
                 return false;
             }
             return s.potionPrice(select) != -1 && gc.gold >= s.potionPrice(select);
 
 
         case search::GameAction::RewardsActionType::RELIC:
-            if (select < 0 || select >= 3) {
+            if (select > 2) {
                 return false;
             }
             return s.relicPrice(select) != -1 && gc.gold >= s.relicPrice(select);
@@ -473,13 +289,17 @@ bool search::GameAction::isValidAction(const sts::GameContext &gc) const {
 
     switch (gc.screenState) {
         case ScreenState::EVENT_SCREEN:
-            return isValidEventScreenAction(gc, *this);
+            if (gc.curEvent == sts::Event::MATCH_AND_KEEP) {
+                return isValidMatchAndKeepEventAction(gc, *this);
+            } else {
+                return isValidEventScreenAction(gc, *this);
+            }
 
         case ScreenState::REWARDS:
             return isValidRewardsAction(gc, *this);
 
         case ScreenState::BOSS_RELIC_REWARDS:
-            return getSelectIdx() == 0 || getSelectIdx() == 1 || getSelectIdx() == 2;
+            return getIdx1() < 4;
 
         case ScreenState::CARD_SELECT:
             return isValidCardSelectScreenAction(gc, *this);
@@ -488,7 +308,7 @@ bool search::GameAction::isValidAction(const sts::GameContext &gc) const {
             return isValidMapAction(gc, *this);
 
         case ScreenState::TREASURE_ROOM:
-            return getSelectIdx() == 0 || getSelectIdx() == 1;
+            return getIdx1() == 0 || getIdx1() == 1;
 
         case ScreenState::REST_ROOM:
             return isValidRestAction(gc, *this);
@@ -506,9 +326,31 @@ bool search::GameAction::isValidAction(const sts::GameContext &gc) const {
 void executeRewardsAction(GameContext &gc, const search::GameAction a) {
     auto &r = gc.info.rewardsContainer;
     switch (a.getRewardsActionType()) {
+
+        case search::GameAction::RewardsActionType::CARD:
+            if (a.getIdx2() == 5) { // singing bowl
+                if (gc.hasRelic(sts::RelicId::SINGING_BOWL)) {
+                    gc.playerIncreaseMaxHp(2);
+                }
+            } else {
+                gc.obtainCard(r.cardRewards[a.getIdx1()][a.getIdx2()]);
+            }
+            r.removeCardReward(a.getIdx1());
+            break;
+
         case search::GameAction::RewardsActionType::GOLD:
             gc.obtainGold(r.gold[a.getIdx1()]);
             r.removeGoldReward(a.getIdx1());
+            break;
+
+        case search::GameAction::RewardsActionType::KEY:
+            r.sapphireKey = false;
+            r.emeraldKey = false;
+            break;
+
+        case search::GameAction::RewardsActionType::POTION:
+            gc.obtainPotion(r.potions[a.getIdx1()]);
+            r.removePotionReward(a.getIdx1());
             break;
 
         case search::GameAction::RewardsActionType::RELIC:
@@ -517,20 +359,6 @@ void executeRewardsAction(GameContext &gc, const search::GameAction a) {
             if (a.getIdx1() == r.relicCount-1) {
                 r.sapphireKey = false;
             }
-            break;
-
-        case search::GameAction::RewardsActionType::KEY:
-            r.sapphireKey = false;
-            r.emeraldKey = false;
-            break;
-
-        case search::GameAction::RewardsActionType::CARD:
-            if (a.getIdx2() == 5) { // singing bowl
-                gc.playerIncreaseMaxHp(2);
-            } else {
-                gc.obtainCard(r.cardRewards[a.getIdx1()][a.getIdx2()]);
-            }
-            r.removeCardReward(a.getIdx1());
             break;
 
         case search::GameAction::RewardsActionType::SKIP:
@@ -577,9 +405,8 @@ void executeShopAction(GameContext &gc, const search::GameAction a) {
 void search::GameAction::execute(GameContext &gc) const {
 #ifdef sts_asserts
     if (!isValidAction(gc)) {
-        std::cerr << "invalid game action taken seed:" << gc.seed
-            << " floor:" << gc.floorNum
-            << " event:" << eventGameNames[static_cast<int>(gc.curEvent)] << std::endl;
+        std::cerr << "invalid game action taken: " << bits
+        << " seed: " << gc << std::endl;
         assert(false);
     }
 #endif
@@ -594,7 +421,7 @@ void search::GameAction::execute(GameContext &gc) const {
 
     switch (gc.screenState) {
         case ScreenState::EVENT_SCREEN:
-            gc.chooseEventOption(getSelectIdx());
+            gc.chooseEventOption(getIdx1());
             break;
 
         case ScreenState::REWARDS:
@@ -602,19 +429,19 @@ void search::GameAction::execute(GameContext &gc) const {
             break;
 
         case ScreenState::BOSS_RELIC_REWARDS:
-            gc.chooseBossRelic(getSelectIdx());
+            gc.chooseBossRelic(getIdx1());
             break;
 
         case ScreenState::CARD_SELECT:
-            gc.chooseSelectCardScreenOption(getSelectIdx());
+            gc.chooseSelectCardScreenOption(getIdx1());
             break;
 
         case ScreenState::MAP_SCREEN:
-            gc.transitionToMapNode(getSelectIdx());
+            gc.transitionToMapNode(getIdx1());
             break;
 
         case ScreenState::TREASURE_ROOM:
-            if (getSelectIdx() == 0) {
+            if (getIdx1() == 0) {
                 gc.openTreasureRoomChest();
             } else {
                 gc.regainControl();
@@ -622,7 +449,7 @@ void search::GameAction::execute(GameContext &gc) const {
             break;
 
         case ScreenState::REST_ROOM:
-            gc.chooseCampfireOption(getSelectIdx());
+            gc.chooseCampfireOption(getIdx1());
             break;
 
         case ScreenState::SHOP_ROOM:
@@ -636,6 +463,192 @@ void search::GameAction::execute(GameContext &gc) const {
             assert(false);
 #endif
             break;
+    }
+}
+
+std::vector<search::GameAction> getAllActionsInEventState(const sts::GameContext &gc) {
+    // given that gc is in event screen state
+    std::vector<search::GameAction> actions;
+
+    auto bits = search::GameAction::getValidEventSelectBits(gc);
+    int curIdx = 0;
+    while (bits) {
+        if (bits & 0x1) {
+            actions.emplace_back(curIdx);
+        }
+
+        ++curIdx;
+        bits >>= 1;
+    }
+
+    return actions;
+}
+
+std::vector<search::GameAction> getAllShopActions(const sts::GameContext &gc) {
+    std::vector<search::GameAction> actions;
+
+    const auto &s = gc.info.shop;
+    for (int i = 0; i < 7; ++i) {
+        auto price = s.cardPrice(i);
+        if (price != -1 && gc.gold >= price) {
+            actions.emplace_back(search::GameAction::RewardsActionType::CARD, i);
+        }
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        auto price = s.relicPrice(i);
+        if (price != -1 && gc.gold >= price) {
+            actions.emplace_back(search::GameAction::RewardsActionType::RELIC, i);
+        }
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        auto price = s.potionPrice(i);
+        if (price != -1 && gc.gold >= price) {
+            actions.emplace_back(search::GameAction::RewardsActionType::POTION, i);
+        }
+    }
+
+    if (s.removeCost != -1 && gc.gold >= s.removeCost) {
+        actions.emplace_back(search::GameAction::RewardsActionType::CARD_REMOVE);
+    }
+
+    actions.emplace_back(search::GameAction::RewardsActionType::SKIP);
+    return actions;
+}
+
+std::vector<search::GameAction> getAllRestActions(const sts::GameContext &gc) {
+    std::vector<search::GameAction> actions;
+
+    if (!gc.relics.has(RelicId::COFFEE_DRIPPER)) {
+        actions.emplace_back(0);
+    }
+
+    if (!gc.relics.has(RelicId::FUSION_HAMMER) && gc.deck.getUpgradeableCount() > 0) {
+        actions.emplace_back(1);
+    }
+
+    if (!gc.hasKey(Key::RUBY_KEY)) {
+        actions.emplace_back(2);
+    }
+
+    if (gc.relics.has(RelicId::GIRYA) && gc.relics.getRelicValue(RelicId::GIRYA) != 3) {
+        actions.emplace_back(3);
+    }
+
+    if (gc.relics.has(RelicId::PEACE_PIPE)) { // assume we have card to remove
+        actions.emplace_back(4);
+    }
+
+    if (gc.relics.has(RelicId::SHOVEL)) { // assume we have card to remove
+        actions.emplace_back(5);
+    }
+
+    if (actions.empty()) {
+        actions.emplace_back(6);
+    }
+
+    return actions;
+}
+
+std::vector<search::GameAction> getAllRewardActions(const sts::GameContext &gc) {
+    std::vector<search::GameAction> actions;
+
+    const auto &r = gc.info.rewardsContainer;
+    for (int i = 0; i < r.goldRewardCount; ++i) {
+        actions.emplace_back(search::GameAction::RewardsActionType::GOLD);
+    }
+
+    for (int i = 0; i < r.cardRewardCount; ++i) {
+        for (int x = 0; x < r.cardRewards[i].size(); ++x) {
+            actions.emplace_back(search::GameAction::RewardsActionType::CARD, i, x);
+        }
+    }
+
+    for (int i = 0; i < r.relicCount; ++i) {
+        actions.emplace_back(search::GameAction::RewardsActionType::RELIC, i);
+    }
+
+    if (r.emeraldKey || r.sapphireKey) {
+        actions.emplace_back(search::GameAction::RewardsActionType::KEY);
+    }
+
+    for (int i = 0; i < r.potionCount; ++i) {
+        actions.emplace_back(search::GameAction::RewardsActionType::POTION, i);
+    }
+    actions.emplace_back(search::GameAction::RewardsActionType::SKIP);
+
+    return actions;
+}
+
+std::vector<search::GameAction> getAllMapActions(const sts::GameContext &gc) {
+    std::vector<search::GameAction> actions;
+
+    if (gc.curMapNodeY == 14) {
+        actions.emplace_back(0);
+
+    } else if (gc.curMapNodeY == -1) {
+        for (const auto &node : gc.map->nodes[0]) {
+            if (node.edgeCount > 0) {
+                actions.emplace_back(node.x);
+            }
+        }
+
+    } else {
+        auto node = gc.map->getNode(gc.curMapNodeX, gc.curMapNodeY);
+        for (int i = 0; i < node.edgeCount; ++i) {
+            actions.emplace_back(node.edges[i]);
+        }
+    }
+
+    return actions;
+}
+
+std::vector<search::GameAction> search::GameAction::getAllActionsInState(const sts::GameContext &gc) {
+    if (gc.outcome != GameOutcome::UNDECIDED) {
+        return {};
+    }
+
+    switch (gc.screenState) {
+
+        case ScreenState::EVENT_SCREEN:
+            if (gc.curEvent == Event::MATCH_AND_KEEP) {
+                return {};
+            } else {
+                return getAllActionsInEventState(gc);
+            }
+
+        case ScreenState::REWARDS:
+            return getAllRewardActions(gc);
+
+        case ScreenState::BOSS_RELIC_REWARDS:
+            return {0,1,2,3};
+
+        case ScreenState::CARD_SELECT: {
+            std::vector<search::GameAction> actions;
+            actions.reserve(gc.info.toSelectCards.size());
+            for (int i = 0; i < gc.info.toSelectCards.size(); ++i) {
+                actions.emplace_back(i);
+            }
+            return actions;
+        }
+
+        case ScreenState::MAP_SCREEN:
+            return getAllMapActions(gc);
+
+        case ScreenState::TREASURE_ROOM:
+            return {0,1};
+
+        case ScreenState::REST_ROOM:
+            return getAllRestActions(gc);
+
+        case ScreenState::SHOP_ROOM:
+            return getAllShopActions(gc);
+
+        case ScreenState::BATTLE:
+        case ScreenState::INVALID:
+        default:
+            return {};
     }
 }
 
@@ -702,11 +715,13 @@ int search::GameAction::getValidEventSelectBits(const GameContext &gc) {
                 case 1:
                 case 2:
                 case 3:
-                    return 0x1;
+                    return 0x1 << (gc.info.eventData+1);
+
                 case 4:
-                    return 0x3;
+                    return 0x3 << (gc.info.eventData+1);
+
                 default:
-                    return false;
+                    return 0;
             }
 
         case Event::DESIGNER_IN_SPIRE:{
@@ -857,7 +872,7 @@ int search::GameAction::getValidEventSelectBits(const GameContext &gc) {
             if (gc.info.cardIdx != -1) {
                 bits |= 4;
             }
-            break;
+            return bits;
         }
 
         case Event::BONFIRE_SPIRITS: // we skip the select phase of this event
@@ -867,38 +882,6 @@ int search::GameAction::getValidEventSelectBits(const GameContext &gc) {
         case Event::SHOP:
         case Event::TREASURE:
         default:
-            return false;
-    }
-}
-
-std::vector<search::GameAction> search::GameAction::getAllActionsInState(const sts::GameContext &gc) {
-    if (gc.outcome != GameOutcome::UNDECIDED) {
-        return {};
-    }
-
-    switch (gc.screenState) {
-        case ScreenState::EVENT_SCREEN:
-            break;
-
-
-        case ScreenState::REWARDS:
-            break;
-        case ScreenState::BOSS_RELIC_REWARDS:
-            break;
-        case ScreenState::CARD_SELECT:
-            break;
-        case ScreenState::MAP_SCREEN:
-            break;
-        case ScreenState::TREASURE_ROOM:
-            break;
-        case ScreenState::REST_ROOM:
-            break;
-        case ScreenState::SHOP_ROOM:
-            break;
-
-        case ScreenState::BATTLE:
-        case ScreenState::INVALID:
-        default:
-            return {};
+            return 0;
     }
 }

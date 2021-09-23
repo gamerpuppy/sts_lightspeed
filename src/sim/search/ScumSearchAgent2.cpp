@@ -5,18 +5,31 @@
 #include "sim/search/ScumSearchAgent2.h"
 
 #include <sim/search/ExpertKnowledge.h>
-#include <sim/StateHandler.h>
 #include <game/Game.h>
 #include "sim/PrintHelpers.h"
-
 #include "sim/search/BattleScumSearcher2.h"
-#include "combat/BattleContext.h"
 
 using namespace sts;
 
+void search::ScumSearchAgent2::takeAction(GameContext &gc, search::GameAction a) {
+    if (printLogs) {
+        gameActionHistory.emplace_back(a.bits);
+        std::cout << a.bits << std::endl;
+    }
+    a.execute(gc);
+}
+
+void search::ScumSearchAgent2::takeAction(BattleContext &bc, search::Action a) {
+    if (printLogs) {
+        gameActionHistory.emplace_back(a.bits);
+        std::cout << a.bits << std::endl;
+    }
+    a.execute(bc);
+}
+
+
 void search::ScumSearchAgent2::playout(GameContext &gc) {
     paused = false;
-    RandomStateHandler handler;
     BattleContext bc;
     const auto seedStr = std::string(SeedHelper::getString(gc.seed));
 
@@ -48,9 +61,7 @@ void printHelper(const BattleContext &bc, const search::Action &a) {
     std::cout << bc << std::endl;
 }
 
-
 void search::ScumSearchAgent2::playoutBattle(BattleContext &bc) {
-
     std::vector<search::Action> bestActions;
     int bestOutcomePlayerHp = -1;
 
@@ -87,8 +98,8 @@ void search::ScumSearchAgent2::stepThroughSolution(BattleContext &bc, std::vecto
         if (printLogs) {
             printHelper(bc, a);
         }
-        a.execute(bc);
 
+        takeAction(bc, a);
         actions.pop_back();
     }
 }
@@ -118,57 +129,53 @@ void search::ScumSearchAgent2::stepThroughSearchTree(BattleContext &bc, const se
             printHelper(bc, maxEdge->action);
         }
 
-        maxEdge->action.execute(bc);
+        takeAction(bc, maxEdge->action);
         curNode = &maxEdge->node;
     }
 }
 
 void search::ScumSearchAgent2::stepRandom(GameContext &gc) {
-    RandomStateHandler handler;
-    handler.setupState(gc);
-    const auto stateSize = handler.getStateSize(gc);
-    std::uniform_int_distribution<int> distr(0, stateSize - 1);
+    std::vector<search::GameAction> possibleActions(search::GameAction::getAllActionsInState(gc));
+    std::uniform_int_distribution<int> distr(0, static_cast<int>(possibleActions.size())-1);
     const int randomChoice = distr(rng);
-    handler.chooseOption(gc, randomChoice);
+    auto a = possibleActions[randomChoice];
+    takeAction(gc, a);
 }
 
 void search::ScumSearchAgent2::stepOutOfCombatPolicy(GameContext &gc) {
     ++stepCount;
+    search::GameAction a;
+
     switch (gc.screenState) {
         case ScreenState::EVENT_SCREEN:
             stepEventPolicy(gc);
             break;
 
-        case ScreenState::REWARDS: {
+        case ScreenState::REWARDS:
             stepRewardsPolicy(gc);
             break;
-        }
 
         case ScreenState::TREASURE_ROOM: {
             bool takeChest = true;
             if (gc.relics.has(RelicId::CURSED_KEY)) {
                 takeChest = gc.info.chestSize == ChestSize::LARGE;
             }
-            gc.chooseTreasureRoomOption(takeChest);
+            takeAction(gc, takeChest);
             break;
         }
-
-        case ScreenState::BATTLE:
-        case ScreenState::INVALID:
-            assert(false);
-            break;
 
         case ScreenState::SHOP_ROOM: {
             bool purchased = false;
             for (int i = 0; i < 3; ++i) {
                 if (gc.info.shop.relicPrice(i) != -1 &&  gc.gold >= gc.info.shop.relicPrice(i)) {
-                    gc.info.shop.buyRelic(gc, i);
+                    takeAction(gc, GameAction(GameAction::RewardsActionType::RELIC, i));
                     purchased = true;
                     break;
                 }
             }
             if (!purchased) {
                 stepRandom(gc);
+                return;
             }
             break;
         }
@@ -189,25 +196,31 @@ void search::ScumSearchAgent2::stepOutOfCombatPolicy(GameContext &gc) {
                     bestIdx = i;
                 }
             }
-            gc.chooseBossRelic(bestIdx);
+            takeAction(gc, bestIdx);
             break;
         }
 
         case ScreenState::REST_ROOM: {
-            if (gc.curHp > 50 && gc.deck.upgradeableCount > 0 && !gc.hasRelic(RelicId::FUSION_HAMMER)) {
-                gc.chooseCampfireOption(1);
-            } else if (gc.curHp < 10 && !gc.relics.has(RelicId::COFFEE_DRIPPER)){
-                gc.chooseCampfireOption(0);
+            if (gc.curHp > 50 && gc.deck.getUpgradeableCount() > 0 && !gc.hasRelic(RelicId::FUSION_HAMMER)) {
+                takeAction(gc, 1);
+            } else if (gc.curHp < 15 && !gc.relics.has(RelicId::COFFEE_DRIPPER)){
+                takeAction(gc, 0);
             } else {
                 stepRandom(gc);
+                return;
             }
             break;
         }
 
+        case ScreenState::BATTLE:
+        case ScreenState::INVALID:
+            assert(false);
+            break;
+
         case ScreenState::MAP_SCREEN:
         default:
             stepRandom(gc);
-            break;
+            return;
     }
 }
 
@@ -249,42 +262,30 @@ void search::ScumSearchAgent2::cardSelectPolicy(GameContext &gc) {
         }
     }
     std::sort(selectOrder.begin(), selectOrder.end(), [](auto a, auto b) { return a.second < b.second; });
-    gc.chooseSelectCardScreenOption(selectOrder.front().first);
+    takeAction(gc, selectOrder.front().first);
 }
 
 void search::ScumSearchAgent2::stepRewardsPolicy(GameContext &gc) {
     auto &r = gc.info.rewardsContainer;
     if (r.goldRewardCount > 0) {
-        gc.obtainGold(r.gold[0]);
-        r.removeGoldReward(0);
-        return;
+        takeAction(gc, GameAction(GameAction::RewardsActionType::GOLD, 0));
 
     } else if (r.relicCount > 0) {
-        const bool newBlueKeyValue = r.sapphireKey && (0  < r.relicCount - 1);
-        gc.obtainRelic(r.relics[0]);
-        r.removeRelicReward(0);
-        r.sapphireKey = newBlueKeyValue;
-        return;
+        takeAction(gc, GameAction(GameAction::RewardsActionType::RELIC, 0));
 
     } else if (r.potionCount > 0) {
-        gc.obtainPotion(r.potions[0]);
-        r.removePotionReward(0);
-        return;
+        takeAction(gc, GameAction(GameAction::RewardsActionType::POTION, 0));
+
+    } else if (r.cardRewardCount == 0) {
+        takeAction(gc, GameAction(GameAction::RewardsActionType::SKIP));
+
+    } else {
+        if (pauseOnCardReward) {
+            paused = true;
+            return;
+        }
+        weightedCardRewardPolicy(gc);
     }
-
-    if (r.cardRewardCount == 0) {
-        gc.regainControl(); // skip
-        return;
-    }
-
-    if (pauseOnCardReward) {
-        paused = true;
-        return;
-    }
-
-
-//    stepRandom(gc);
-    weightedCardRewardPolicy(gc);
 }
 
 double getAvgDeckWeight(const GameContext &gc) {
@@ -345,18 +346,22 @@ void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
             }
         }
 
-        if (!skipCard) {
-            gc.deck.obtain(gc, r.cardRewards[rIdx][weights[selection].first]);
+        if (skipCard) {
+            takeAction(gc, GameAction(GameAction::RewardsActionType::CARD, rIdx, 5));
+
+        } else {
+            takeAction(gc, GameAction(GameAction::RewardsActionType::CARD, rIdx, weights[selection].first));
         }
-        gc.info.rewardsContainer.removeCardReward(rIdx);
     }
 }
 
 void search::ScumSearchAgent2::stepEventPolicy(GameContext &gc) {
+
     switch (gc.curEvent) {
 
         case Event::NEOW:
-            gc.chooseEventOption(3);
+            takeAction(gc, 3);
+//            gc.chooseEventOption(3);
 //                    if (gc.info.neowRewards[1].d == Neow::Drawback::CURSE || gc.info.neowRewards[2].d == Neow::Drawback::CURSE) {
 //                        gc.chooseEventOption(0);
 //                    } else {
@@ -367,60 +372,55 @@ void search::ScumSearchAgent2::stepEventPolicy(GameContext &gc) {
         case Event::NOTE_FOR_YOURSELF:
         case Event::THE_DIVINE_FOUNTAIN:
         case Event::OMINOUS_FORGE:
-            gc.chooseEventOption(0);
+            takeAction(gc, 0);
             break;
 
         case Event::BIG_FISH:
-            gc.chooseEventOption(1);
+            takeAction(gc, 1);
             break;
 
         case Event::WE_MEET_AGAIN: {
             if (gc.gold >= 50) {
-                gc.chooseEventOption(1);
+                takeAction(gc, 1);
             } else if (gc.potionCount > 0) {
-                gc.chooseEventOption(0);
+                takeAction(gc, 2);
             } else {
                 stepRandom(gc);
+                return;
             }
             break;
         }
 
         case Event::GOLDEN_IDOL: {
             if (gc.hasRelic(RelicId::GOLDEN_IDOL)) {
-                gc.chooseEventOption(2);
+                takeAction(gc, 5);
             } else {
-                gc.chooseEventOption(1);
+                takeAction(gc, 0);
             }
             break;
         }
 
-        case Event::GHOSTS: {
-            gc.chooseEventOption(0);
-            break;
-        }
 
-        case Event::MASKED_BANDITS: {
-            gc.chooseEventOption(0);
+        case Event::GHOSTS:
+        case Event::MASKED_BANDITS:
+            takeAction(gc, 0);
             break;
-        }
 
-        case Event::KNOWING_SKULL: {
-            gc.chooseEventOption(0);
-            if (gc.potionCount != gc.potionCapacity) {
-                gc.chooseEventOption(2);
+        case Event::CURSED_TOME:
+            if (gc.info.eventData == 0) {
+                takeAction(gc, 0);
+            } else {
+                takeAction(gc, gc.info.eventData+1);
             }
-            gc.chooseEventOption(3);
             break;
-        }
 
-        case Event::CURSED_TOME: {
-            gc.chooseEventOption(0);
+        case Event::KNOWING_SKULL:
+            takeAction(gc, 3);
             break;
-        }
 
         default:
             stepRandom(gc);
-            break;
+            return;
     }
 }
 

@@ -8,6 +8,7 @@
 
 using namespace sts;
 
+search::Action::Action(std::uint32_t bits) : bits(bits) {}
 search::Action::Action(search::ActionType actionType) : bits(static_cast<int>(actionType) << 29) {}
 search::Action::Action(search::ActionType actionType, int idx1) : bits((static_cast<int>(actionType) << 29) | (idx1 & 0xFFFF)) {}
 search::Action::Action(search::ActionType actionType, int idx1, int idx2) : bits((static_cast<int>(actionType) << 29) | ((idx2 & 0x1FFF) << 16) | (idx1 & 0xFFFF)) {}

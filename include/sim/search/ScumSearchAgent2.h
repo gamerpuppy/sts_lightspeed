@@ -7,6 +7,7 @@
 
 #include "game/GameContext.h"
 #include "sim/search/Action.h"
+#include "sim/search/GameAction.h"
 
 #include <memory>
 #include <random>
@@ -16,9 +17,10 @@ namespace sts::search {
     class BattleScumSearcher2;
 
     struct ScumSearchAgent2 {
+        std::vector<int> gameActionHistory;
+
         int stepCount = 0;
         bool paused = false;
-
 
         bool pauseOnCardReward = false;
         bool printLogs = false;
@@ -29,15 +31,18 @@ namespace sts::search {
 
         std::default_random_engine rng;
 
+
         // public interface
         void playout(GameContext &gc);
 
         // private methods
         void playoutBattle(BattleContext &bc);
 
+        void takeAction(GameContext &gc, GameAction a);
+        void takeAction(BattleContext &bc, Action a);
+
         void stepThroughSolution(BattleContext &bc, std::vector<search::Action> &actions);
         void stepThroughSearchTree(BattleContext &bc, const search::BattleScumSearcher2 &s);
-
 
         void stepOutOfCombatPolicy(GameContext &gc);
         void cardSelectPolicy(GameContext &gc);

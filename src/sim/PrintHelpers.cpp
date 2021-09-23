@@ -148,6 +148,8 @@ namespace sts {
             << " boss2: " << monsterEncounterStrings[static_cast<int>(gc.secondBoss)]
             << '\n';
 
+        os << "eventData: " << gc.info.eventData
+            << "screenState: " << static_cast<int>(gc.screenState);
 
         os << "\t";
         printPlayerInfo(os, gc);
@@ -157,6 +159,7 @@ namespace sts {
 
         os << '\t';
         printPotionInfo(os, gc);
+
 
         printMonsterLists(os, gc);
 

@@ -858,6 +858,10 @@ void GameContext::setupEvent() { // todo necronomicon event
             openCardSelectScreen(CardSelectScreenType::BONFIRE_SPIRITS, 1);
             break;
 
+        case Event::CURSED_TOME:
+            info.eventData = 0;
+            break;
+
         case Event::DEAD_ADVENTURER: {
             info.phase = 0;
             info.rewards = {0,1,2};
@@ -2833,21 +2837,29 @@ void GameContext::chooseEventOption(int idx) {
                 case 0:
                     obtainRelic(RelicId::GOLDEN_IDOL);
                     break;
+
                 case 1:
+                    regainControl();
                     break;
+
                 case 2:
                     obtainCard(CardId::INJURY);
+                    regainControl();
                     break;
+
                 case 3:
                     damagePlayer(info.hpAmount0);
+                    regainControl();
                     break;
+
                 case 4:
                     loseMaxHp(info.hpAmount1);
+                    regainControl();
                     break;
+
                 default:
                     break;
             }
-            regainControl();
         }
 
         case Event::GOLDEN_SHRINE: { // Golden Shrine

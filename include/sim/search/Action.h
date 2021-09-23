@@ -29,17 +29,15 @@ namespace sts::search {
         END_TURN,
     };
 
-
-
     // couldn't make a union work in only 32 bits
-    class Action {
+    struct Action {
 //        ActionType actionType;
 //        int idx1;
 //        int idx2;
         std::uint32_t bits = -1;
 
-    public:
         Action() = default;
+        Action(std::uint32_t bits);
         Action(ActionType actionType);
         Action(ActionType actionType, int idx1);
         Action(ActionType actionType, int idx1, int idx2);

@@ -3137,6 +3137,7 @@ namespace sts {
             << ", ascension " << bc.ascension
             << ", loopCount: " << bc.loopCount
             << ", sum: " << bc.sum
+            << ", seed: " << bc.seed
             << "\n";
 
         os << bc.monsters;

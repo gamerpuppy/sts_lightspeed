@@ -718,7 +718,6 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
 //                    assert(false);
 //                    break;
 //            }
-
             break;
         }
 
