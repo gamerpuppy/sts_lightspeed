@@ -26,6 +26,8 @@
 
 namespace sts {
 
+
+
     enum class Outcome {
         UNDECIDED=0,
         PLAYER_VICTORY,
@@ -39,6 +41,8 @@ namespace sts {
     };
 
     class GameContext;
+
+    extern BattleContext *g_debug_bc;
 
     struct BattleContext {
 
@@ -73,7 +77,7 @@ namespace sts {
         bool turnHasEnded = false;
         bool skipMonsterTurn = false;
 
-        ActionQueue<40> actionQueue;
+        ActionQueue<50> actionQueue;
         CardQueue cardQueue;
 
         int potionCount = 0;

@@ -25,10 +25,14 @@ int sts::search::Expert::getPlayOrdering(CardId id) {
             return -10;
 
         case CardId::PANACHE:
+        case CardId::RUPTURE:
             return -5;
 
         case CardId::DARK_EMBRACE:
         case CardId::FEEL_NO_PAIN:
+        case CardId::BLOODLETTING:
+        case CardId::SPOT_WEAKNESS:
+        case CardId::OFFERING:
             return -2;
 
         case CardId::BARRICADE:
@@ -41,7 +45,6 @@ int sts::search::Expert::getPlayOrdering(CardId id) {
         case CardId::BRUTALITY:
         case CardId::FIRE_BREATHING:
         case CardId::METALLICIZE:
-        case CardId::RUPTURE:
             return 3;
 
         case CardId::MASTER_OF_STRATEGY:
@@ -49,10 +52,8 @@ int sts::search::Expert::getPlayOrdering(CardId id) {
 
         case CardId::SADISTIC_NATURE:
         case CardId::PANACEA:
-        case CardId::OFFERING:
         case CardId::SECRET_TECHNIQUE:
         case CardId::SECRET_WEAPON:
-        case CardId::SPOT_WEAKNESS:
             return 5;
 
         case CardId::DARK_SHACKLES:
@@ -88,7 +89,6 @@ int sts::search::Expert::getPlayOrdering(CardId id) {
         case CardId::DEEP_BREATH:
         case CardId::DISCOVERY:
         case CardId::INFERNAL_BLADE:
-        case CardId::FLEX:
         case CardId::METAMORPHOSIS:
         case CardId::HAVOC:
         case CardId::FORETHOUGHT:
@@ -99,7 +99,6 @@ int sts::search::Expert::getPlayOrdering(CardId id) {
         case CardId::JAX:
             return 20;
 
-        case CardId::BLOODLETTING:
         case CardId::EXHUME:
         case CardId::IMPATIENCE:
         case CardId::TRUE_GRIT:
@@ -224,17 +223,19 @@ int search::Expert::getBossRelicOrdering(RelicId id) {
             return 2;
 
         case RelicId::BLACK_BLOOD:
+            return 3;
+
         case RelicId::TINY_HOUSE:
         case RelicId::ASTROLABE:
         case RelicId::CALLING_BELL:
-        case RelicId::RUNIC_PYRAMID:
-        case RelicId::SACRED_BARK:
-        case RelicId::RUNIC_CUBE:
-            return 3;
+            return 5;
 
+        case RelicId::RUNIC_CUBE:
         case RelicId::PHILOSOPHERS_STONE:
             return 5;
 
+        case RelicId::SACRED_BARK:
+        case RelicId::RUNIC_PYRAMID:
         case RelicId::BLACK_STAR:
             return 10;
 
@@ -255,86 +256,83 @@ int search::Expert::getObtainWeight(CardId id) {
             return 95;
 
         case CardId::BARRICADE:
-            return 90;
-
-        case CardId::DARK_EMBRACE:
         case CardId::FEEL_NO_PAIN:
-            return 89;
+            return 85;
 
-        case CardId::RITUAL_DAGGER:
         case CardId::MASTER_OF_STRATEGY:
             return 70;
 
+        case CardId::RITUAL_DAGGER:
         case CardId::BRUTALITY:
         case CardId::FIEND_FIRE:
         case CardId::SECRET_TECHNIQUE:
         case CardId::BLUDGEON:
         case CardId::IMMOLATE:
         case CardId::OFFERING:
+        case CardId::FLEX:
+        case CardId::SPOT_WEAKNESS:
             return 65;
 
-        case CardId::REAPER:
         case CardId::LIMIT_BREAK:
             return 40;
 
         case CardId::BERSERK:
+        case CardId::WHIRLWIND:
             return 35;
 
+        case CardId::REAPER:
+        case CardId::DARK_EMBRACE:
         case CardId::MAYHEM:
         case CardId::PANACEA:
         case CardId::SECRET_WEAPON:
         case CardId::INFLAME:
-        case CardId::UPPERCUT:
         case CardId::CARNAGE:
         case CardId::DRAMATIC_ENTRANCE:
-        case CardId::FEED:
-        case CardId::SPOT_WEAKNESS:
+        case CardId::JAX:
             return 30;
 
-        case CardId::FLASH_OF_STEEL:
-            return 28;
+        case CardId::RUPTURE:
+        case CardId::FEED:
+            return 25;
 
         case CardId::BLOOD_FOR_BLOOD:
-        case CardId::RUPTURE:
-        case CardId::SEVER_SOUL:
-        case CardId::WHIRLWIND:
         case CardId::ARMAMENTS:
         case CardId::DARK_SHACKLES:
         case CardId::FINESSE:
         case CardId::BATTLE_TRANCE:
         case CardId::DISARM:
-        case CardId::INTIMIDATE:
         case CardId::BLIND:
         case CardId::TRIP:
         case CardId::SHOCKWAVE:
         case CardId::PERFECTED_STRIKE:
-        case CardId::FIRE_BREATHING:
         case CardId::EVOLVE:
-            return 25;
+            return 20;
 
-        case CardId::JAX:
+        case CardId::UPPERCUT:
         case CardId::POWER_THROUGH:
         case CardId::SECOND_WIND:
-            return 24;
+        case CardId::FLAME_BARRIER:
+            return 18;
 
+        case CardId::SEVER_SOUL:
+        case CardId::INTIMIDATE:
         case CardId::JUGGERNAUT:
         case CardId::MADNESS:
         case CardId::RAGE:
         case CardId::TRANSMUTATION:
         case CardId::HAND_OF_GREED:
-        case CardId::METALLICIZE:
-        case CardId::COMBUST:
         case CardId::SHRUG_IT_OFF:
-            return 22;
+            return 15;
 
-        case CardId::FLAME_BARRIER:
+        case CardId::CLOTHESLINE:
         case CardId::ENTRENCH:
         case CardId::ENLIGHTENMENT:
-            return 20;
+        case CardId::FLASH_OF_STEEL:
+            return 12;
 
-        case CardId::HEMOKINESIS:
-            return 18;
-
+        case CardId::FIRE_BREATHING:
+        case CardId::COMBUST:
+        case CardId::CLEAVE:
         case CardId::PANACHE:
         case CardId::EXHUME:
         case CardId::SEEING_RED:
@@ -346,15 +344,16 @@ int search::Expert::getObtainWeight(CardId id) {
         case CardId::CHRYSALIS:
         case CardId::DISCOVERY:
         case CardId::INFERNAL_BLADE:
-        case CardId::FLEX:
         case CardId::METAMORPHOSIS:
         case CardId::HAVOC:
         case CardId::SENTINEL:
-            return 15;
+        case CardId::HEMOKINESIS:
+        case CardId::HEAVY_BLADE:
+            return 8;
 
+        case CardId::METALLICIZE:
         case CardId::ANGER:
         case CardId::THINKING_AHEAD:
-        case CardId::BLOODLETTING:
         case CardId::MAGNETISM:
         case CardId::JACK_OF_ALL_TRADES:
         case CardId::DEEP_BREATH:
@@ -365,45 +364,43 @@ int search::Expert::getObtainWeight(CardId id) {
         case CardId::GHOSTLY_ARMOR:
         case CardId::WILD_STRIKE:
         case CardId::POMMEL_STRIKE:
-            return 13;
+            return 6;
 
-        case CardId::THUNDERCLAP:
+        case CardId::BLOODLETTING:
         case CardId::GOOD_INSTINCTS:
         case CardId::VIOLENCE:
         case CardId::SWIFT_STRIKE:
         case CardId::FORETHOUGHT:
         case CardId::HEADBUTT:
-            return 12;
+            return 5;
 
         case CardId::CLASH:
-        case CardId::CLOTHESLINE:
         case CardId::PUMMEL:
-        case CardId::BODY_SLAM:
-            return 10;
+            return 4;
 
+        case CardId::THUNDERCLAP:
         case CardId::RAMPAGE:
-        case CardId::HEAVY_BLADE:
         case CardId::SWORD_BOOMERANG:
-            return 8;
+            return 3;
 
         case CardId::DROPKICK:
-        case CardId::CLEAVE:
         case CardId::RECKLESS_CHARGE:
         case CardId::IRON_WAVE:
-            return 7;
-
         case CardId::TWIN_STRIKE:
+            return 2;
+
         case CardId::BITE:
         case CardId::BANDAGE_UP:
         case CardId::BASH:
-            return 6;
+        case CardId::BODY_SLAM:
+            return 1;
 
         case CardId::MIND_BLAST:
         case CardId::PURITY:
         case CardId::SEARING_BLOW:
         case CardId::STRIKE_RED:
         case CardId::DEFEND_RED:
-            return 5;
+            return 0;
 
         default:
             return 0;
@@ -413,7 +410,7 @@ int search::Expert::getObtainWeight(CardId id) {
 
 int search::Expert::getObtainWeight(CardId id, bool upgraded) {
     if (upgraded) {
-        return getObtainWeight(id) * 2;
+        return getObtainWeight(id) * 1.5;
     } else {
         return getObtainWeight(id);
     }

@@ -47,6 +47,7 @@ GameContext::GameContext(CharacterClass cc, std::uint64_t seed, int ascension)
     miscRng(seed),
     mathUtilRng(seed-897897), // uses a time based seed -_-
     cc(cc),
+    map(new Map(Map::fromSeed(seed, ascension, 1, true))),
     ascension(ascension) {
     eventList.insert(eventList.end(), EventPools::Act1::events.begin(), EventPools::Act1::events.end());
     shrineList.insert(shrineList.end(), EventPools::Act1::shrines.begin(), EventPools::Act1::shrines.end());
@@ -61,9 +62,6 @@ GameContext::GameContext(CharacterClass cc, std::uint64_t seed, int ascension)
     generateMonsters();
     initRelics();
     initPlayer();
-
-    map = new Map();
-    *map = Map::fromSeed(seed, ascension, 1, true);
 
     potionCapacity = ascension < 11 ? 3 : 2;
     std::fill(potions.begin(), potions.end(), Potion::EMPTY_POTION_SLOT);
@@ -216,8 +214,7 @@ void GameContext::initFromSave(const SaveFile &s) {
         potions[i] = p;
     }
 
-    map = new Map();
-    *map = Map::fromSeed(seed, ascension, act, true);
+    map = std::make_shared<Map>(Map::fromSeed(seed, ascension, act, true));
 
     regainControlAction = [](GameContext &gc) {
         gc.afterBattle();
@@ -371,10 +368,10 @@ bool GameContext::relicCanSpawn(RelicId relic, bool shopRoom) const {
 
 bool GameContext::canAddOneTimeEvent(Event shrine) const {
     switch (shrine) {
-        case Event::FOUNTAIN_OF_CLEANSING:
+        case Event::THE_DIVINE_FOUNTAIN:
             return deck.hasCurse();
 
-        case Event::DESIGNER:
+        case Event::DESIGNER_IN_SPIRE:
             return  (act == 2 || act == 3) && gold >= 75;
 
         case Event::DUPLICATOR:
@@ -406,7 +403,7 @@ bool GameContext::canAddOneTimeEvent(Event shrine) const {
 bool GameContext::canAddEvent(Event event) const {
     switch (event) {
         case Event::DEAD_ADVENTURER:
-        case Event::MUSHROOMS:
+        case Event::HYPNOTIZING_COLORED_MUSHROOMS:
             return floorNum > 6;
 
         case Event::THE_MOAI_HEAD: {
@@ -418,7 +415,7 @@ bool GameContext::canAddEvent(Event event) const {
         case Event::THE_CLERIC:
             return gold >= 35;
 
-        case Event::BEGGAR:
+        case Event::OLD_BEGGAR:
             return gold >= 75;
 
         case Event::COLOSSEUM:
@@ -871,7 +868,7 @@ void GameContext::setupEvent() { // todo necronomicon event
             break;
         }
 
-        case Event::DESIGNER:
+        case Event::DESIGNER_IN_SPIRE:
             info.upgradeOne = miscRng.randomBoolean();
             info.cleanUpIsRemoveCard = miscRng.randomBoolean();
             break;
@@ -958,6 +955,10 @@ void GameContext::setupEvent() { // todo necronomicon event
         }
 
         case Event::MATCH_AND_KEEP: {
+            if (disableMatchAndKeep) { // additional safeguard as it should also be prevented from spawning
+                regainControl();
+            }
+
             info.toSelectCards.clear();
 
             Card cards[6];
@@ -1210,6 +1211,21 @@ void GameContext::obtainKey(Key key) {
 #ifdef sts_asserts
             assert(false);
 #endif
+    }
+}
+
+void GameContext::obtainCard(Card c, int count) {
+    deck.obtain(*this, c, count);
+}
+
+void GameContext::obtainGold(int amount) {
+    if (relics.has(R::ECTOPLASM)) {
+        return;
+    }
+
+    gold += amount;
+    if (relics.has(R::BLOODY_IDOL)) {
+        playerHeal(5);
     }
 }
 
@@ -1556,7 +1572,7 @@ Card GameContext::previewObtainCard(Card card) {
 
 void GameContext::relicsOnEnterRoom(Room room) {
     if (hasRelic(RelicId::MAW_BANK) && relics.getRelicValue(RelicId::MAW_BANK) != 0) {
-        gainGold(12);
+        obtainGold(12);
     }
 
     switch (room) {
@@ -1568,7 +1584,7 @@ void GameContext::relicsOnEnterRoom(Room room) {
 
         case Room::EVENT:
             if (hasRelic(RelicId::SSSERPENT_HEAD)) {
-                gainGold(50);
+                obtainGold(50);
             }
             break;
 
@@ -1780,7 +1796,7 @@ CardReward GameContext::createCardReward(Room room) {
         bool hasDuplicate = true;
         while (hasDuplicate) {
 
-            if (prismaticShardEnabled && hasRelic(RelicId::PRISMATIC_SHARD)) {
+            if (hasRelic(RelicId::PRISMATIC_SHARD) && !disablePrismaticShard) {
                 id = getAnyColorCard(cardRng, rarity);
             } else {
                 id = getRandomClassCardOfRarity(cardRng, cc, rarity);
@@ -1946,7 +1962,9 @@ Event GameContext::getShrine(Random &eventRngCopy) {  // todo fix, this is slow
     Event tempShrines[20];
 
     for (auto shrine : shrineList) {
-        tempShrines[tempLength++] = shrine;
+        if (shrine != Event::MATCH_AND_KEEP || !disableMatchAndKeep) {
+            tempShrines[tempLength++] = shrine;
+        }
     }
 
     for (auto event : specialOneTimeEventList) {
@@ -2139,17 +2157,6 @@ void GameContext::playerIncreaseMaxHp(int amount) {
     playerHeal(amount);
 }
 
-void GameContext::gainGold(int amount) {
-    if (relics.has(R::ECTOPLASM)) {
-        return;
-    }
-
-    gold += amount;
-    if (relics.has(R::BLOODY_IDOL)) {
-        playerHeal(5);
-    }
-}
-
 void GameContext::loseGold(int amount, bool inShop) {
     if (inShop && relics.has(RelicId::MAW_BANK)) {
         relics.getRelicValueRef(RelicId::MAW_BANK) = 0;
@@ -2162,22 +2169,13 @@ void GameContext::loseMaxHp(int amount) {
     curHp = std::min(curHp, maxHp);
 }
 
-void GameContext::drinkPotion(int idx) {
-    if (curEvent == Event::WE_MEET_AGAIN && screenState == ScreenState::EVENT_SCREEN) {
-        assert(false);
-    }
-
-    const Potion drinkPotion = potions[idx];
-
-    potions[idx] = Potion::EMPTY_POTION_SLOT;
-    --potionCount;
-
-    switch (drinkPotion) {
+void GameContext::drinkPotion(Potion p) {
+    switch (p) {
         case Potion::BLOOD_POTION:
             playerHeal(fractionMaxHp(hasRelic(RelicId::SACRED_BARK) ? 0.40f : 0.20f));
             break;
 
-        case Potion::ENTROPIC_BREW: {  // todo fix
+        case Potion::ENTROPIC_BREW: {
             Potion randPotions[5];
             for (int i = 0 ; i < potionCapacity; ++i) {
                 randPotions[i] = returnRandomPotion(potionRng, cc);
@@ -2196,18 +2194,30 @@ void GameContext::drinkPotion(int idx) {
         case Potion::INVALID:
         case Potion::EMPTY_POTION_SLOT:
         default:
+#ifdef sts_asserts
             assert(false);
+#endif
             break;
     }
 }
 
-void GameContext::discardPotion(int idx) {
-    if ((curEvent == Event::WE_MEET_AGAIN && screenState == ScreenState::EVENT_SCREEN) ||
-            potions[idx] == Potion::EMPTY_POTION_SLOT ||
-            potions[idx] == Potion::INVALID) {
-        assert(false);
-    }
+void GameContext::drinkPotionAtIdx(int idx) {
+#ifdef sts_asserts
+    assert(!(curEvent == Event::WE_MEET_AGAIN && screenState == ScreenState::EVENT_SCREEN));
+    assert(potions[idx] != Potion::EMPTY_POTION_SLOT);
+    assert(potions[idx] != Potion::INVALID);
+#endif
+    const Potion p = potions[idx];
+    discardPotionAtIdx(idx);
+    drinkPotion(p);
+}
 
+void GameContext::discardPotionAtIdx(int idx) {
+#ifdef sts_asserts
+    assert(!(curEvent == Event::WE_MEET_AGAIN && screenState == ScreenState::EVENT_SCREEN));
+    assert(potions[idx] != Potion::EMPTY_POTION_SLOT);
+    assert(potions[idx] != Potion::INVALID);
+#endif
     potions[idx] = Potion::EMPTY_POTION_SLOT;
     --potionCount;
 }
@@ -2307,7 +2317,7 @@ void GameContext::chooseNeowOption(const Neow::Option &o) {
             break;
 
         case Neow::Bonus::HUNDRED_GOLD:
-            gainGold(100);
+            obtainGold(100);
             regainControlAction(*this);
             break;
 
@@ -2333,7 +2343,7 @@ void GameContext::chooseNeowOption(const Neow::Option &o) {
             break;
 
         case Neow::Bonus::TWO_FIFTY_GOLD:
-            gainGold(250);
+            obtainGold(250);
             regainControlAction(*this);
             break;
 
@@ -2404,7 +2414,6 @@ void GameContext::chooseMatchAndKeepCards(int idx1, int idx2) {
     }
 }
 
-
 void GameContext::chooseTreasureRoomOption(bool openChest) {
     if (openChest) {
         openTreasureRoomChest();
@@ -2412,7 +2421,6 @@ void GameContext::chooseTreasureRoomOption(bool openChest) {
         regainControl();
     }
 }
-
 
 void GameContext::chooseEventOption(int idx) {
 //    regainControlAction = [](auto &gs) {
@@ -2448,7 +2456,7 @@ void GameContext::chooseEventOption(int idx) {
             break;
         }
 
-        case Event::ADDICT: { // Pleading Vagrant
+        case Event::PLEADING_VAGRANT: { // Pleading Vagrant
             switch (idx) {
                 case 0: {
                     loseGold(85);
@@ -2476,7 +2484,7 @@ void GameContext::chooseEventOption(int idx) {
             break;
         }
 
-        case Event::BACK_TO_BASICS: { // Ancient Writing
+        case Event::ANCIENT_WRITING: { // Ancient Writing
             if (idx == 0) {
                 openCardSelectScreen(CardSelectScreenType::REMOVE, 1);
 
@@ -2490,7 +2498,7 @@ void GameContext::chooseEventOption(int idx) {
             break;
         }
 
-        case Event::BEGGAR: { // Old Beggar
+        case Event::OLD_BEGGAR: { // Old Beggar
             if (idx == 0) {
                 loseGold(75);
                 openCardSelectScreen(CardSelectScreenType::REMOVE, 1);
@@ -2536,55 +2544,48 @@ void GameContext::chooseEventOption(int idx) {
             regainControl();
             break;
 
-
         case Event::CURSED_TOME: {
-            switch (info.eventData) {
+            int &phase = info.eventData;
+            switch (idx) {
                 case 0:
-                    if (idx == 0) {
-                        ++info.eventData;
-
-                    } else if (idx == 1) {
-                        regainControl();
-
-                    } else {
-                        assert(false);
-                    }
+                    ++phase;
                     break;
 
                 case 1:
+                    regainControl();
+                    break;
+
                 case 2:
                 case 3:
-                    playerLoseHp(info.eventData++);
+                case 4:
+                    playerLoseHp(phase);
+                    ++phase;
                     break;
 
-                case 4:
-                    if (idx == 0) {
-                        playerLoseHp(unfavorable ? 15 : 10);
-                        auto res = miscRng.random(2);
-                        auto book = res == 0 ? RelicId::NECRONOMICON :
+                case 5: {
+                    playerLoseHp(unfavorable ? 15 : 10);
+                    auto res = miscRng.random(2);
+                    auto book = res == 0 ? RelicId::NECRONOMICON :
                                 (res == 1 ? RelicId::ENCHIRIDION : RelicId::NILRYS_CODEX);
 
-                        Rewards reward;
-                        reward.addRelic(book);
-                        openCombatRewardScreen(reward);
-
-                    } else if (idx == 1) {
-                        playerLoseHp(3);
-                        regainControl();
-
-                    } else {
-                        assert(false);
-                    }
+                    Rewards reward;
+                    reward.addRelic(book);
+                    openCombatRewardScreen(reward);
                     break;
+                }
+
+                case 6: {
+                    playerLoseHp(3);
+                    regainControl();
+                    break;
+                }
 
                 default:
-                    assert(false);
                     break;
             }
-            break;
         }
 
-        case Event::DEAD_ADVENTURER: {
+        case Event::DEAD_ADVENTURER: { // todo map onto unique idxs
             if (idx == 0) {
                 int encounterChance = info.phase * 25 + (unfavorable ? 35 : 25);
                 bool didEncounter = miscRng.random(99) < encounterChance;
@@ -2620,7 +2621,7 @@ void GameContext::chooseEventOption(int idx) {
                     auto reward = info.rewards[info.phase];
                     if (reward == 0) {
                         // GOLD
-                        gainGold(30);
+                        obtainGold(30);
 
                     } else if (reward == 2) {
                         // RELIC
@@ -2640,7 +2641,7 @@ void GameContext::chooseEventOption(int idx) {
             break;
         }
 
-        case Event::DESIGNER: { // Designer In-Spire
+        case Event::DESIGNER_IN_SPIRE: { // Designer In-Spire
             switch (idx) {
                 case 0:
                     loseGold(unfavorable ? 50 : 40);
@@ -2681,7 +2682,7 @@ void GameContext::chooseEventOption(int idx) {
             break;
         }
 
-        case Event::DRUG_DEALER: { // Augmenter
+        case Event::AUGMENTER: { // Augmenter
             switch (idx) {
                 case 0:
                     deck.obtain(*this, CardId::JAX);
@@ -2720,7 +2721,7 @@ void GameContext::chooseEventOption(int idx) {
         case Event::FACE_TRADER: { // Face Trader
             switch (idx) {
                 case 0:
-                    gainGold(unfavorable ? 50 : 75);
+                    obtainGold(unfavorable ? 50 : 75);
                     damagePlayer(std::max(fractionMaxHp(.10f), 1));
                     regainControl();
                     break;
@@ -2794,7 +2795,7 @@ void GameContext::chooseEventOption(int idx) {
             break;
         }
 
-        case Event::FOUNTAIN_OF_CLEANSING: {
+        case Event::THE_DIVINE_FOUNTAIN: {
             if (idx == 0) {
                 for (int i = deck.size()-1; i >= 0; --i) {
                     if (deck.cards[i].getType() == CardType::CURSE && deck.cards[i].canTransform()) {
@@ -2827,41 +2828,37 @@ void GameContext::chooseEventOption(int idx) {
             break;
         }
 
-
         case Event::GOLDEN_IDOL: {
-            if (relics.has(RelicId::GOLDEN_IDOL)) {
-                switch (idx) {
-                    case 0: deck.obtain(*this, CardId::INJURY); break;
-                    case 1: damagePlayer(info.hpAmount0); break;
-                    case 2: loseMaxHp(info.hpAmount1); break;
-                    default:
-                        assert(false);
-                }
-                regainControl();
-
-            } else {
-                if (idx == 0) {
+            switch (idx) {
+                case 0:
                     obtainRelic(RelicId::GOLDEN_IDOL);
-
-                } else if (idx == 1) {
-                    regainControl();
-
-                } else {
-                    assert(false);
-                }
+                    break;
+                case 1:
+                    break;
+                case 2:
+                    obtainCard(CardId::INJURY);
+                    break;
+                case 3:
+                    damagePlayer(info.hpAmount0);
+                    break;
+                case 4:
+                    loseMaxHp(info.hpAmount1);
+                    break;
+                default:
+                    break;
             }
-            break;
+            regainControl();
         }
 
         case Event::GOLDEN_SHRINE: { // Golden Shrine
             switch (idx) {
                 case 0:
-                    gainGold(unfavorable ? 50 : 100);
+                    obtainGold(unfavorable ? 50 : 100);
                     regainControl();
                     break;
 
                 case 1:
-                    gainGold(275);
+                    obtainGold(275);
                     deck.obtain(*this, CardId::REGRET);
                     regainControl();
                     break;
@@ -2876,7 +2873,7 @@ void GameContext::chooseEventOption(int idx) {
             break;
         }
 
-        case Event::GOLDEN_WING: {
+        case Event::WING_STATUE: {
             switch (idx) {
                 case 0:
                     damagePlayer(7);
@@ -2884,7 +2881,7 @@ void GameContext::chooseEventOption(int idx) {
                     break;
 
                 case 1:
-                    gainGold(miscRng.random(50,80));
+                    obtainGold(miscRng.random(50, 80));
                     regainControl();
                     break;
 
@@ -2902,7 +2899,7 @@ void GameContext::chooseEventOption(int idx) {
             switch (idx) {
                 case 0:
                     playerLoseHp(info.hpAmount0++);
-                    gainGold(90);
+                    obtainGold(90);
                     break;
 
                 case 1:
@@ -2931,9 +2928,9 @@ void GameContext::chooseEventOption(int idx) {
             assert(false);
             break;
 
-        case Event::LIARS_GAME: { // The Ssssserpent
+        case Event::THE_SSSSSERPENT: { // The Ssssserpent
             if (idx == 0) {
-                gainGold(unfavorable ? 150 : 175);
+                obtainGold(unfavorable ? 150 : 175);
                 deck.obtain(*this, CardId::DOUBT);
                 regainControl();
 
@@ -3030,7 +3027,7 @@ void GameContext::chooseEventOption(int idx) {
                     break;
 
                 case 2:
-                    gainGold(999);
+                    obtainGold(999);
                     deck.obtain(*this, CardId::NORMALITY, 2);
                     regainControl();
                     break;
@@ -3047,7 +3044,7 @@ void GameContext::chooseEventOption(int idx) {
             break;
         }
 
-        case Event::MUSHROOMS: {
+        case Event::HYPNOTIZING_COLORED_MUSHROOMS: {
             if (idx == 0) {
                 const int goldAmt = miscRng.random(20, 30);
                 regainControlAction = [=](GameContext &gc) {
@@ -3062,7 +3059,7 @@ void GameContext::chooseEventOption(int idx) {
                 enterBattle(MonsterEncounter::MUSHROOMS_EVENT);
 
             } else if (idx == 1) {
-                gainGold(unfavorable ? 50 : 99);
+                obtainGold(unfavorable ? 50 : 99);
                 regainControl();
 
             } else {
@@ -3083,7 +3080,7 @@ void GameContext::chooseEventOption(int idx) {
                 enterBattle(MonsterEncounter::MYSTERIOUS_SPHERE_EVENT);
 
             } else if (idx == 1) {
-                gainGold(unfavorable ? 50 : 99);
+                obtainGold(unfavorable ? 50 : 99);
                 regainControl();
 
             } else {
@@ -3093,9 +3090,9 @@ void GameContext::chooseEventOption(int idx) {
             break;
         }
 
-        case Event::NEST: {
+        case Event::THE_NEST: {
             if (idx == 0) {
-                gainGold(unfavorable ? 50 : 99);
+                obtainGold(unfavorable ? 50 : 99);
                 regainControl();
 
             } else if (idx == 1) {
@@ -3263,12 +3260,12 @@ void GameContext::chooseEventOption(int idx) {
             loseGold(50);
             if (idx == 0) {
                 if (!ownerWins) {
-                    gainGold(100);
+                    obtainGold(100);
                 }
 
             } else if (idx == 1) {
                 if (ownerWins) {
-                    gainGold(250);
+                    obtainGold(250);
                 }
 
             } else {
@@ -3337,7 +3334,7 @@ void GameContext::chooseEventOption(int idx) {
 
 
                 case 1:
-                    gainGold(333);
+                    obtainGold(333);
                     relics.remove(RelicId::GOLDEN_IDOL);
                     regainControl();
                     break;
@@ -3390,7 +3387,7 @@ void GameContext::chooseEventOption(int idx) {
         case Event::TOMB_OF_LORD_RED_MASK: {
             switch (idx) {
                 case 0: {
-                    gainGold(222);
+                    obtainGold(222);
                     regainControl();
                     break;
                 }
@@ -3471,7 +3468,7 @@ void GameContext::chooseEventOption(int idx) {
             switch (idx) {
                 case 0:
                     potions[info.potionIdx] = Potion::EMPTY_POTION_SLOT;
-                    --potionCount; // doing this instead of calling discardPotion because drinkPotion/discardPotion is not allowed during this event
+                    --potionCount; // doing this instead of calling discardPotion because drinkPotionAtIdx/discardPotionAtIdx is not allowed during this event
                     break;
 
                 case 1:
@@ -3500,7 +3497,7 @@ void GameContext::chooseEventOption(int idx) {
             int result = miscRng.random(5);
             switch (result) {
                 case 0:
-                    gainGold(act*100);
+                    obtainGold(act * 100);
                     regainControl();
                     break;
 
@@ -3562,7 +3559,7 @@ void GameContext::chooseEventOption(int idx) {
         case Event::WORLD_OF_GOOP: {
             if (idx == 0) {
                 damagePlayer(11);
-                gainGold(75);
+                obtainGold(75);
                 regainControl();
 
             } else if (idx == 1) {

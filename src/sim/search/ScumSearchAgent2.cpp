@@ -37,55 +37,89 @@ void search::ScumSearchAgent2::playout(GameContext &gc) {
     }
 }
 
-void search::ScumSearchAgent2::playoutBattle(BattleContext &bc) {
-    while (bc.outcome == Outcome::UNDECIDED) {
-        search::BattleScumSearcher2 searcher(bc);
+void printHelper(const BattleContext &bc, const search::Action &a) {
+    a.printDesc(std::cout, bc) << " ";
+    std::cout
+            << " turn: " << bc.turn
+            << " energy: " << bc.player.energy
+            << " cardsPlayedThisTurn: " << bc.player.cardsPlayedThisTurn
+            << " state: " << (bc.inputState == InputState::PLAYER_NORMAL ? "normal" : " probably card select")
+            << std::endl;
+    std::cout << bc << std::endl;
+}
 
-        const std::int64_t simulationCount = (isBossEncounter(bc.encounter) ? bossSimulationMultiplier : 1)  * simulationCountBase;
+
+void search::ScumSearchAgent2::playoutBattle(BattleContext &bc) {
+
+    std::vector<search::Action> bestActions;
+    int bestOutcomePlayerHp = -1;
+
+    while (bc.outcome == Outcome::UNDECIDED) {
+        const std::int64_t simulationCount = isBossEncounter(bc.encounter) ?
+                                              (bossSimulationMultiplier * simulationCountBase) : simulationCountBase;
+
+        search::BattleScumSearcher2 searcher(bc);
         searcher.search(simulationCount);
 
-        if (!searcher.bestActionSequence.empty()) {
-            for (auto x : searcher.bestActionSequence) {
-                if (printLogs) {
-                    x.printDesc(std::cout, bc) << " ";
-                    std::cout
-                            << " turn: " << bc.turn
-                            << " energy: " << bc.player.energy
-                            << " cardsPlayedThisTurn: " << bc.player.cardsPlayedThisTurn
-                            << " state: " << (bc.inputState == InputState::PLAYER_NORMAL ? "normal" : " probably card select")
-                            << std::endl;
-
-                    std::cout << bc << std::endl;
-                }
-                x.execute(bc);
-            }
-            continue;
+        if (searcher.outcomePlayerHp > bestOutcomePlayerHp)
+        {
+            bestActions = std::vector(
+                    searcher.bestActionSequence.rbegin(),
+                    searcher.bestActionSequence.rend());
+            bestOutcomePlayerHp = searcher.outcomePlayerHp;
         }
 
+        if (bestOutcomePlayerHp > 0) {
+            stepThroughSolution(bc, bestActions);
+        } else {
+            stepThroughSearchTree(bc, searcher);
+        }
+    }
+}
 
-        // execute the action with the most simulations
+void search::ScumSearchAgent2::stepThroughSolution(BattleContext &bc, std::vector<search::Action> &actions) {
+    for (int i = 0; i < stepsWithSolution; ++i) {
+        if (actions.empty()) {
+            break;
+        }
+
+        auto &a = actions.back();
+        if (printLogs) {
+            printHelper(bc, a);
+        }
+        a.execute(bc);
+
+        actions.pop_back();
+    }
+}
+
+void search::ScumSearchAgent2::stepThroughSearchTree(BattleContext &bc, const search::BattleScumSearcher2 &s) {
+    const search::BattleScumSearcher2::Node *curNode = &s.root;
+    for (int actionCount = 0; actionCount < stepsNoSolution; ++actionCount) {
+        if (bc.outcome != Outcome::UNDECIDED) {
+            break;
+        }
+
         std::int64_t maxSimulations = -1;
-        sts::search::Action bestAction;
-        for (const auto &edge : searcher.root.edges) {
+        const sts::search::BattleScumSearcher2::Edge *maxEdge = nullptr;
+
+        for (const auto &edge : curNode->edges) {
             if (edge.node.simulationCount > maxSimulations) {
                 maxSimulations = edge.node.simulationCount;
-                bestAction = edge.action;
+                maxEdge = &edge;
             }
         }
-        if (printLogs) {
-            bestAction.printDesc(std::cout, bc) << " ";
-            std::cout
-                    << " turn: " << bc.turn
-                    << " energy: " << bc.player.energy
-                    << " cardsPlayedThisTurn: " << bc.player.cardsPlayedThisTurn
-                    << " state: " << (bc.inputState == InputState::PLAYER_NORMAL ? "normal" : " probably card select")
-                    << std::endl;
 
-            std::cout << bc << std::endl;
+        if (maxEdge == nullptr) {
+            break;
         }
 
-        bestAction.execute(bc);
+        if (printLogs) {
+            printHelper(bc, maxEdge->action);
+        }
 
+        maxEdge->action.execute(bc);
+        curNode = &maxEdge->node;
     }
 }
 
@@ -221,7 +255,7 @@ void search::ScumSearchAgent2::cardSelectPolicy(GameContext &gc) {
 void search::ScumSearchAgent2::stepRewardsPolicy(GameContext &gc) {
     auto &r = gc.info.rewardsContainer;
     if (r.goldRewardCount > 0) {
-        gc.gainGold(r.gold[0]);
+        gc.obtainGold(r.gold[0]);
         r.removeGoldReward(0);
         return;
 
@@ -275,7 +309,7 @@ void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
             constexpr double act1AttackMultiplier = 1.4;
 
             const auto &c = r.cardRewards[rIdx][cIdx];
-            double weight = search::Expert::getObtainWeight(c.getId(), c.isUpgraded());
+            double weight = std::pow(search::Expert::getObtainWeight(c.getId(), c.isUpgraded()), 1.2);
             if (gc.act == 1 && c.getType() == CardType::ATTACK) {
                 weight *= act1AttackMultiplier;
             }
@@ -304,7 +338,7 @@ void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
 
         bool skipCard = true;
         {
-            std::uniform_real_distribution<double> distr(0,weights[selection].second + deckWeight*0.75);
+            std::uniform_real_distribution<double> distr(0,weights[selection].second + deckWeight*0.6);
             double roll = distr(rng);
             if (roll < weights[selection].second) {
                 skipCard = false;
@@ -331,7 +365,7 @@ void search::ScumSearchAgent2::stepEventPolicy(GameContext &gc) {
             break;
 
         case Event::NOTE_FOR_YOURSELF:
-        case Event::FOUNTAIN_OF_CLEANSING:
+        case Event::THE_DIVINE_FOUNTAIN:
         case Event::OMINOUS_FORGE:
             gc.chooseEventOption(0);
             break;

@@ -148,7 +148,9 @@ namespace sts {
         static constexpr float SHRINE_CHANCE = 0.25F;
 
         sts::Card noteForYourselfCard = Card(CardId::IRON_WAVE);
-        static constexpr bool prismaticShardEnabled = false;
+
+        static constexpr bool disableMatchAndKeep = true;
+        static constexpr bool disablePrismaticShard = true;
         bool skipBattles = false;
 
         // ********* hidden from player *********
@@ -209,7 +211,7 @@ namespace sts {
 
         int curMapNodeX = -1;
         int curMapNodeY = -1;
-        Map *map = nullptr; // todo fix memory leak
+        std::shared_ptr<Map> map = nullptr; // todo fix memory leak
 
         int act = 1;
         int ascension = 0;
@@ -273,6 +275,8 @@ namespace sts {
         void afterBattle();
 
         // actions
+        void obtainCard(Card c, int count=1);
+        void obtainGold(int amount);
         void obtainKey(Key key);
         void obtainPotion(Potion p);
         bool obtainRelic(RelicId r);
@@ -315,12 +319,13 @@ namespace sts {
         void playerOnDie();
         void playerHeal(int amount);
         void playerIncreaseMaxHp(int amount);
-        void gainGold(int amount);
         void loseGold(int amount, bool inShop=false);
         void loseMaxHp(int amount);
 
-        void drinkPotion(int idx);
-        void discardPotion(int idx);
+
+        void drinkPotion(Potion p);
+        void drinkPotionAtIdx(int idx);
+        void discardPotionAtIdx(int idx);
 
 
         void openTreasureRoomChest();

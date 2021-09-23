@@ -246,12 +246,12 @@ void ConsoleSimulator::takeAction(const std::string &action) {
 
     if (action.length() >= 14 && action.substr(0, 12) == "drink potion") {
         int idx = action[13]-'0';
-        gc->drinkPotion(idx);
+        gc->drinkPotionAtIdx(idx);
         return;
 
     } else if (action.length() >= 16 && action.substr(0,14) == "discard potion") {
         int idx = action[15]-'0';
-        gc->discardPotion(idx);
+        gc->discardPotionAtIdx(idx);
         return;
     }
 
@@ -519,7 +519,7 @@ void ConsoleSimulator::takeRewardScreenAction(const std::string &action) {
     auto &r = gc->info.rewardsContainer;
 
     if (takeType == "gold") {
-        gc->gainGold(r.gold[takeIdx]);
+        gc->obtainGold(r.gold[takeIdx]);
         r.removeGoldReward(takeIdx);
 
     } else if (takeType == "card") {
@@ -630,7 +630,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             break;
         }
 
-        case Event::ADDICT: { // Pleading Vagrant
+        case Event::PLEADING_VAGRANT: { // Pleading Vagrant
             if (gc->gold >= 85) {
                 os << "0: [Give 85 Gold] Obtain a random Relic.\n";
             }
@@ -639,13 +639,13 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             break;
         }
 
-        case Event::BACK_TO_BASICS:  { // Ancient Writing
+        case Event::ANCIENT_WRITING:  { // Ancient Writing
             os << "0: [Elegance] Remove a card from your deck.\n";
             os << "1: [Simplicity] Upgrade all Strikes and Defends.\n";
             break;
         }
 
-        case Event::BEGGAR: { // Old Beggar
+        case Event::OLD_BEGGAR: { // Old Beggar
             os << "0: [Offer Gold] Lose 75 Gold. Remove a card from your cards.\n";
             os << "1: [Leave] Nothing happens.\n";
             break;
@@ -685,17 +685,39 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
                 case 1:
                 case 2:
                 case 3:
-                    os << "0: [Continue] Lose " << phase << "HP.\n";
+                    os << phase+1 << ": [Continue] Lose " << phase << "HP.\n";
                     break;
+
                 case 4:
-                    os << "0: [Take] Obtain the Book. Lose " << (unfavorable ? 15 : 10) << " HP\n";
-                    os << "1: [Stop] Lose 3 HP.\n";
+                    os << "5: [Take] Obtain the Book. Lose " << (unfavorable ? 15 : 10) << " HP\n";
+                    os << "6: [Stop] Lose 3 HP.\n";
                     break;
 
                 default:
                     assert(false);
                     break;
             }
+
+//            switch (phase) {
+//                case 0:
+//                    os << "0: [Read]\n";
+//                    os << "1: [Leave]\n";
+//                    break;
+//
+//                case 1:
+//                case 2:
+//                case 3:
+//                    os << "0: [Continue] Lose " << phase << "HP.\n";
+//                    break;
+//                case 4:
+//                    os << "0: [Take] Obtain the Book. Lose " << (unfavorable ? 15 : 10) << " HP\n";
+//                    os << "1: [Stop] Lose 3 HP.\n";
+//                    break;
+//
+//                default:
+//                    assert(false);
+//                    break;
+//            }
 
             break;
         }
@@ -707,7 +729,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             break;
         }
 
-        case Event::DESIGNER: { // Designer In-Spire
+        case Event::DESIGNER_IN_SPIRE: { // Designer In-Spire
             const auto upgradeOne = gc->info.upgradeOne;
             const auto cleanUpIsRemoveCard = gc->info.cleanUpIsRemoveCard;
 
@@ -744,7 +766,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             break;
         }
 
-        case Event::DRUG_DEALER: { // Augmenter
+        case Event::AUGMENTER: { // Augmenter
             os << "0: [Test J.A.X] Obtain a J.A.X.\n";
             if (gc->deck.getTransformableCount(2) > 1) {
                 os << "1: [Become Test Subject] Choose and Transform 2 cards in your deck.\n";
@@ -799,7 +821,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             break;
         }
 
-        case Event::FOUNTAIN_OF_CLEANSING: { // The Divine Fountain
+        case Event::THE_DIVINE_FOUNTAIN: { // The Divine Fountain
             os << "0: [Drink] Remove all Curses from your deck.\n";
             os << "1: [Leave] Nothing happens.\n";
             break;
@@ -816,9 +838,9 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
                 os << "0: [Take] Obtain Golden Idol. Trigger a trap.\n";
                 os << "1: [Leave] Nothing happens.\n";
             } else {
-                os << "0: [Outrun] Become Cursed - Injury\n";
-                os << "1: [Smash] Take " << gc->info.hpAmount0 << "damage.\n";
-                os << "2: [Hide] Lose " << gc->info.hpAmount1 << " Max HP\n";
+                os << "2: [Outrun] Become Cursed - Injury\n";
+                os << "3: [Smash] Take " << gc->info.hpAmount0 << "damage.\n";
+                os << "4: [Hide] Lose " << gc->info.hpAmount1 << " Max HP\n";
             }
             break;
         }
@@ -830,7 +852,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             break;
         }
 
-        case Event::GOLDEN_WING: { // Wing Statue
+        case Event::WING_STATUE: { // Wing Statue
             os << "0: [Pray] Remove a card from your cards. Lose 7 HP.\n";
             if (gc->deck.hasCardForWingStatue()) {
                 os << "1: [Destroy] Gain 50-80 Gold.\n";
@@ -851,7 +873,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             // opens combat reward and should not be in event screen state here
             break;
 
-        case Event::LIARS_GAME: {
+        case Event::THE_SSSSSERPENT: {
             os << "0: [Agree] Gain " << (unfavorable ? 150 : 175) << " Gold. Become Cursed - Doubt.\n";
             os << "1: [Disagree] Nothing happens.\n";
             break;
@@ -899,7 +921,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             break;
         }
 
-        case Event::MUSHROOMS: { // Hypnotizing Colored Mushrooms todo check this events second phase optionIdxs
+        case Event::HYPNOTIZING_COLORED_MUSHROOMS: { // Hypnotizing Colored Mushrooms todo check this events second phase optionIdxs
             os << "0: [Stomp] Anger the Mushrooms.\n";
             os << "1: [Eat] Heal " << gc->fractionMaxHp(.25f) << " HP. Become Cursed - Parasite.\n";
             break;
@@ -910,7 +932,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             os << "1: [Leave] Nothing happens.\n";
             break;
 
-        case Event::NEST: // The Nest
+        case Event::THE_NEST: // The Nest
             os << "0: [Smash and Grab] Obtain " << (unfavorable ? 50 : 99) << " Gold.\n";
             os << "1: [Stay in Line] Obtain Ritual Dagger. Lose 6 HP.\n";
             break;

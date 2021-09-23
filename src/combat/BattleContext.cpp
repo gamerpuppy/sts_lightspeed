@@ -8,6 +8,11 @@
 
 using namespace sts;
 
+namespace sts {
+    BattleContext *g_debug_bc;
+}
+
+
 // assume all bc fields have just been initialized by in class member initializers
 void BattleContext::init(const GameContext &gc) {
     init(gc, gc.info.encounter);
@@ -716,6 +721,7 @@ bool BattleContext::isCardPlayAllowed() const {
 void BattleContext::executeActions() {
     // todo find a place for checking where card queue is empty and player doesn't have control for calling onEndingTurn
     ++sum;
+    g_debug_bc = this;
 
     while (true)
     {

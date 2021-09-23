@@ -13,6 +13,12 @@
 
 #include <iostream>
 
+
+namespace sts {
+    class BattleContext;
+}
+
+
 namespace sts::search {
 
     enum class ActionType {
@@ -22,6 +28,8 @@ namespace sts::search {
         MULTI_CARD_SELECT,
         END_TURN,
     };
+
+
 
     // couldn't make a union work in only 32 bits
     class Action {

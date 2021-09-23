@@ -11,6 +11,7 @@
 #include <memory>
 #include <random>
 #include <iostream>
+#include <limits>
 
 namespace sts::search {
 
@@ -37,10 +38,15 @@ namespace sts::search {
         EvalFnc evalFnc;
         double explorationParameter = 3*sqrt(2);
 
-        double bestActionValue = 1.0;
+        double bestActionValue = std::numeric_limits<double>::min();
+        double minActionValue = std::numeric_limits<double>::max();
+        int outcomePlayerHp = 0;
+
         std::vector<Action> bestActionSequence;
         std::default_random_engine randGen;
 
+        std::vector<Node*> searchStack;
+        std::vector<Action> actionStack;
 
         explicit BattleScumSearcher2(const BattleContext &bc, EvalFnc evalFnc=&evaluateEndState);
 
@@ -49,14 +55,14 @@ namespace sts::search {
         void step();
 
         // private helpers
-        void updateSearchStack(const std::vector<Node*> &stack, const std::vector<Action> &actionStack, double evaluation);
+        void updateFromPlayout(const std::vector<Node*> &stack, const std::vector<Action> &actionStack, const BattleContext &endState);
         [[nodiscard]] bool isTerminalState(const BattleContext &bc) const;
 
         double evaluateEdge(const Node &parent, int edgeIdx);
         int selectBestEdgeToSearch(const Node &cur);
         int selectFirstActionForLeafNode(const Node &leafNode);
 
-        double randomPlayout(BattleContext &state, std::vector<Action> &actionStack);
+        void playoutRandom(BattleContext &state, std::vector<Action> &actionStack);
 
         void enumerateActionsForNode(Node &node, const BattleContext &bc);
         void enumerateCardActions(Node &node, const BattleContext &bc);
@@ -65,9 +71,10 @@ namespace sts::search {
         static double evaluateEndState(const BattleContext &bc);
 
         void printSearchTree(std::ostream &os, int levels);
+        void printSearchStack(std::ostream &os, bool skipLast=false);
     };
 
-
+    extern BattleScumSearcher2 *g_debug_scum_search;
 
 }
 

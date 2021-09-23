@@ -42,7 +42,7 @@ bool Deck::anyCardBottled() const {
     return bottleIdxs[0] == -1 || bottleIdxs[1] == -1 || bottleIdxs[2] == -1;
 }
 
-int Deck::getUpgradeableCount(int limit) const {
+int Deck::getUpgradeableCount() const {
     return upgradeableCount;
 }
 
@@ -181,7 +181,7 @@ void Deck::obtain(GameContext &gc, Card card, int count) {
 
 
     if (gc.relics.has(RelicId::CERAMIC_FISH)) { // todo check if ceramic fish activates before omamori
-        gc.gainGold(9*count);
+        gc.obtainGold(9 * count);
     }
 
     for (int i = 0; i < count; ++i) {

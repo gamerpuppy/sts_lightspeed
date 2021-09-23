@@ -40,7 +40,7 @@ namespace sts {
         [[nodiscard]] bool isCardBottled(int idx) const;
         [[nodiscard]] bool anyCardBottled() const;
 
-        [[nodiscard]] int getUpgradeableCount(int limit=-1) const;
+        [[nodiscard]] int getUpgradeableCount() const;
         [[nodiscard]] int getTransformableCount(int limit=-1, bool includeBottled=false) const;
         [[nodiscard]] int getCountMatching(const CardPredicate &predicate, int limit=-1) const;
         [[nodiscard]] fixed_list<int, MAX_SIZE> getIdxsMatching(const CardPredicate &p) const;

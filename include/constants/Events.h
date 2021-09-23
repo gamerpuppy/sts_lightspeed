@@ -18,35 +18,35 @@ namespace sts {
         TREASURE,
         NEOW,
         OMINOUS_FORGE,
-        ADDICT,
-        BACK_TO_BASICS,
-        BEGGAR,
+        PLEADING_VAGRANT,
+        ANCIENT_WRITING,
+        OLD_BEGGAR,
         BIG_FISH,
         BONFIRE_SPIRITS,
         COLOSSEUM,
         CURSED_TOME,
         DEAD_ADVENTURER,
-        DESIGNER,
-        DRUG_DEALER,
+        DESIGNER_IN_SPIRE,
+        AUGMENTER,
         DUPLICATOR,
         FACE_TRADER,
         FALLING,
         FORGOTTEN_ALTAR,
-        FOUNTAIN_OF_CLEANSING,
+        THE_DIVINE_FOUNTAIN,
         GHOSTS,
         GOLDEN_IDOL,
         GOLDEN_SHRINE,
-        GOLDEN_WING,
+        WING_STATUE,
         KNOWING_SKULL,
         LAB,
-        LIARS_GAME,
+        THE_SSSSSERPENT,
         LIVING_WALL,
         MASKED_BANDITS,
         MATCH_AND_KEEP,
         MINDBLOOM,
-        MUSHROOMS,
+        HYPNOTIZING_COLORED_MUSHROOMS,
         MYSTERIOUS_SPHERE,
-        NEST,
+        THE_NEST,
         NLOTH,
         NOTE_FOR_YOURSELF,
         PURIFIER,
@@ -192,16 +192,16 @@ namespace sts {
 
     namespace EventPools {
 
-        const std::array<Event,14> oneTimeEventsAsc0 {Event::OMINOUS_FORGE, Event::BONFIRE_SPIRITS, Event::DESIGNER, Event::DUPLICATOR, Event::FACE_TRADER, Event::FOUNTAIN_OF_CLEANSING, Event::KNOWING_SKULL, Event::LAB, Event::NLOTH, Event::NOTE_FOR_YOURSELF, Event::SECRET_PORTAL, Event::THE_JOUST, Event::WE_MEET_AGAIN, Event::THE_WOMAN_IN_BLUE };
-        const std::array<Event,13> oneTimeEventsAsc15 {Event::OMINOUS_FORGE, Event::BONFIRE_SPIRITS, Event::DESIGNER, Event::DUPLICATOR, Event::FACE_TRADER, Event::FOUNTAIN_OF_CLEANSING, Event::KNOWING_SKULL, Event::LAB, Event::NLOTH, Event::SECRET_PORTAL, Event::THE_JOUST, Event::WE_MEET_AGAIN, Event::THE_WOMAN_IN_BLUE };
+        const std::array<Event,14> oneTimeEventsAsc0 {Event::OMINOUS_FORGE, Event::BONFIRE_SPIRITS, Event::DESIGNER_IN_SPIRE, Event::DUPLICATOR, Event::FACE_TRADER, Event::THE_DIVINE_FOUNTAIN, Event::KNOWING_SKULL, Event::LAB, Event::NLOTH, Event::NOTE_FOR_YOURSELF, Event::SECRET_PORTAL, Event::THE_JOUST, Event::WE_MEET_AGAIN, Event::THE_WOMAN_IN_BLUE };
+        const std::array<Event,13> oneTimeEventsAsc15 {Event::OMINOUS_FORGE, Event::BONFIRE_SPIRITS, Event::DESIGNER_IN_SPIRE, Event::DUPLICATOR, Event::FACE_TRADER, Event::THE_DIVINE_FOUNTAIN, Event::KNOWING_SKULL, Event::LAB, Event::NLOTH, Event::SECRET_PORTAL, Event::THE_JOUST, Event::WE_MEET_AGAIN, Event::THE_WOMAN_IN_BLUE };
 
         namespace Act1 {
-            const std::array<Event,11> events { Event::BIG_FISH, Event::THE_CLERIC, Event::DEAD_ADVENTURER, Event::GOLDEN_IDOL, Event::GOLDEN_WING, Event::WORLD_OF_GOOP, Event::LIARS_GAME, Event::LIVING_WALL, Event::MUSHROOMS, Event::SCRAP_OOZE, Event::SHINING_LIGHT };
+            const std::array<Event,11> events {Event::BIG_FISH, Event::THE_CLERIC, Event::DEAD_ADVENTURER, Event::GOLDEN_IDOL, Event::WING_STATUE, Event::WORLD_OF_GOOP, Event::THE_SSSSSERPENT, Event::LIVING_WALL, Event::HYPNOTIZING_COLORED_MUSHROOMS, Event::SCRAP_OOZE, Event::SHINING_LIGHT };
             const std::array<Event,6> shrines { Event::MATCH_AND_KEEP, Event::GOLDEN_SHRINE, Event::TRANSMORGRIFIER, Event::PURIFIER, Event::UPGRADE_SHRINE, Event::WHEEL_OF_CHANGE };
         }
 
         namespace Act2 {
-            const std::array<Event,13> events { Event::ADDICT, Event::BACK_TO_BASICS, Event::BEGGAR, Event::COLOSSEUM, Event::CURSED_TOME, Event::DRUG_DEALER, Event::FORGOTTEN_ALTAR, Event::GHOSTS, Event::MASKED_BANDITS, Event::NEST, Event::THE_LIBRARY, Event::THE_MAUSOLEUM, Event::VAMPIRES };
+            const std::array<Event,13> events {Event::PLEADING_VAGRANT, Event::ANCIENT_WRITING, Event::OLD_BEGGAR, Event::COLOSSEUM, Event::CURSED_TOME, Event::AUGMENTER, Event::FORGOTTEN_ALTAR, Event::GHOSTS, Event::MASKED_BANDITS, Event::THE_NEST, Event::THE_LIBRARY, Event::THE_MAUSOLEUM, Event::VAMPIRES };
             const std::array<Event,6> shrines { Event::MATCH_AND_KEEP, Event::WHEEL_OF_CHANGE, Event::GOLDEN_SHRINE, Event::TRANSMORGRIFIER, Event::PURIFIER, Event::UPGRADE_SHRINE };
         }
 

@@ -204,7 +204,7 @@ void RandomStateHandler::setupRewardsOptions(const GameContext &gc) {
     const auto &r = gc.info.rewardsContainer;
     for (int i = 0; i < r.goldRewardCount; ++i) {
         optionFunctions.push_back([=](GameContext &gc) {
-            gc.gainGold(r.gold[i]);
+            gc.obtainGold(r.gold[i]);
             gc.info.rewardsContainer.removeGoldReward(i);
         });
     }
@@ -331,16 +331,16 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             }
             break;
 
-        case Event::ADDICT:
+        case Event::PLEADING_VAGRANT:
             if (gc.gold > 85) {
                 pushOption(0);
             } else {
-                pushOptions(1, 2);
+                pushOptions(1, 3);
             }
             break;
 
-        case Event::BACK_TO_BASICS:
-        case Event::BEGGAR:
+        case Event::ANCIENT_WRITING:
+        case Event::OLD_BEGGAR:
             pushOptions(0, 2);
             break;
 
@@ -351,10 +351,9 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             if (gc.info.eventData == 0) {
                 pushOption(0);
             } else {
-                pushOptions(0, 2);
+                pushOptions(1, 3);
             }
             break;
-
 
         case Event::CURSED_TOME: {
             const int phase = gc.info.eventData;
@@ -374,7 +373,6 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
                     break;
 
                 default:
-                    assert(false);
                     break;
             }
             break;
@@ -384,12 +382,12 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             pushOptions(0, 2);
             break;
 
-        case Event::DESIGNER: { // Designer In-Spire
+        case Event::DESIGNER_IN_SPIRE: { // Designer In-Spire
             const auto upgradeOne = gc.info.upgradeOne;
             const auto cleanUpIsRemoveCard = gc.info.cleanUpIsRemoveCard;
 
             const auto goldCost0 = unfavorable ? 50 : 40;
-            if (gc.gold >= goldCost0 && gc.deck.getUpgradeableCount(1) > 0) {
+            if (gc.gold >= goldCost0 && gc.deck.getUpgradeableCount() > 0) {
                 if (upgradeOne) {
                     pushOption(0);
                 } else {
@@ -421,12 +419,12 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             break;
         }
 
-        case Event::DRUG_DEALER:
+        case Event::AUGMENTER:
+            pushOption(0);
             if (gc.deck.getTransformableCount(2) >= 2) {
-                pushOption(0);
-            } else {
-                pushOptions(1, 2);
+                pushOption(1);
             }
+            pushOption(2);
             break;
 
         case Event::DUPLICATOR:
@@ -458,10 +456,10 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             if (gc.relics.has(RelicId::GOLDEN_IDOL)) {
                 pushOption(0);
             }
-            pushOptions(1, 2);
+            pushOptions(1, 3);
             break;
 
-        case Event::FOUNTAIN_OF_CLEANSING:
+        case Event::THE_DIVINE_FOUNTAIN:
             pushOptions(0, 2);
             break;
 
@@ -473,7 +471,7 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             if (!gc.relics.has(RelicId::GOLDEN_IDOL)) {
                 pushOptions(0, 2);
             } else {
-                pushOptions(0, 3);
+                pushOptions(2, 5);
             }
             break;
 
@@ -481,7 +479,7 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             pushOptions(0, 3);
             break;
 
-        case Event::GOLDEN_WING:
+        case Event::WING_STATUE:
             pushOption(0);
             if (gc.deck.hasCardForWingStatue()) {
                 pushOption(1);
@@ -497,13 +495,15 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             // not handled as an event
             break;
 
-        case Event::LIARS_GAME:
+        case Event::THE_SSSSSERPENT:
             pushOptions(0, 2);
             break;
 
-        case Event::LIVING_WALL:
+        case Event::LIVING_WALL: // this event can softlock in base game
             pushOptions(0, 2);
-            pushOption(2);
+            if (gc.deck.getUpgradeableCount() > 0) {
+                pushOption(2);
+            }
             break;
 
         case Event::MASKED_BANDITS:
@@ -533,7 +533,7 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             }
             break;
 
-        case Event::MUSHROOMS:
+        case Event::HYPNOTIZING_COLORED_MUSHROOMS:
             pushOptions(0, 2);
             break;
 
@@ -541,7 +541,7 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             pushOptions(0, 2);
             break;
 
-        case Event::NEST:
+        case Event::THE_NEST:
             pushOptions(0, 2);
             break;
 
@@ -627,7 +627,7 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             break;
 
         case Event::UPGRADE_SHRINE:
-            if (gc.deck.getUpgradeableCount(1) > 0) {
+            if (gc.deck.getUpgradeableCount() > 0) {
                 pushOption(0);
             }
             pushOption(1);
@@ -637,7 +637,7 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
             if (gc.relics.has(RelicId::BLOOD_VIAL)) {
                 pushOption(0);
             }
-            pushOptions(1,2);
+            pushOptions(1,3);
             break;
 
         case Event::WE_MEET_AGAIN:
@@ -676,7 +676,6 @@ void RandomStateHandler::setupEventOptions(const GameContext &gc) {
     }
 
 }
-
 
 int RandomBattleStateHandler::setupState(const BattleContext &bc, bool withDesc) {
     if (bc.inputState == InputState::PLAYER_NORMAL) {

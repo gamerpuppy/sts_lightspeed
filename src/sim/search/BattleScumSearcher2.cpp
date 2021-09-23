@@ -13,15 +13,26 @@ using namespace sts;
 
 std::int64_t simulationIdx = 0; // for debugging
 
+namespace sts::search {
+    search::BattleScumSearcher2 *g_debug_scum_search;
+}
+
+
+
 search::BattleScumSearcher2::BattleScumSearcher2(const BattleContext &bc,
                                                       search::EvalFnc _evalFnc)  : rootState(new BattleContext(bc)), evalFnc(std::move(_evalFnc)),
                                                                                    randGen(bc.seed+bc.loopCount+bc.player.curHp+bc.aiRng.counter) {
-
 }
 
 void search::BattleScumSearcher2::search(int64_t simulations) {
+    g_debug_scum_search = this;
+
     if (isTerminalState(*rootState)) {
-        root.evaluationSum = evaluateEndState(*rootState);
+        auto evaluation = evaluateEndState(*rootState);
+        outcomePlayerHp = rootState->player.curHp;
+        bestActionSequence = {};
+
+        root.evaluationSum = evaluation;
         root.simulationCount = 1;
     }
 
@@ -31,8 +42,8 @@ void search::BattleScumSearcher2::search(int64_t simulations) {
 }
 
 void search::BattleScumSearcher2::step() {
-    std::vector<Node*> searchStack {&root};
-    std::vector<search::Action> actionStack;
+    searchStack = {&root};
+    actionStack.clear();
     BattleContext curState;
     curState = *rootState;
 
@@ -40,7 +51,7 @@ void search::BattleScumSearcher2::step() {
         auto &curNode = *searchStack.back();
 
         if (isTerminalState(curState)) {
-            updateSearchStack(searchStack, actionStack, evalFnc(curState));
+            updateFromPlayout(searchStack, actionStack, curState);
             return;
         }
 
@@ -58,15 +69,13 @@ void search::BattleScumSearcher2::step() {
             actionStack.push_back(edgeTaken.action);
             searchStack.push_back(&edgeTaken.node);
 
-            const auto evaluation = randomPlayout(curState, actionStack);
-            updateSearchStack(searchStack, actionStack, evaluation);
+            playoutRandom(curState, actionStack);
+            updateFromPlayout(searchStack, actionStack, curState);
             return;
 
         } else {
             const auto selectIdx = selectBestEdgeToSearch(curNode);
             auto &edgeTaken = curNode.edges[selectIdx];
-
-
 
 //            edgeTaken.action.printDesc(std::cout, curState) << std::endl;
             edgeTaken.action.execute(curState);
@@ -77,10 +86,17 @@ void search::BattleScumSearcher2::step() {
     }
 }
 
-void search::BattleScumSearcher2::updateSearchStack(const std::vector<Node *> &stack, const std::vector<search::Action> &actionStack, double evaluation) {
+void search::BattleScumSearcher2::updateFromPlayout(const std::vector<Node *> &stack, const std::vector<Action> &actionStack, const BattleContext &endState) {
+    const auto evaluation = evaluateEndState(endState);
+
     if (evaluation > bestActionValue) {
         bestActionSequence = actionStack;
         bestActionValue = evaluation;
+        outcomePlayerHp = endState.player.curHp;
+    }
+
+    if (evaluation < minActionValue) {
+        minActionValue = evaluation;
     }
 
     for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
@@ -101,7 +117,8 @@ double search::BattleScumSearcher2::evaluateEdge(const search::BattleScumSearche
     double qualityValue = 0;
     if (!bestActionSequence.empty()) {
         auto avgEvaluation = edge.node.evaluationSum / (edge.node.simulationCount+1);
-        qualityValue = avgEvaluation / bestActionValue;
+        double evalRange = bestActionValue - minActionValue;
+        qualityValue = avgEvaluation / evalRange;
     }
 
     double explorationValue = explorationParameter *
@@ -133,7 +150,7 @@ int search::BattleScumSearcher2::selectFirstActionForLeafNode(const search::Batt
     return dist(randGen);
 }
 
-double search::BattleScumSearcher2::randomPlayout(BattleContext &state, std::vector<Action> &actionStack) {
+void search::BattleScumSearcher2::playoutRandom(BattleContext &state, std::vector<Action> &actionStack) {
     Node tempNode; // temp
     while (!isTerminalState(state)) {
         ++simulationIdx;
@@ -154,7 +171,6 @@ double search::BattleScumSearcher2::randomPlayout(BattleContext &state, std::vec
 
         tempNode.edges.clear();
     }
-    return evaluateEndState(state);
 }
 
 void search::BattleScumSearcher2::enumerateActionsForNode(search::BattleScumSearcher2::Node &node,
@@ -397,11 +413,7 @@ double search::BattleScumSearcher2::evaluateEndState(const BattleContext &bc) {
 
     } else {
 //        double statusScore =
-//                (bc.player.getStatus<PS::STRENGTH>() * .5) +
-//                (bc.player.getStatus<PS::DEXTERITY>() * .6) +
-//                (bc.player.getStatus<PS::FEEL_NO_PAIN>() * .2) +
-//                (bc.player.hasStatus<PS::CORRUPTION>() * 2) +
-//                (bc.player.hasStatus<PS::BARRICADE>() * 1);
+//                (bc.player.getStatus<PS::STRENGTH>() * .5);
         const bool couldHaveSpikers = bc.encounter == MonsterEncounter::THREE_SHAPES || bc.encounter == MonsterEncounter::FOUR_SHAPES;
         double energyPenalty = bc.energyWasted * -0.2 * (couldHaveSpikers ? 0 : 1);
         double drawBonus = bc.cardsDrawn * 0.03;
@@ -409,13 +421,7 @@ double search::BattleScumSearcher2::evaluateEndState(const BattleContext &bc) {
 
         return (1-getNonMinionMonsterCurHpRatio(bc))*10 + aliveScore + energyPenalty + drawBonus + potionScore / 2 + (bc.turn * .2);
     }
-//    const double winBonus = bc.outcome == Outcome::PLAYER_VICTORY ? 35 : 0;
-//    const double turnBonus = bc.outcome == Outcome::PLAYER_VICTORY ? -(bc.turn * 0.001) : (bc.turn * 0.01);
-//
-//    return winBonus + bc.player.curHp + (bc.potionCount * 4) + turnBonus;
 }
-
-
 
 struct LayerStruct {
     const search::BattleScumSearcher2::Node *node;
@@ -486,10 +492,40 @@ void search::BattleScumSearcher2::printSearchTree(std::ostream &os, int levels) 
 
 }
 
+void search::BattleScumSearcher2::printSearchStack(std::ostream &os, bool skipLast) {
+    BattleContext curBc = *rootState;
+    os << "explorationParamater: " << explorationParameter << '\n';
+    os << "bestActionValue: " << bestActionValue << '\n';
+    os << "minActionValue: " << minActionValue << '\n';
+    os << "outcomePlayerHp: " << outcomePlayerHp << '\n';
+    os << "root node:\n";
+    os << curBc << "\n";
 
+    for (int i = 0; i < actionStack.size(); ++i) {
+        if (i < searchStack.size()) {
+            const auto &n = searchStack[i];
+            os << i << " nodeSearched: " << n->simulationCount << " { ";
+            for (const auto &edge : n->edges) {
+                os << "(" << edge.node.simulationCount << ")";
+                edge.action.printDesc(os, curBc) << " ";
+            }
+            os << "}\n";
+        }
 
+        const auto &a = actionStack[i];
+        os << i << " actionTaken: ";
+        a.printDesc(os, curBc) << '\n';
 
+        if (skipLast && (i + 1 >= actionStack.size())) {
+            break;
+        }
 
+        a.execute(curBc);
+        os << curBc << '\n';
+    }
+
+    os.flush();
+}
 
 
 

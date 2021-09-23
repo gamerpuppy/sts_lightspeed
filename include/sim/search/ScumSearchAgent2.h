@@ -6,19 +6,27 @@
 #define STS_LIGHTSPEED_SCUMSEARCHAGENT2_H
 
 #include "game/GameContext.h"
+#include "sim/search/Action.h"
 
 #include <memory>
 #include <random>
 
 namespace sts::search {
 
+    class BattleScumSearcher2;
+
     struct ScumSearchAgent2 {
         int stepCount = 0;
+        bool paused = false;
+
+
+        bool pauseOnCardReward = false;
+        bool printLogs = false;
         int simulationCountBase = 50000;
         double bossSimulationMultiplier = 3;
-        bool pauseOnCardReward = false;
-        bool paused = false;
-        bool printLogs = false;
+        int stepsNoSolution = 5;
+        int stepsWithSolution = 15;
+
         std::default_random_engine rng;
 
         // public interface
@@ -26,6 +34,10 @@ namespace sts::search {
 
         // private methods
         void playoutBattle(BattleContext &bc);
+
+        void stepThroughSolution(BattleContext &bc, std::vector<search::Action> &actions);
+        void stepThroughSearchTree(BattleContext &bc, const search::BattleScumSearcher2 &s);
+
 
         void stepOutOfCombatPolicy(GameContext &gc);
         void cardSelectPolicy(GameContext &gc);

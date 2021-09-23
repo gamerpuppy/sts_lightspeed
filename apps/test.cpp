@@ -22,7 +22,6 @@
 #include "sim/PrintHelpers.h"
 #include "sim/RandomAgent.h"
 #include "sim/StateHandler.h"
-#include "sim/BattleScumSearcher.h"
 #include "sim/search/ScumSearchAgent2.h"
 
 #include "sim/search/BattleScumSearcher2.h"
@@ -383,7 +382,7 @@ void playRandom4(PlayRandomInfo *info) {
         search::ScumSearchAgent2 agent;
         agent.simulationCountBase = g_simulationCount;
         agent.rng = std::default_random_engine(gc.seed);
-        agent.printLogs = false;
+//        agent.printLogs = true;
         agent.playout(gc);
 
         info->floorSum += gc.floorNum;
@@ -465,37 +464,6 @@ void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
         << std::endl;
 }
 
-int scumSearch(int argc, const char *argv[]) {
-    const auto depth = std::stoi(argv[2]);
-    const auto minTurnLookahead = std::stoi(argv[3]);
-    const auto saveFilePath = argv[4];
-
-    SaveFile saveFile = SaveFile::loadFromPath(saveFilePath, sts::CharacterClass::IRONCLAD);
-    GameContext gc;
-    gc.initFromSave(saveFile);
-
-    BattleContext bc;
-    bc.init(gc);
-
-    BattleScumSearcher scumSearcher(depth, minTurnLookahead);
-
-    auto startTime = std::chrono::high_resolution_clock::now();
-
-    scumSearcher.search(bc);
-
-    auto endTime = std::chrono::high_resolution_clock::now();
-    double duration = std::chrono::duration<double>(endTime-startTime).count();
-
-    std::cout << " search time: " << duration << "s\n";
-
-    for (int i = 0; i < scumSearcher.bestInfos.size(); ++i) {
-        std::cout << "depth [" << i << "]: " << scumSearcher.bestInfos[i] << '\n';
-
-    }
-    return 0;
-}
-
-
 int mcts(int argc, const char *argv[]) {
     const auto saveFilePath = argv[2];
     const auto simulationCount = std::stoll(argv[3]);
@@ -567,9 +535,6 @@ int main(int argc, const char* argv[]) {
         g_simulationCount = depthArg;
 
         playRandomMt(threadCount, startSeedLong, playoutCount);
-
-    } else if (command == "scum_search") {
-        return scumSearch(argc, argv);
 
     } else if (command == "json") {
         const std::string saveFilePath(argv[2]);

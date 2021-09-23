@@ -25,8 +25,6 @@ void RandomAgent::playout(GameContext &gc, const GameContextPredicate &predicate
     RandomStateHandler handler;
     gc.skipBattles = true;
     while (gc.outcome == GameOutcome::UNDECIDED && (!predicate || !predicate(gc))) {
-
-
         handler.setupState(gc);
         const auto stateSize = handler.getStateSize(gc);
         std::uniform_int_distribution<int> distr(0, stateSize-1);
@@ -44,7 +42,6 @@ void RandomAgent::playout(GameContext &gc, const GameContextPredicate &predicate
 
 //    std::cout << "random playoutBattle finished\n";
 }
-
 
 void RandomAgent::playoutWithBattles(GameContext &gc) {
     RandomStateHandler handler;

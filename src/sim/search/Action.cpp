@@ -396,9 +396,7 @@ void executeSingleCardSelectActionHelper(BattleContext &bc, search::Action a) {
         case CardSelectTask::INVALID:
         default:
             break;
-
     }
-
 }
 
 void executeMultiCardSelectActionHelper(BattleContext &bc, search::Action a) {

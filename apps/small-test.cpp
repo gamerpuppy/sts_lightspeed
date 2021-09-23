@@ -143,12 +143,19 @@ void printEncountersForBinding() {
         std::cout << ".value(\"" << monsterEncounterEnumNames[i] << "\", "
         << "ME::" << monsterEncounterEnumNames[i] << ")\n";
     }
-
 }
 
-int main(int argc, const char *argv[]) {
+void printAllRelicForBinding() {
+    for (auto i = static_cast<int>(RelicId::AKABEKO); i <= static_cast<int>(RelicId::INVALID); ++i) {
+        std::cout << ".value(\"" << relicEnumNames[i] << "\", " << "RelicId::" << relicEnumNames[i] << ")\n";
+    }
+}
 
-    printEncountersForBinding();
+
+int main(int argc, const char *argv[]) {
+    printAllRelicForBinding();
+
+//    printEncountersForBinding();
 //    printAllCardInfo(std::cout);
 //    printCardsForOrdering();
 //    printCardsForBinding();

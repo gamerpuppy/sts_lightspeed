@@ -3,8 +3,7 @@
 //
 
 #ifndef STS_LIGHTSPEED_STS_COMMON_H
-#define STS_LIGHTSPEED_STS_COMMON_H
-
+#define STS_LIGHTSPEED_STS_COMMON_Hs
 //#define sts_print_debug
 #define sts_asserts
 
