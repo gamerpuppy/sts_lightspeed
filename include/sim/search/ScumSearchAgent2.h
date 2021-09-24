@@ -17,13 +17,16 @@ namespace sts::search {
     class BattleScumSearcher2;
 
     struct ScumSearchAgent2 {
+        std::int64_t simulationCountTotal;
         std::vector<int> gameActionHistory;
 
         int stepCount = 0;
         bool paused = false;
-
         bool pauseOnCardReward = false;
+
+        bool printActions = false;
         bool printLogs = false;
+
         int simulationCountBase = 50000;
         double bossSimulationMultiplier = 3;
         int stepsNoSolution = 5;

@@ -80,7 +80,8 @@ void replayActionFile(const GameContext &startState, const std::string &fname) {
 
     bool inBattle = false;
 
-    int actionBits;
+    int lineNum = 0;
+    std::uint32_t actionBits;
     while (true) {
         if (inBattle) {
             if (bc.outcome != sts::Outcome::UNDECIDED) {
@@ -88,8 +89,10 @@ void replayActionFile(const GameContext &startState, const std::string &fname) {
                 inBattle = false;
 
             } else {
-                ifs >> actionBits;
+                ++lineNum;
+                ifs >> std::hex >> actionBits;
                 search::Action a(actionBits);
+                a.printDesc(std::cout, bc) << std::endl;
                 a.execute(bc);
             }
 
@@ -103,8 +106,10 @@ void replayActionFile(const GameContext &startState, const std::string &fname) {
                 inBattle = true;
 
             } else {
-                ifs >> actionBits;
+                ++lineNum;
+                ifs >> std::hex >> actionBits;
                 search::GameAction a(actionBits);
+                a.printDesc(std::cout, gc) << std::endl;
                 a.execute(gc);
             }
         }
@@ -115,17 +120,40 @@ void replayActionFile(const GameContext &startState, const std::string &fname) {
 
 
 
-struct PlayRandomInfo {
-    std::uint64_t startSeed;
-    std::uint64_t endSeed;
-    int seedIncrement;
-    int seedOffset;
+void printOutcome(const GameContext &gc) {
+
+    if (gc.outcome == sts::GameOutcome::PLAYER_VICTORY) {
+        std::cout << gc.seed << " won at floor " << gc.floorNum << " against "
+                  << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
+        std::cout << " " << gc.deck << " " << gc.relics << std::endl;
+
+    } else {
+        std::cout << gc.seed << " lost at floor " << gc.floorNum << " "
+                  << roomStrings[static_cast<int>(gc.curRoom)] << " ";
+        if (gc.curRoom == sts::Room::EVENT) {
+            std::cout << eventGameNames[static_cast<int>(gc.curEvent)];
+        } else if (gc.curRoom == Room::BOSS || gc.curRoom == Room::ELITE || gc.curRoom == Room::MONSTER) {
+            std::cout << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
+        }
+        std::cout << " " << gc.deck << " " << gc.relics << std::endl;
+    }
+
+}
+
+
+
+
+struct AgentMtInfo {
+    std::mutex m;
+
+    std::uint64_t curSeed;
+    std::uint64_t seedStart;
+    std::uint64_t seedEnd;
 
     std::int64_t winCount = 0;
     std::int64_t lossCount = 0;
     std::int64_t floorSum = 0;
-
-    std::int64_t nodeEvalTotal = 0;
+    std::int64_t totalSimulations = 0;
 };
 
 static int g_searchAscension = 0;
@@ -133,94 +161,77 @@ static int g_simulationCount = 5;
 static int g_print_level = 0;
 
 
+void agentMtRunner(AgentMtInfo *info) {
+    std::uint64_t seed;
+    {
+        std::scoped_lock lock(info->m);
+        seed = info->curSeed++;
+    }
 
-//
-//std::mutex g_info_mutex;
-//
-//void getSeed() {
-//
-//}
+    while(true) {
+        if (seed >= info->seedEnd) {
+            break;
+        }
 
-void playRandom4(PlayRandomInfo *info) {
-    for (std::uint64_t seed = info->startSeed + info->seedOffset; seed < info->endSeed; seed += info->seedIncrement) {
         GameContext gc(CharacterClass::IRONCLAD, seed, g_searchAscension);
-
         search::ScumSearchAgent2 agent;
         agent.simulationCountBase = g_simulationCount;
         agent.rng = std::default_random_engine(gc.seed);
         agent.printLogs = g_print_level;
+
         agent.playout(gc);
 
-        info->floorSum += gc.floorNum;
+        printOutcome(gc);
 
-        if (gc.outcome == sts::GameOutcome::PLAYER_VICTORY) {
-            ++info->winCount;
-//            std::cout << gc << std::endl;
-            std::cout << seed << " won at floor " << gc.floorNum << " against "
-                << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
-            std::cout << " " << gc.deck << " " << gc.relics << std::endl;
-
-        } else {
-            ++info->lossCount;
-            std::cout << seed << " lost at floor " << gc.floorNum << " "
-                << roomStrings[static_cast<int>(gc.curRoom)] << " ";
-            if (gc.curRoom == sts::Room::EVENT) {
-                std::cout << eventGameNames[static_cast<int>(gc.curEvent)];
-            } else if (gc.curRoom == Room::BOSS || gc.curRoom == Room::ELITE || gc.curRoom == Room::MONSTER) {
-                std::cout << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
+        {
+            std::scoped_lock lock(info->m);
+            info->floorSum += gc.floorNum;
+            if (gc.outcome == sts::GameOutcome::PLAYER_VICTORY) {
+                ++info->winCount;
+            } else {
+                ++info->lossCount;
             }
-            std::cout << " " << gc.deck << " " << gc.relics << std::endl;
+            info->totalSimulations += agent.simulationCountTotal;
+
+            seed = info->curSeed++;
         }
+
     }
 }
 
-void playRandomMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
+void agentMt(int threadCount, std::uint64_t startSeed, int playoutCount) {
     auto startTime = std::chrono::high_resolution_clock::now();
-
     std::vector<std::unique_ptr<std::thread>> threads;
 
-    std::vector<PlayRandomInfo> infos;
-    for (int tid = 0; tid < threadCount; ++tid) {
-        PlayRandomInfo info;
-        info.startSeed = startSeed;
-        info.seedOffset = tid;
-        info.endSeed = startSeed + playoutCount;
-        info.seedIncrement = threadCount;
+    AgentMtInfo info;
+    info.curSeed = startSeed;
+    info.seedStart = startSeed;
+    info.seedEnd = startSeed + playoutCount;
 
-        infos.push_back(info);
-    }
+
     if (threadCount == 1) { // doing this for more consistency when benchmarking
-        playRandom4(&infos[0]);
+        agentMtRunner(&info);
+
     } else {
         for (int tid = 0; tid < threadCount; ++tid) {
-            threads.emplace_back(new std::thread(playRandom4, &infos[tid]));
+            threads.emplace_back(new std::thread(agentMtRunner, &info));
         }
     }
-
-    std::int64_t winCount = 0;
-    std::int64_t lossCount = 0;
-    std::int64_t floorSum = 0;
-    std::int64_t nodeSearchSum = 0;
-
 
     for (int tid = 0; tid < threadCount; ++tid) {
         if (threadCount > 1) {
             threads[tid]->join();
         }
-        winCount += infos[tid].winCount;
-        lossCount += infos[tid].lossCount;
-        floorSum += infos[tid].floorSum;
-        nodeSearchSum += infos[tid].nodeEvalTotal;
     }
-
 
     auto endTime = std::chrono::high_resolution_clock::now();
     double duration = std::chrono::duration<double>(endTime-startTime).count();
 
-    std::cout << "w/l: (" << winCount  << ", " << lossCount << ")"
-        << " percentWin: " << static_cast<double>(winCount) / playoutCount * 100 << "%"
-        << " avgFloorReached: " << static_cast<double>(floorSum) / playoutCount << '\n'
-        << " nodesSearched: " << nodeSearchSum << " avgPerFloor: " << (double)nodeSearchSum/floorSum << '\n';
+    std::cout << "w/l: (" << info.winCount  << ", " << info.lossCount << ")"
+        << " percentWin: " << static_cast<double>(info.winCount) / playoutCount * 100 << "%"
+        << " avgFloorReached: " << static_cast<double>(info.floorSum) / playoutCount << '\n'
+        << " totalSimulations: " << info.totalSimulations
+        << " avgPerFloor: " << (double)info.totalSimulations/info.floorSum << '\n';
 
     std::cout << "threads: " << threadCount
               << " playoutCount: " << playoutCount
@@ -288,7 +299,7 @@ int main(int argc, const char* argv[]) {
     } else if (command == "save") {
         playFromSaveFile(argv[2], argv[3]);
 
-    } if (command == "random_mt") { // actually doing tree search now
+    } if (command == "agent_mt") { // actually doing tree search now
         const int threadCount(std::stoi(argv[2]));
         const int depthArg = std::stoi(argv[3]);
         const int ascensionIn = std::stoi(argv[4]);
@@ -299,7 +310,7 @@ int main(int argc, const char* argv[]) {
         g_searchAscension = ascensionIn;
         g_simulationCount = depthArg;
 
-        playRandomMt(threadCount, startSeedLong, playoutCount);
+        agentMt(threadCount, startSeedLong, playoutCount);
 
     } else if (command == "json") {
         const std::string saveFilePath(argv[2]);

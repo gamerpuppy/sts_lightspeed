@@ -12,18 +12,19 @@
 using namespace sts;
 
 void search::ScumSearchAgent2::takeAction(GameContext &gc, search::GameAction a) {
-    if (printLogs) {
+    if (printActions) {
         gameActionHistory.emplace_back(a.bits);
-        std::cout << a.bits << std::endl;
+        std::cout << std::hex << a.bits << std::endl;
     }
     a.execute(gc);
 }
 
 void search::ScumSearchAgent2::takeAction(BattleContext &bc, search::Action a) {
-    if (printLogs) {
+    if (printActions) {
         gameActionHistory.emplace_back(a.bits);
-        std::cout << a.bits << std::endl;
+        std::cout << std::hex << a.bits << std::endl;
     }
+//    a.printDesc(std::cout, bc);
     a.execute(bc);
 }
 
@@ -79,6 +80,8 @@ void search::ScumSearchAgent2::playoutBattle(BattleContext &bc) {
                     searcher.bestActionSequence.rend());
             bestOutcomePlayerHp = searcher.outcomePlayerHp;
         }
+
+        simulationCountTotal += searcher.root.simulationCount;
 
         if (bestOutcomePlayerHp > 0) {
             stepThroughSolution(bc, bestActions);
@@ -144,7 +147,6 @@ void search::ScumSearchAgent2::stepRandom(GameContext &gc) {
 
 void search::ScumSearchAgent2::stepOutOfCombatPolicy(GameContext &gc) {
     ++stepCount;
-    search::GameAction a;
 
     switch (gc.screenState) {
         case ScreenState::EVENT_SCREEN:

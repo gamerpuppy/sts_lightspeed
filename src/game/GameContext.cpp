@@ -2587,6 +2587,7 @@ void GameContext::chooseEventOption(int idx) {
                 default:
                     break;
             }
+            break;
         }
 
         case Event::DEAD_ADVENTURER: { // todo map onto unique idxs
@@ -2640,6 +2641,7 @@ void GameContext::chooseEventOption(int idx) {
                 regainControl();
 
             } else {
+                std::cerr << idx << " " << *this << std::endl;
                 assert(false);
             }
             break;

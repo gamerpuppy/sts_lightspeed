@@ -17,7 +17,6 @@ namespace sts::search {
 
     typedef std::function<double (const BattleContext&)> EvalFnc;
 
-
     // to find a solution to a battle with tree pruning
     struct BattleScumSearcher2 {
         class Edge;
@@ -74,7 +73,7 @@ namespace sts::search {
         void printSearchStack(std::ostream &os, bool skipLast=false);
     };
 
-    extern BattleScumSearcher2 *g_debug_scum_search;
+    extern thread_local BattleScumSearcher2 *g_debug_scum_search;
 
 }
 

@@ -21,10 +21,7 @@ Action Actions::AttackEnemy(int idx, int damage) {
         }
 
         bc.monsters.arr[idx].attacked(bc, damage);
-
-        if (bc.monsters.areMonstersBasicallyDead()) {
-            bc.clearPostCombatActions();
-        }
+        bc.checkCombat();
     }};
 }
 

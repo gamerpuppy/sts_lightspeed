@@ -21,7 +21,7 @@ namespace sts::search {
 
 search::BattleScumSearcher2::BattleScumSearcher2(const BattleContext &bc,
                                                       search::EvalFnc _evalFnc)  : rootState(new BattleContext(bc)), evalFnc(std::move(_evalFnc)),
-                                                                                   randGen(bc.seed+bc.loopCount+bc.player.curHp+bc.aiRng.counter) {
+                                                                                   randGen(bc.seed+bc.floorNum) {
 }
 
 void search::BattleScumSearcher2::search(int64_t simulations) {
@@ -493,38 +493,45 @@ void search::BattleScumSearcher2::printSearchTree(std::ostream &os, int levels) 
 }
 
 void search::BattleScumSearcher2::printSearchStack(std::ostream &os, bool skipLast) {
-    BattleContext curBc = *rootState;
-    os << "explorationParamater: " << explorationParameter << '\n';
-    os << "bestActionValue: " << bestActionValue << '\n';
-    os << "minActionValue: " << minActionValue << '\n';
-    os << "outcomePlayerHp: " << outcomePlayerHp << '\n';
-    os << "root node:\n";
-    os << curBc << "\n";
-
     for (int i = 0; i < actionStack.size(); ++i) {
-        if (i < searchStack.size()) {
-            const auto &n = searchStack[i];
-            os << i << " nodeSearched: " << n->simulationCount << " { ";
-            for (const auto &edge : n->edges) {
-                os << "(" << edge.node.simulationCount << ")";
-                edge.action.printDesc(os, curBc) << " ";
-            }
-            os << "}\n";
-        }
-
         const auto &a = actionStack[i];
-        os << i << " actionTaken: ";
-        a.printDesc(os, curBc) << '\n';
-
-        if (skipLast && (i + 1 >= actionStack.size())) {
-            break;
-        }
-
-        a.execute(curBc);
-        os << curBc << '\n';
+        os << std::hex << a.bits << '\n';
     }
 
     os.flush();
+
+//    BattleContext curBc = *rootState;
+//    os << "explorationParameter: " << explorationParameter << '\n';
+//    os << "bestActionValue: " << bestActionValue << '\n';
+//    os << "minActionValue: " << minActionValue << '\n';
+//    os << "outcomePlayerHp: " << outcomePlayerHp << '\n';
+//    os << "root node:\n";
+//    os << curBc << "\n";
+//
+//    for (int i = 0; i < actionStack.size(); ++i) {
+//        if (i < searchStack.size()) {
+//            const auto &n = searchStack[i];
+//            os << i << " nodeSearched: " << n->simulationCount << " { ";
+//            for (const auto &edge : n->edges) {
+//                os << "(" << edge.node.simulationCount << ")";
+//                edge.action.printDesc(os, curBc) << " ";
+//            }
+//            os << "}\n";
+//        }
+//
+//        const auto &a = actionStack[i];
+//        os << i << " actionTaken: ";
+//        a.printDesc(os, curBc) << '\n';
+//
+//        if (skipLast && (i + 1 >= actionStack.size())) {
+//            break;
+//        }
+//
+//        a.execute(curBc);
+//        os << curBc << '\n';
+//    }
+//
+//    os.flush();
 }
 
 

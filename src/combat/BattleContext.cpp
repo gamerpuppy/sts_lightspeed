@@ -9,7 +9,7 @@
 using namespace sts;
 
 namespace sts {
-    BattleContext *g_debug_bc;
+    thread_local BattleContext *g_debug_bc;
 }
 
 
@@ -658,7 +658,7 @@ void BattleContext::addToBotCard(CardQueueItem item) {
 }
 
 void BattleContext::checkCombat() {
-    if (monsters.areMonstersBasicallyDead()) {
+    if (outcome == Outcome::PLAYER_VICTORY) {
         clearPostCombatActions();
     }
 }
@@ -792,7 +792,11 @@ void BattleContext::executeActions() {
         }
         monsters.skipTurn.reset();
 
-        if (turnHasEnded && !monsters.areMonstersBasicallyDead()) {
+        if (outcome != Outcome::UNDECIDED) {
+            break;
+        }
+
+        if (turnHasEnded) {
             // after all monster turns
             afterMonsterTurns();
             continue;
@@ -2499,7 +2503,7 @@ void BattleContext::discardAtEndOfTurn() {
 }
 
 void BattleContext::discardAtEndOfTurnHelper() {
-    if (monsters.areMonstersBasicallyDead()) {
+    if (outcome != Outcome::UNDECIDED) {
         return;
     }
 

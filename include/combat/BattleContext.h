@@ -42,7 +42,7 @@ namespace sts {
 
     class GameContext;
 
-    extern BattleContext *g_debug_bc;
+    extern thread_local BattleContext *g_debug_bc;
 
     struct BattleContext {
 
