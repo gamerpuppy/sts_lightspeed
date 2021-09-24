@@ -107,7 +107,7 @@ namespace sts {
 #ifdef sts_asserts
         assert(size > 0 );
 #endif
-        ActionFunction &a = arr[front];
+        ActionFunction a = arr[front];
         ++front;
         --size;
         if (front >= capacity) {

@@ -14,7 +14,7 @@ using namespace sts;
 std::int64_t simulationIdx = 0; // for debugging
 
 namespace sts::search {
-    search::BattleScumSearcher2 *g_debug_scum_search;
+    thread_local search::BattleScumSearcher2 *g_debug_scum_search;
 }
 
 

@@ -677,7 +677,10 @@ void BattleContext::clearPostCombatActions() {
         }
         const bool shouldClear = actionQueue.bits.test(curIdx);
 
-        if (!shouldClear) {
+        if (shouldClear) {
+            --actionQueue.size;
+
+        } else {
             if (placeIdx >= actionQueue.getCapacity()) {
                 placeIdx = 0;
             }
@@ -688,6 +691,8 @@ void BattleContext::clearPostCombatActions() {
         }
         ++curIdx;
     }
+
+    actionQueue.back = (actionQueue.front + actionQueue.size) % actionQueue.getCapacity();
 
 //    auto actionQueueCopy = actionQueue;
 //    actionQueue.clear();
