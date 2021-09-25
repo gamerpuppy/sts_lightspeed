@@ -750,10 +750,6 @@ void BattleContext::executeActions() {
             break;
         }
 
-        if (loopCount > 80000) {
-            std::cerr << "high loop count" << std::endl;
-        }
-
         if (!actionQueue.isEmpty()) {
             // do a action
             auto a = std::move(actionQueue.popFront());

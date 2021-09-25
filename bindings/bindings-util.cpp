@@ -40,6 +40,7 @@ namespace sts {
         ret[offset++] = std::min(gc.curHp, playerHpMax);
         ret[offset++] = std::min(gc.maxHp, playerHpMax);
         ret[offset++] = std::min(gc.gold, playerGoldMax);
+        ret[offset++] = gc.floorNum;
 
         int bossEncodeIdx = offset + bossEncodeMap.at(gc.boss);
         ret[bossEncodeIdx] = 1;
@@ -67,6 +68,7 @@ namespace sts {
         ret[0] = playerHpMax;
         ret[1] = playerHpMax;
         ret[2] = playerGoldMax;
+        ret[3] = 60;
         spaceOffset += 3;
 
         std::fill(ret.begin()+spaceOffset, ret.end(), 1);

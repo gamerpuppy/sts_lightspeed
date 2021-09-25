@@ -224,15 +224,14 @@ Action Actions::MakeTempCardInHand(CardId card, bool upgraded, int amount) {
     return Actions::MakeTempCardInHand(c, amount);
 }
 
-Action Actions::MakeTempCardInHand(const CardInstance &c, int amount) {
+Action Actions::MakeTempCardInHand(CardInstance card, int amount) {
     // todo master reality when the action is created
     return {[=](BattleContext &bc) {
         for (int i = 0; i < amount; ++i) {
-            if (bc.cards.cardsInHand + 1 <= CardManager::MAX_HAND_SIZE) {
-                bc.cards.createTempCardInHand(c);
-            } else {
-                bc.cards.createTempCardInDiscard(c);
-            }
+            CardInstance c(card);
+            c.uniqueId = bc.cards.nextUniqueCardId++;
+            bc.cards.notifyAddCardToCombat(c);
+            bc.moveToHandHelper(c);
         }
     }};
 }
@@ -258,6 +257,17 @@ Action Actions::MakeTempCardInDiscard(const CardInstance &c, int amount) {
         }
     }};
 }
+
+Action Actions::MakeTempCardsInHand(std::vector<CardInstance> cards) {
+    return {[=](BattleContext &bc) {
+        for (auto c : cards) {
+            c.uniqueId = bc.cards.nextUniqueCardId++;
+            bc.cards.notifyAddCardToCombat(c);
+            bc.moveToHandHelper(c);
+        }
+    }};
+}
+
 
 Action Actions::DiscardNoTriggerCard() {
     return {[](BattleContext &bc) {
@@ -586,17 +596,18 @@ Action Actions::TransmutationAction(bool upgraded, int energy, bool useEnergy) {
             return;
         }
 
+        std::vector<CardInstance> cards;
        for (int i = 0; i < effectAmount; ++i) {
            const auto cid = sts::getTrulyRandomColorlessCardInCombat(bc.cardRandomRng);
            CardInstance c(cid, upgraded);
            c.setCostForTurn(0);
-           bc.addToBot( Actions::MakeTempCardInHand(c) );
+           cards.push_back(c);
        }
+       bc.addToBot( Actions::MakeTempCardsInHand(cards) );
 
        if (useEnergy) {
            bc.player.useEnergy(bc.player.energy);
        }
-
     }};
 }
 

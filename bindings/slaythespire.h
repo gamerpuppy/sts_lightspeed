@@ -8,7 +8,7 @@
 namespace sts {
 
     struct NNInterface {
-        static constexpr int observation_space_size = 411;
+        static constexpr int observation_space_size = 412;
         static constexpr int playerHpMax = 200;
         static constexpr int playerGoldMax = 1800;
         static constexpr int cardCountMax = 7;

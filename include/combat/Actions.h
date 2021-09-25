@@ -87,9 +87,10 @@ namespace sts {
 
         static Action PlayTopCard(int monsterTargetIdx, bool exhausts);
         static Action MakeTempCardInHand(CardId card, bool upgraded= false, int amount = 1);
-        static Action MakeTempCardInHand(const CardInstance &c, int amount = 1);
+        static Action MakeTempCardInHand(CardInstance c, int amount = 1);
         static Action MakeTempCardInDrawPile(const CardInstance &c, int amount, bool shuffleInto);
         static Action MakeTempCardInDiscard(const CardInstance &c, int amount = 1);
+        static Action MakeTempCardsInHand(std::vector<CardInstance> cards);
 
         static Action DiscardNoTriggerCard(); // for doubt, shame, etc, discards the BattleContext.curCard
 
