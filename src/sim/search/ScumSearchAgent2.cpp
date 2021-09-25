@@ -373,7 +373,6 @@ void search::ScumSearchAgent2::stepEventPolicy(GameContext &gc) {
 
         case Event::NOTE_FOR_YOURSELF:
         case Event::THE_DIVINE_FOUNTAIN:
-        case Event::OMINOUS_FORGE:
             takeAction(gc, 0);
             break;
 

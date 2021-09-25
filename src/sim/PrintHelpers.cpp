@@ -138,18 +138,19 @@ namespace sts {
 
     std::ostream& operator<<(std::ostream &os, const sts::GameContext &gc) {
         os << "GameContext: {\n";
-        os << "\tseed: \"" << SeedHelper::getString(gc.seed) << "\" seedAsLong: " << gc.seed << '\n';
-        os << "\t" << "floorNum: " << gc.floorNum
+        os << "\tseed: \"" << SeedHelper::getString(gc.seed)
+            << "\" seedAsLong: " << gc.seed << '\n';
+        os  << "floorNum: " << gc.floorNum
             << " act: " << gc.act
-            << " g_searchAscension: " << gc.ascension
-            << " curRoom: " << roomStrings[static_cast<int>(gc.curRoom)]
-            << " curEvent: " << eventIdStrings[static_cast<int>(gc.curEvent)]
+            << " ascension: " << gc.ascension
             << " boss: " << monsterEncounterStrings[static_cast<int>(gc.boss)]
             << " boss2: " << monsterEncounterStrings[static_cast<int>(gc.secondBoss)]
             << '\n';
 
-        os << "eventData: " << gc.info.eventData
-            << "screenState: " << static_cast<int>(gc.screenState);
+        os << "\tcurRoom: " << roomStrings[static_cast<int>(gc.curRoom)]
+            << " curEvent: " << eventIdStrings[static_cast<int>(gc.curEvent)]
+            << " eventData: " << gc.info.eventData
+            << " screenState: " << static_cast<int>(gc.screenState);
 
         os << "\t";
         printPlayerInfo(os, gc);

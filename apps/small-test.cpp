@@ -6,7 +6,7 @@
 #include "game/GameContext.h"
 #include "game/Game.h"
 #include "constants/Cards.h"
-
+#include "slaythespire.h"
 #include "sim/SimHelpers.h"
 
 #include <vector>
@@ -152,8 +152,32 @@ void printAllRelicForBinding() {
 }
 
 
+template<typename ForwardIt>
+void printVec(const std::string &name, std::ostream &os, ForwardIt begin, ForwardIt end) {
+    os << name << " (" << (end-begin) << "): ";
+    int i = 0;
+    for (auto it = begin; it != end; ++it) {
+        os << "(" << i << "," << *it << "), ";
+        ++i;
+    }
+    os << '\n';
+}
+
+
+
+
 int main(int argc, const char *argv[]) {
-    printAllRelicForBinding();
+//    printAllRelicForBinding();
+
+    GameContext gc(sts::CharacterClass::IRONCLAD, 10000, 0);
+
+
+    const auto maximums = NNInterface::getInstance()->getObservationMaximums();
+    printVec("maximums", std::cout, maximums.begin(), maximums.end());
+
+    const auto observation = NNInterface::getInstance()->getObservation(gc);
+    printVec("observation", std::cout, observation.begin(), observation.end());
+
 
 //    printEncountersForBinding();
 //    printAllCardInfo(std::cout);

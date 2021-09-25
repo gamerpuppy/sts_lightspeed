@@ -685,7 +685,6 @@ int search::GameAction::getValidEventSelectBits(const GameContext &gc) {
 
         case Event::BIG_FISH:
         case Event::FACE_TRADER:
-        case Event::OMINOUS_FORGE:
         case Event::GOLDEN_SHRINE:
         case Event::NLOTH:
         case Event::SENSORY_STONE:
@@ -873,6 +872,14 @@ int search::GameAction::getValidEventSelectBits(const GameContext &gc) {
                 bits |= 4;
             }
             return bits;
+        }
+
+        case Event::OMINOUS_FORGE: {
+            if (gc.deck.getUpgradeableCount() > 0) {
+                return 0x7;
+            } else {
+                return 0x6;
+            }
         }
 
         case Event::BONFIRE_SPIRITS: // we skip the select phase of this event

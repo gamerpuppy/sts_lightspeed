@@ -24,7 +24,7 @@ namespace sts::search {
         bool paused = false;
         bool pauseOnCardReward = false;
 
-        bool printActions = true;
+        bool printActions = false;
         bool printLogs = false;
 
         int simulationCountBase = 50000;

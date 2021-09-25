@@ -8,6 +8,7 @@
 #include <pybind11/functional.h>
 
 #include <sstream>
+#include <algorithm>
 
 #include "sim/ConsoleSimulator.h"
 #include "sim/search/ScumSearchAgent2.h"
@@ -15,126 +16,30 @@
 #include "sim/PrintHelpers.h"
 #include "game/Game.h"
 
-namespace sts::py {
+#include "slaythespire.h"
 
-    void play() {
-        sts::SimulatorContext ctx;
-        sts::ConsoleSimulator sim;
-        sim.play(std::cin, std::cout, ctx);
-    }
-
-//    CardId getCardIdForString(const std::string &s) {
-//        return SimHelpers::getCardIdForString(s);
-//    }
-//
-//    Card getCardForString(const std::string &s) {
-//        return {SimHelpers::getCardIdForString(s)};
-//    }
-
-    static GameContext *simulationGc = nullptr;
-    static search::ScumSearchAgent2 *agent = nullptr;
-
-    search::ScumSearchAgent2* getAgent() {
-        if (agent == nullptr) {
-            agent = new search::ScumSearchAgent2();
-            agent->pauseOnCardReward = true;
-        }
-        return agent;
-    }
-
-    void setGc(const GameContext &gc) {
-        if (simulationGc == nullptr) {
-            simulationGc = new GameContext(gc);
-        } else {
-            *simulationGc = gc;
-        }
-    }
-
-    GameContext* getGc() {
-        if (simulationGc == nullptr) {
-//            std::cerr << "GameContext was null, setting to default value. Try calling set_gc first." << std::endl;
-            simulationGc = new GameContext(CharacterClass::IRONCLAD, 1, 0);
-        }
-        return simulationGc;
-    }
-
-    void playout() {
-        if (agent == nullptr) {
-            agent = new search::ScumSearchAgent2();
-            agent->pauseOnCardReward = true;
-        }
-        if (simulationGc == nullptr) {
-            std::cerr << "GameContext was null, call set_gc first." << std::endl;
-            return;
-        }
-
-        agent->playout(*simulationGc);
-    }
-
-    std::vector<Card> getCardReward(GameContext &gc) {
-        const bool inValidState = gc.outcome == GameOutcome::UNDECIDED &&
-                gc.screenState == ScreenState::REWARDS &&
-                gc.info.rewardsContainer.cardRewardCount > 0;
-
-        if (!inValidState) {
-            std::cerr << "GameContext was not in a state with card rewards, check that the game has not completed first." << std::endl;
-            return {};
-        }
-
-        const auto &r = gc.info.rewardsContainer;
-        const auto &cardList = r.cardRewards[r.cardRewardCount-1];
-        return std::vector<Card>(cardList.begin(), cardList.end());
-    }
-
-    void pickRewardCard(GameContext &gc, Card card) {
-        const bool inValidState = gc.outcome == GameOutcome::UNDECIDED &&
-                                  gc.screenState == ScreenState::REWARDS &&
-                                  gc.info.rewardsContainer.cardRewardCount > 0;
-        if (!inValidState) {
-            std::cerr << "GameContext was not in a state with card rewards, check that the game has not completed first." << std::endl;
-            return;
-        }
-        auto &r = gc.info.rewardsContainer;
-        gc.deck.obtain(*simulationGc, card);
-        r.removeCardReward(r.cardRewardCount-1);
-    }
-
-    void skipRewardCards(GameContext &gc) {
-        const bool inValidState = gc.outcome == GameOutcome::UNDECIDED &&
-                                  gc.screenState == ScreenState::REWARDS &&
-                                  gc.info.rewardsContainer.cardRewardCount > 0;
-        if (!inValidState) {
-            std::cerr << "GameContext was not in a state with card rewards, check that the game has not completed first." << std::endl;
-            return;
-        }
-
-        if (gc.hasRelic(RelicId::SINGING_BOWL)) {
-            gc.playerIncreaseMaxHp(2);
-        }
-
-        auto &r = gc.info.rewardsContainer;
-        r.removeCardReward(r.cardRewardCount-1);
-    }
-
-}
 
 using namespace sts;
 
 PYBIND11_MODULE(slaythespire, m) {
     m.doc() = "pybind11 example plugin"; // optional module docstring
     m.def("play", &sts::py::play, "play Slay the Spire Console");
-    m.def("set_gc", &sts::py::setGc, "set the current GameContext");
-    m.def("get_gc", &sts::py::getGc, "get the current GameContext");
-    m.def("get_agent", &sts::py::getAgent, "get the agent object");
-    m.def("playoutRandom", &sts::py::playout, "gives control to an agent to progress the game");
     m.def("get_seed_str", &SeedHelper::getString, "gets the integral representation of seed string used in the game ui");
     m.def("get_seed_long", &SeedHelper::getLong, "gets the seed string representation of an integral seed");
+    m.def("getNNInterface", &sts::NNInterface::getInstance, "gets the NNInterface object");
+
+    pybind11::class_<NNInterface> nnInterface(m, "NNInterface");
+    nnInterface.def("getObservation", &NNInterface::getObservation, "get observation array given a GameContext")
+        .def("getObservationMaximums", &NNInterface::getObservationMaximums, "get the defined maximum values of the observation space")
+        .def_property_readonly("observation_space_size", []() { return NNInterface::observation_space_size; });
 
     pybind11::class_<search::ScumSearchAgent2> agent(m, "Agent");
+    agent.def(pybind11::init<>());
     agent.def_readwrite("simulation_count_base", &search::ScumSearchAgent2::simulationCountBase, "number of simulations the agent uses for monte carlo tree search each turn")
         .def_readwrite("boss_simulation_multiplier", &search::ScumSearchAgent2::bossSimulationMultiplier, "bonus multiplier to the simulation count for boss fights")
         .def_readwrite("pause_on_card_reward", &search::ScumSearchAgent2::pauseOnCardReward, "causes the agent to pause so as to cede control to the user when it encounters a card reward choice")
-        .def_readwrite("print_logs", &search::ScumSearchAgent2::printLogs, "when set to true, the agent prints state information as it makes actions");
+        .def_readwrite("print_logs", &search::ScumSearchAgent2::printLogs, "when set to true, the agent prints state information as it makes actions")
+        .def("playout", &search::ScumSearchAgent2::playout);
 
     pybind11::class_<GameContext> gameContext(m, "GameContext");
     gameContext.def(pybind11::init<CharacterClass, std::uint64_t, int>())
