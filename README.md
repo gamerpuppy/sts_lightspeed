@@ -18,7 +18,7 @@ requires https://github.com/nlohmann/json
 * Tree search of possible game outcomes (not given the state of rng)
 
 **Implementation Progress**
-* Act 1 Enemies
+* All Enemies
 * All relics (in testing)
 * All Ironclad cards
 * All Colorless cards
