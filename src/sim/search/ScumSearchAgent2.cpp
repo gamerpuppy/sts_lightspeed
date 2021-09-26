@@ -358,17 +358,14 @@ void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
 }
 
 void search::ScumSearchAgent2::stepEventPolicy(GameContext &gc) {
-
     switch (gc.curEvent) {
 
         case Event::NEOW:
-            takeAction(gc, 3);
-//            gc.chooseEventOption(3);
-//                    if (gc.info.neowRewards[1].d == Neow::Drawback::CURSE || gc.info.neowRewards[2].d == Neow::Drawback::CURSE) {
-//                        gc.chooseEventOption(0);
-//                    } else {
-//                        chooseRandom(gc);
-//                    }
+            if (gc.info.neowRewards[1].d == Neow::Drawback::CURSE || gc.info.neowRewards[2].d == Neow::Drawback::CURSE) {
+                takeAction(gc, 0);
+            } else {
+                stepRandom(gc);
+            }
             break;
 
         case Event::NOTE_FOR_YOURSELF:
@@ -379,18 +376,6 @@ void search::ScumSearchAgent2::stepEventPolicy(GameContext &gc) {
         case Event::BIG_FISH:
             takeAction(gc, 1);
             break;
-
-        case Event::WE_MEET_AGAIN: {
-            if (gc.gold >= 50) {
-                takeAction(gc, 1);
-            } else if (gc.potionCount > 0) {
-                takeAction(gc, 2);
-            } else {
-                stepRandom(gc);
-                return;
-            }
-            break;
-        }
 
         case Event::GOLDEN_IDOL: {
             if (gc.hasRelic(RelicId::GOLDEN_IDOL)) {
