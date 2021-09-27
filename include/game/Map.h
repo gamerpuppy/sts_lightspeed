@@ -39,6 +39,9 @@ namespace sts {
         int burningEliteBuff = -1;
         std::array<std::array<MapNode, 7>, 15> nodes;
 
+        Map() = default;
+        Map(std::uint64_t seed, int ascension, int act, bool assignBurningElite);
+
         MapNode &getNode(int x, int y);
         [[nodiscard]] const MapNode &getNode(int x, int y) const;
         [[nodiscard]] std::string toString(bool showRoomSymbols=true) const;

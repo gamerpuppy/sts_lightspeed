@@ -32,6 +32,9 @@ void filterRedundantEdgesFromFirstRow(Map &map);
 void assignRooms(Map &map, Random &mapRng, int ascensionLevel=0);
 void assignBurningElite(Map &map, Random &mapRng);
 
+Map::Map(std::uint64_t seed, int ascension, int act, bool assignBurningElite)
+    : Map(Map::fromSeed(seed,ascension,act,assignBurningElite)) {}
+
 MapNode &Map::getNode(int x, int y) {
     return nodes.at(y).at(x);
 }
@@ -242,7 +245,6 @@ inline int getCommonAncestor(const Map &map, int x1, int x2, int y) {
     }
     return -1;
 }
-
 
 inline int choosePathParentLoopRandomizer(const Map &map, Random &rng, int curX, int curY, int newX) {
     const MapNode &newEdgeDest = map.getNode(newX, curY + 1);

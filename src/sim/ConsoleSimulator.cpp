@@ -59,8 +59,8 @@ void ConsoleSimulator::play(std::istream &is, std::ostream &os, SimulatorContext
         std::string character;
         int ascensionLevel;
 
-        is >> character;
         is >> seedStr;
+        is >> character;
         is >> ascensionLevel;
 
         if (c.printInput) {
@@ -557,8 +557,6 @@ void ConsoleSimulator::takeRewardScreenAction(const std::string &action) {
 }
 
 void ConsoleSimulator::printCardSelectScreenActions(std::ostream &os) const {
-    int selectCount = gc->info.toSelectCount;
-
     os << "Select Card to ";
     switch (gc->info.selectScreenType) {
 

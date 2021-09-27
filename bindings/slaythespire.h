@@ -5,6 +5,12 @@
 #ifndef STS_LIGHTSPEED_SLAYTHESPIRE_H
 #define STS_LIGHTSPEED_SLAYTHESPIRE_H
 
+#include <vector>
+#include <unordered_map>
+#include <array>
+
+#include "constants/Rooms.h"
+
 namespace sts {
 
     struct NNInterface {
@@ -35,6 +41,10 @@ namespace sts {
         class ScumSearchAgent2;
     }
 
+
+    class GameContext;
+    class Map;
+
     namespace py {
 
         void play();
@@ -48,6 +58,9 @@ namespace sts {
         void pickRewardCard(GameContext &gc, Card card);
         void skipRewardCards(GameContext &gc);
 
+        std::vector<int> getNNMapRepresentation(const Map &map);
+        Room getRoomType(const Map &map, int x, int y);
+        bool hasEdge(const Map &map, int x, int y, int x2);
     }
 
 

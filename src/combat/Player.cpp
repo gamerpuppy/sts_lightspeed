@@ -167,7 +167,7 @@ void Player::heal(int amount) {
     curHp = std::min(static_cast<int>(maxHp), curHp + amount);
 
     if (wasBloodied && curHp > maxHp/2 && hasRelic<RelicId::RED_SKULL>()) {
-        decrementStatus<PS::STRENGTH>(3);
+        debuff<PS::STRENGTH>(3);
     }
 }
 

@@ -5,6 +5,7 @@
 #include "game/SaveFile.h"
 #include "game/GameContext.h"
 #include "game/Game.h"
+#include "game/Map.h"
 #include "constants/Cards.h"
 #include "slaythespire.h"
 #include "sim/SimHelpers.h"
@@ -164,19 +165,24 @@ void printVec(const std::string &name, std::ostream &os, ForwardIt begin, Forwar
 }
 
 
-
-
 int main(int argc, const char *argv[]) {
 //    printAllRelicForBinding();
 
-    GameContext gc(sts::CharacterClass::IRONCLAD, 10000, 0);
+    Map map(sts::Map::fromSeed(1));
+    std::cout << map.toString() << '\n';
 
+    auto rep = sts::py::getNNMapRepresentation(map);
+    printVec("map_rep", std::cout, rep.begin(), rep.end());
 
-    const auto maximums = NNInterface::getInstance()->getObservationMaximums();
-    printVec("maximums", std::cout, maximums.begin(), maximums.end());
-
-    const auto observation = NNInterface::getInstance()->getObservation(gc);
-    printVec("observation", std::cout, observation.begin(), observation.end());
+//
+//    GameContext gc(sts::CharacterClass::IRONCLAD, 10000, 0);
+//
+//
+//    const auto maximums = NNInterface::getInstance()->getObservationMaximums();
+//    printVec("maximums", std::cout, maximums.begin(), maximums.end());
+//
+//    const auto observation = NNInterface::getInstance()->getObservation(gc);
+//    printVec("observation", std::cout, observation.begin(), observation.end());
 
 
 //    printEncountersForBinding();

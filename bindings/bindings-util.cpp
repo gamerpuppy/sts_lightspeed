@@ -9,6 +9,7 @@
 #include "sim/SimHelpers.h"
 #include "sim/PrintHelpers.h"
 #include "game/Game.h"
+#include "game/Map.h"
 
 #include "slaythespire.h"
 
@@ -130,7 +131,6 @@ namespace sts {
         return bossMap;
     }
 
-
     NNInterface* NNInterface::getInstance() {
         if (theInstance == nullptr) {
             theInstance = new NNInterface;
@@ -139,8 +139,6 @@ namespace sts {
     }
 
 }
-
-
 
 namespace sts::py {
 
@@ -207,6 +205,91 @@ namespace sts::py {
 
         auto &r = gc.info.rewardsContainer;
         r.removeCardReward(r.cardRewardCount-1);
+    }
+
+
+
+    // BEGIN MAP THINGS ****************************
+
+    std::vector<int> getNNMapRepresentation(const Map &map) {
+        std::vector<int> ret;
+
+        // 7 bits
+        // push edges to first row
+        for (int x = 0; x < 7; ++x) {
+            if (map.getNode(x,0).edgeCount > 0) {
+                ret.push_back(true);
+            } else {
+                ret.push_back(false);
+            }
+        }
+
+        // for each node in a row, push valid edges to next row, 3 bits per node, 21 bits per row
+        // skip 14th row because it is invariant
+        // 21 * 13 == 273 bits
+        for (int y = 0; y < 14; ++y) {
+            for (int x = 0; x < 7; ++x) {
+
+                bool localEdgeValues[3] {false, false, false};
+                auto node = map.getNode(x,y);
+                for (int i = 0; i < node.edgeCount; ++i) {
+                    auto edge = node.edges[i];
+                    if (edge < x) {
+                        localEdgeValues[0] = true;
+                    } else if (edge == x) {
+                        localEdgeValues[1] = true;
+                    } else {
+                        localEdgeValues[2] = true;
+                    }
+                }
+                ret.insert(ret.end(), localEdgeValues, localEdgeValues+3);
+            }
+        }
+
+        // room types - for each node there are 6 possible rooms,
+        // the first row is always monster, the 8th row is always treasure, 14th is always rest
+        // this gives 14-3 valid rows == 11
+        // 11 * 6 * 7 = 462 bits
+        for (int y = 1; y < 14; ++y) {
+            if (y == 8) {
+                continue;
+            }
+            for (int x = 0; x < 7; ++x) {
+                auto roomType = map.getNode(x,y).room;
+                for (int i = 0; i < 6; ++i) {
+                    ret.push_back(static_cast<int>(roomType) == i);
+                }
+            }
+        }
+
+        return ret;
+    };
+
+    Room getRoomType(const Map &map, int x, int y) {
+        if (x < 0 || x > 6 || y < 0 || y > 14) {
+            return Room::INVALID;
+        }
+
+        return map.getNode(x,y).room;
+    }
+
+    bool hasEdge(const Map &map, int x, int y, int x2) {
+        if (x == -1) {
+            return map.getNode(x2,0).edgeCount > 0;
+        }
+
+        if (x < 0 || x > 6 || y < 0 || y > 14) {
+            return false;
+        }
+
+
+        auto node = map.getNode(x,y);
+        for (int i = 0; i < node.edgeCount; ++i) {
+            if (node.edges[i] == x2) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

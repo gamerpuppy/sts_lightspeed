@@ -109,6 +109,15 @@ PYBIND11_MODULE(slaythespire, m) {
     relic.def_readwrite("id", &RelicInstance::id)
         .def_readwrite("data", &RelicInstance::data);
 
+    pybind11::class_<Map> map(m, "SpireMap");
+    map.def(pybind11::init<std::uint64_t, int,int,bool>());
+    map.def("get_room_type", &sts::py::getRoomType);
+    map.def("has_edge", &sts::py::hasEdge);
+    map.def("get_nn_rep", &sts::py::getNNMapRepresentation);
+    map.def("__repr__", [](const Map &m) {
+        return m.toString(true);
+    });
+
     pybind11::class_<Card> card(m, "Card");
     card.def(pybind11::init<CardId>())
         .def("__repr__", [](const Card &c) {
