@@ -64,7 +64,7 @@ void ConsoleSimulator::play(std::istream &is, std::ostream &os, SimulatorContext
         is >> ascensionLevel;
 
         if (c.printInput) {
-            std::cout << character << " " << seedStr << " " << ascensionLevel << "\n";
+            std::cout << seedStr << " " << character << " " << ascensionLevel << "\n";
         }
         setupGame(SeedHelper::getLong(seedStr), getCharacterClassFromString(character), ascensionLevel);
     }
@@ -128,7 +128,7 @@ void ConsoleSimulator::handleInputLine(const std::string &line, std::ostream &os
 
     } else if (line.length() >= 6 && line.substr(0, 6) == "print ") {
         if (c.printLogActions) {
-//            c.tookAction = true;
+            c.tookAction = true;
             doPrintCommand(os, line.substr(6));
         }
 
