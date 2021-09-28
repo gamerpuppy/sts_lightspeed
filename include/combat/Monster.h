@@ -21,6 +21,11 @@ namespace sts {
 
     class BattleContext;
 
+    struct DamageInfo {
+        int damage = 0;
+        int attackCount = 1;
+    };
+
     struct Monster {
 
         /*
@@ -152,6 +157,7 @@ namespace sts {
         [[nodiscard]] int calculateDamageToPlayer(const BattleContext &bc, int baseDamage) const;
         void attackPlayerHelper(BattleContext &bc, int baseDamage, int times=1);
         void takeTurn(BattleContext &bc);
+        [[nodiscard]] DamageInfo getMoveBaseDamage(const BattleContext &bc) const;
 
         // monster specific functions
 

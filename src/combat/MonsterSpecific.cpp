@@ -348,15 +348,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
 
     switch (moveHistory[0]) {
 
-        case MMID::ACID_SLIME_S_LICK:
-            bc.addToBot(Actions::DebuffPlayer<PS::WEAK>(1, true));
-            setMove(MMID::ACID_SLIME_S_TACKLE);
-            break;
-
-        case MMID::ACID_SLIME_S_TACKLE:
-            attackPlayerHelper(bc, asc2 ? 4 : 3);
-            setMove(MMID::ACID_SLIME_S_LICK);
-            break;
+        // ************ ACID_SLIME_L ************
 
         case MMID::ACID_SLIME_L_CORROSIVE_SPIT:
             attackPlayerHelper(bc, asc2 ? 12 : 11);
@@ -376,6 +368,36 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
         case MMID::ACID_SLIME_L_TACKLE:
             attackPlayerHelper(bc, asc2 ? 18 : 16);
             bc.addToBot(Actions::RollMove(idx));
+            break;
+
+        case MMID::ACID_SLIME_M_CORROSIVE_SPIT:
+            attackPlayerHelper(bc, asc2 ? 8 : 7);
+            bc.addToBot(Actions::MakeTempCardInDiscard(CardId::SLIMED));
+            bc.addToBot(Actions::RollMove(idx));
+            break;
+
+        // ************ ACID_SLIME_M ************
+
+        case MMID::ACID_SLIME_M_LICK:
+            bc.addToBot(Actions::DebuffPlayer<PS::WEAK>(1, true));
+            bc.addToBot(Actions::RollMove(idx));
+            break;
+
+        case MMID::ACID_SLIME_M_TACKLE:
+            attackPlayerHelper(bc, asc2 ? 12 : 10);
+            bc.addToBot(Actions::RollMove(idx));
+            break;
+
+        // ************ ACID_SLIME_S ************
+
+        case MMID::ACID_SLIME_S_LICK:
+            bc.addToBot(Actions::DebuffPlayer<PS::WEAK>(1, true));
+            setMove(MMID::ACID_SLIME_S_TACKLE);
+            break;
+
+        case MMID::ACID_SLIME_S_TACKLE:
+            attackPlayerHelper(bc, asc2 ? 4 : 3);
+            setMove(MMID::ACID_SLIME_S_LICK);
             break;
 
         // ************ RED MASK BOIS ************
@@ -650,22 +672,6 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             }
             break;
         }
-
-        case MMID::ACID_SLIME_M_CORROSIVE_SPIT:
-            attackPlayerHelper(bc, asc2 ? 8 : 7);
-            bc.addToBot(Actions::MakeTempCardInDiscard(CardId::SLIMED));
-            bc.addToBot(Actions::RollMove(idx));
-            break;
-
-        case MMID::ACID_SLIME_M_LICK:
-            bc.addToBot(Actions::DebuffPlayer<PS::WEAK>(1, true));
-            bc.addToBot(Actions::RollMove(idx));
-            break;
-
-        case MMID::ACID_SLIME_M_TACKLE:
-            attackPlayerHelper(bc, asc2 ? 12 : 10);
-            bc.addToBot(Actions::RollMove(idx));
-            break;
 
         case MMID::CULTIST_DARK_STRIKE:
             attackPlayerHelper(bc, 6);
@@ -1101,7 +1107,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
         // ************ SNAKE PLANT ************
 
         case MMID::SNAKE_PLANT_CHOMP:
-            attackPlayerHelper(bc, asc2 ? 8 : 7);
+            attackPlayerHelper(bc, asc2 ? 8 : 7, 3);
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
@@ -1361,8 +1367,6 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             attackPlayerHelper(bc, 7);
             break;
 
-
-
         // ************ SHAPES ************
 
         case MMID::EXPLODER_EXPLODE:
@@ -1426,7 +1430,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
         }
 
         case MMID::THE_MAW_SLAM: // 3
-            attackPlayerHelper(bc, asc17 ? 30 : 25);
+            attackPlayerHelper(bc, asc2 ? 30 : 25);
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
@@ -1506,18 +1510,12 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
         // ************ WRITHING MASS ************
 
         case MMID::WRITHING_MASS_FLAIL: // 2
-#ifdef sts_asserts
-            assert(getStatus<MS::REACTIVE>() == 0);
-#endif
             attackPlayerHelper(bc, asc2 ? 16 : 15);
             bc.addToBot( Actions::MonsterGainBlock(idx, asc2 ? 18 : 16) );
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::WRITHING_MASS_IMPLANT: // 4
-#ifdef sts_asserts
-            assert(getStatus<MS::REACTIVE>() == 0);
-#endif
             miscInfo = true;
             if (!bc.player.hasRelic<R::OMAMORI>()) {
                 if (bc.player.hasRelic<R::DARKSTONE_PERIAPT>()) {
@@ -1528,25 +1526,16 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             break;
 
         case MMID::WRITHING_MASS_MULTI_STRIKE: // 1
-#ifdef sts_asserts
-            assert(getStatus<MS::REACTIVE>() == 0);
-#endif
             attackPlayerHelper(bc, asc2 ? 9 : 7, 3);
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::WRITHING_MASS_STRONG_STRIKE: // 0
-#ifdef sts_asserts
-            assert(getStatus<MS::REACTIVE>() == 0);
-#endif
             attackPlayerHelper(bc, asc2 ? 38 : 32);
             bc.addToBot( Actions::RollMove(idx) );
             break;
 
         case MMID::WRITHING_MASS_WITHER: // 3
-#ifdef sts_asserts
-            assert(getStatus<MS::REACTIVE>() == 0);
-#endif
             attackPlayerHelper(bc, asc2 ? 12 : 10);
             bc.addToBot( Actions::DebuffPlayer<PS::WEAK>(2, true) );
             bc.addToBot( Actions::DebuffPlayer<PS::VULNERABLE>(2, true) );
@@ -2764,10 +2753,7 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             if (firstTurn()) {
                 return (MMID::SNECKO_PERPLEXING_GLARE);
 
-            } else if (roll < 40) {
-                return (MMID::SNECKO_TAIL_WHIP);
-
-            } else if (lastTwoMoves(MMID::SNECKO_BITE)) {
+            } else if (roll < 40 || lastTwoMoves(MMID::SNECKO_BITE)) {
                 return (MMID::SNECKO_TAIL_WHIP);
 
             } else {

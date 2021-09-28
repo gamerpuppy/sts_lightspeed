@@ -3,7 +3,6 @@
 //
 
 #include <iostream>
-#include <fstream>
 #include <chrono>
 #include <cstdint>
 #include <thread>
@@ -38,7 +37,6 @@ void printSizes() {
     std::cout << "sizeof ActionFunction : " << sizeof(ActionFunction) << '\n';
     std::cout << "sizeof ActionQueue<40> : " << sizeof(ActionQueue<40>) << '\n';
     std::cout << "sizeof BattleContext: " << sizeof(BattleContext) << '\n';
-
 
     std::cout << "sizeof GameContext: " << sizeof(GameContext) << '\n';
     std::cout << "sizeof Deck: " << sizeof(Deck) << '\n';
