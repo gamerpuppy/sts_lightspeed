@@ -197,6 +197,25 @@ namespace sts {
         return os;
     }
 
+
+    void printOutcome(std::ostream &os, const GameContext &gc) {
+        if (gc.outcome == sts::GameOutcome::PLAYER_VICTORY) {
+            os << gc.seed << " won at floor " << gc.floorNum << " against "
+                      << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
+            os << " " << gc.deck << " " << gc.relics << std::endl;
+
+        } else {
+            os << gc.seed << " lost at floor " << gc.floorNum << " "
+                      << roomStrings[static_cast<int>(gc.curRoom)] << " ";
+            if (gc.curRoom == sts::Room::EVENT) {
+                os << eventGameNames[static_cast<int>(gc.curEvent)];
+            } else if (gc.curRoom == Room::BOSS || gc.curRoom == Room::ELITE || gc.curRoom == Room::MONSTER) {
+                os << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
+            }
+            os << " " << gc.deck << " " << gc.relics << std::endl;
+        }
+    }
+
 }
 
 

@@ -22,6 +22,7 @@
 #include "sim/PrintHelpers.h"
 #include "sim/RandomAgent.h"
 #include "sim/search/ScumSearchAgent2.h"
+#include "sim/search/SimpleAgent.h"
 
 #include "sim/search/BattleScumSearcher2.h"
 
@@ -58,6 +59,8 @@ void playFromSaveFile(const std::string &fname, const std::string &actionFile) {
     ConsoleSimulator sim;
     sim.setupGameFromSaveFile(saveFile);
     SimulatorContext simContext;
+    simContext.quitOnTestFailed = false;
+
 
 
     std::ifstream actionListInputStream(actionFile);
@@ -114,33 +117,6 @@ void replayActionFile(const GameContext &startState, const std::string &fname) {
     }
 }
 
-
-
-
-
-void printOutcome(const GameContext &gc) {
-
-    if (gc.outcome == sts::GameOutcome::PLAYER_VICTORY) {
-        std::cout << gc.seed << " won at floor " << gc.floorNum << " against "
-                  << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
-        std::cout << " " << gc.deck << " " << gc.relics << std::endl;
-
-    } else {
-        std::cout << gc.seed << " lost at floor " << gc.floorNum << " "
-                  << roomStrings[static_cast<int>(gc.curRoom)] << " ";
-        if (gc.curRoom == sts::Room::EVENT) {
-            std::cout << eventGameNames[static_cast<int>(gc.curEvent)];
-        } else if (gc.curRoom == Room::BOSS || gc.curRoom == Room::ELITE || gc.curRoom == Room::MONSTER) {
-            std::cout << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
-        }
-        std::cout << " " << gc.deck << " " << gc.relics << std::endl;
-    }
-
-}
-
-
-
-
 struct AgentMtInfo {
     std::mutex m;
 
@@ -157,7 +133,6 @@ struct AgentMtInfo {
 static int g_searchAscension = 0;
 static int g_simulationCount = 5;
 static int g_print_level = 0;
-
 
 void agentMtRunner(AgentMtInfo *info) {
     std::uint64_t seed;
@@ -181,7 +156,7 @@ void agentMtRunner(AgentMtInfo *info) {
 
         agent.playout(gc);
 
-        printOutcome(gc);
+        printOutcome(std::cout, gc);
 
         {
             std::scoped_lock lock(info->m);
@@ -195,7 +170,6 @@ void agentMtRunner(AgentMtInfo *info) {
 
             seed = info->curSeed++;
         }
-
     }
 }
 
@@ -311,6 +285,18 @@ int main(int argc, const char* argv[]) {
         g_simulationCount = depthArg;
 
         agentMt(threadCount, startSeedLong, playoutCount);
+
+    } if (command == "simple_agent_mt") { // actually doing tree search now
+        const int threadCount(std::stoi(argv[2]));
+        const std::uint64_t startSeedLong(std::stoull(argv[3]));
+        const int playoutCount(std::stoi(argv[4]));
+
+        bool print = false;
+        if (argc > 5) {
+            print = true;
+        }
+
+        search::SimpleAgent::runAgentsMt(threadCount, startSeedLong, playoutCount, print);
 
     } else if (command == "json") {
         const std::string saveFilePath(argv[2]);

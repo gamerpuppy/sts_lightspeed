@@ -28,7 +28,6 @@ void search::ScumSearchAgent2::takeAction(BattleContext &bc, search::Action a) {
     a.execute(bc);
 }
 
-
 void search::ScumSearchAgent2::playout(GameContext &gc) {
     paused = false;
     BattleContext bc;
@@ -51,7 +50,7 @@ void search::ScumSearchAgent2::playout(GameContext &gc) {
     }
 }
 
-void printHelper(const BattleContext &bc, const search::Action &a) {
+static void printHelper(const BattleContext &bc, const search::Action &a) {
     a.printDesc(std::cout, bc) << " ";
     std::cout
             << " turn: " << bc.turn

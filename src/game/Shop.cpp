@@ -160,7 +160,7 @@ void Shop::buyCardRemove(GameContext &gc) {
 
     gc.regainControlAction = [=](GameContext &g) {
         g.screenState = ScreenState::SHOP_ROOM;
-        g.regainControlAction =  gc.regainControlAction;
+        g.regainControlAction = gc.regainControlAction;
     };
 
     gc.openCardSelectScreen(CardSelectScreenType::REMOVE, 1);

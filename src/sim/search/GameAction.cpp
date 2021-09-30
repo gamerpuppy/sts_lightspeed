@@ -697,8 +697,11 @@ int search::GameAction::getValidEventSelectBits(const GameContext &gc) {
             return 0xF;
 
         case Event::PLEADING_VAGRANT:
-            return (bool)(gc.gold >= 85) | 0b110;
-
+            if (gc.gold >= 85) {
+                return 0x7;
+            } else {
+                return 0b110;
+            }
 
         case Event::COLOSSEUM:
             if (gc.info.eventData == 0) { // first phase

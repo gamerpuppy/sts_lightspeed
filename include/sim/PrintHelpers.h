@@ -50,8 +50,7 @@ namespace sts {
     void printBattleContextRng(std::ostream &os, const sts::BattleContext &bc);
 
     std::ostream& printCardInstanceSimple(std::ostream &os, const CardInstance &card);
-
-
+    void printOutcome(std::ostream &os, const GameContext &gc);
 
 }
 

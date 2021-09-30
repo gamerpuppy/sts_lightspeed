@@ -419,7 +419,7 @@ bool GameContext::canAddEvent(Event event) const {
             return gold >= 75;
 
         case Event::COLOSSEUM:
-            return curMapNodeY > 7;
+            return curMapNodeY > 7 && !disableColosseum;
 
         default:
             return true;
@@ -710,7 +710,6 @@ void GameContext::transitionToAct(int targetAct) {
     } else if (targetAct == 4) {
         *map = Map::act4Map();
     }
-
 
     colorlessCardPool = baseColorlessPool;
     if (ascension >= 5) {

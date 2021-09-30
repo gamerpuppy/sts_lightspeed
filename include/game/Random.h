@@ -57,29 +57,7 @@ namespace java {
             }
         }
 
-        template <typename ForwardIterator>
-        void noop_shuffle(int containerSize, java::Random rnd) {
-            for (int i=containerSize; i>1; i--) {
-                rnd.nextInt(i);
-            }
-        }
-
-        template<typename ForwardIt>
-        void binary_sort(ForwardIt begin, ForwardIt end) {
-
-
-
-
-
-        }
-
-
-
     }
-
-
-
-
 }
 
 

@@ -4,7 +4,7 @@
 
 #include "sim/search/Action.h"
 
-
+#include <functional>
 
 using namespace sts;
 
@@ -422,6 +422,7 @@ void search::Action::execute(BattleContext &bc) const {
     if (!isValidAction(bc)) {
         std::cerr << bc.seed << " " << static_cast<int>(getActionType()) << " " << getSourceIdx() << " " << getTargetIdx() << std::endl;
         std::cerr <<  cardSelectTaskStrings[static_cast<int>(bc.cardSelectInfo.cardSelectTask)] << std::endl;
+        std::cerr << bc << std::endl;
         assert(false);
     }
 #endif
@@ -461,3 +462,96 @@ void search::Action::execute(BattleContext &bc) const {
     bc.inputState = InputState::EXECUTING_ACTIONS;
     bc.executeActions();
 }
+
+template <typename ForwardIt>
+void setupCardOptionsHelper(std::vector<search::Action> &actions, const ForwardIt begin, const ForwardIt end, const std::function<bool(const CardInstance &)> &p= nullptr) {
+    for (int i = 0; begin+i != end; ++i) {
+        const auto &c = begin[i];
+        if (!p || (p(c))) {
+            actions.emplace_back(search::ActionType::SINGLE_CARD_SELECT, i);
+        }
+    }
+}
+
+std::vector<search::Action> search::Action::enumerateCardSelectActions(const BattleContext &bc) {
+    std::vector<search::Action> actions;
+
+    switch (bc.cardSelectInfo.cardSelectTask) {
+        case CardSelectTask::ARMAMENTS:
+            setupCardOptionsHelper( actions, bc.cards.hand.begin(), bc.cards.hand.begin() + bc.cards.cardsInHand,
+                                    [] (const CardInstance &c) { return c.canUpgrade(); });
+            break;
+
+        case CardSelectTask::CODEX:
+            for (int i = 0; i < 4; ++i) { // i -> 3 action means skip
+                actions.push_back({Action(search::ActionType::SINGLE_CARD_SELECT, i)});
+            }
+            break;
+
+        case CardSelectTask::DISCOVERY:
+            for (int i = 0; i < 3; ++i) {
+                actions.push_back({Action(search::ActionType::SINGLE_CARD_SELECT, i)});
+            }
+            break;
+
+        case CardSelectTask::DUAL_WIELD:
+            setupCardOptionsHelper( actions, bc.cards.hand.begin(), bc.cards.hand.begin() + bc.cards.cardsInHand,
+                                    [] (const CardInstance &c) {
+                                        return c.getType() == CardType::POWER || c.getType() == CardType::ATTACK;
+                                    });
+            break;
+
+        case CardSelectTask::EXHUME:
+            setupCardOptionsHelper(actions, bc.cards.exhaustPile.begin(), bc.cards.exhaustPile.end(),
+                                   [](const auto &c) { return c.getId() != CardId::EXHUME; });
+            break;
+
+        case CardSelectTask::EXHAUST_ONE:
+            setupCardOptionsHelper(actions, bc.cards.hand.begin(), bc.cards.hand.begin() + bc.cards.cardsInHand);
+            break;
+
+        case CardSelectTask::FORETHOUGHT:
+        case CardSelectTask::WARCRY:
+            setupCardOptionsHelper(actions, bc.cards.hand.begin(), bc.cards.hand.begin() + bc.cards.cardsInHand);
+            break;
+
+        case CardSelectTask::HEADBUTT:
+        case CardSelectTask::LIQUID_MEMORIES_POTION:
+            setupCardOptionsHelper(actions, bc.cards.discardPile.begin(), bc.cards.discardPile.end());
+            break;
+
+        case CardSelectTask::SECRET_TECHNIQUE:
+            setupCardOptionsHelper(actions, bc.cards.drawPile.begin(), bc.cards.drawPile.end(),
+                                   [] (const CardInstance &c) {
+                                       return c.getType() == CardType::SKILL;
+                                   });
+            break;
+
+        case CardSelectTask::SECRET_WEAPON:
+            setupCardOptionsHelper(actions, bc.cards.drawPile.begin(), bc.cards.drawPile.end(),
+                                   [] (const CardInstance &c) {
+                                       return c.getType() == CardType::ATTACK;
+                                   });
+            break;
+
+        case CardSelectTask::EXHAUST_MANY:
+        case CardSelectTask::GAMBLE:
+            // just dont deal with this right now
+            actions.push_back({search::Action(search::ActionType::MULTI_CARD_SELECT, 0)});
+            break;
+
+        default:
+#ifdef sts_asserts
+            assert(false);
+#endif
+            break;
+    }
+    return actions;
+}
+
+
+
+
+
+
+

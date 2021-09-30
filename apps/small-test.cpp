@@ -9,6 +9,7 @@
 #include "constants/Cards.h"
 #include "slaythespire.h"
 #include "sim/SimHelpers.h"
+#include "sim/search/SimpleAgent.h"
 
 #include <vector>
 #include <algorithm>
@@ -169,10 +170,16 @@ int main(int argc, const char *argv[]) {
 //    printAllRelicForBinding();
 
     Map map(sts::Map::fromSeed(1));
-    std::cout << map.toString() << '\n';
+    std::cout << map.toString() << std::endl;
 
-    auto rep = sts::py::getNNMapRepresentation(map);
-    printVec("map_rep", std::cout, rep.begin(), rep.end());
+
+    int weights[] = {100,1000,100,10,1,0};
+
+    auto path = search::SimpleAgent::getBestMapPathForWeights(map, weights);
+    printVec("path", std::cout, path.begin(), path.end());
+
+//    auto rep = sts::py::getNNMapRepresentation(map);
+//    printVec("map_rep", std::cout, rep.begin(), rep.end());
 
 //
 //    GameContext gc(sts::CharacterClass::IRONCLAD, 10000, 0);
