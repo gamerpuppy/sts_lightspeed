@@ -9,7 +9,7 @@
 #include "constants/Cards.h"
 #include "slaythespire.h"
 #include "sim/SimHelpers.h"
-#include "sim/search/SimpleAgent.h"
+#include "sim/agents/SimpleAgent.h"
 
 #include <vector>
 #include <algorithm>

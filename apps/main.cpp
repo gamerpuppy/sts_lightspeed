@@ -1,12 +1,6 @@
 #include <iostream>
 
-#include "data_structure/fixed_list.h"
-#include "constants/CardPools.h"
-#include "game/Game.h"
-#include "game/Map.h"
-#include "game/Neow.h"
-#include "combat/BattleContext.h"
-#include "sim/ConsoleSimulator.h"
+#include <sts/sim/console_simulator.hpp>
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"

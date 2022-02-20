@@ -20,9 +20,9 @@
 #include "combat/BattleContext.h"
 #include "sim/ConsoleSimulator.h"
 #include "sim/PrintHelpers.h"
-#include "sim/RandomAgent.h"
-#include "sim/search/ScumSearchAgent2.h"
-#include "sim/search/SimpleAgent.h"
+#include "sim/agents/RandomAgent.h"
+#include "sim/agents/ScumSearchAgent2.h"
+#include "sim/agents/SimpleAgent.h"
 
 #include "sim/search/BattleScumSearcher2.h"
 
