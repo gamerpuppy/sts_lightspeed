@@ -11,7 +11,6 @@
 
 using namespace sts;
 
-
 bool Player::hasRelicRuntime(RelicId r) const {
     if ((int) r < 64) {
         return relicBits0 & (1ULL << (int)r);

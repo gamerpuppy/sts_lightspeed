@@ -3,7 +3,6 @@
 //
 
 #include <sts/game/neow.hpp>
-#include <sts/common/random.hpp>
 #include <sts/game/misc.hpp>
 
 #include <sts/constants/card_pools.hpp>
@@ -133,4 +132,13 @@ CardReward sts::Neow::getCardReward(Random &rng, CharacterClass cc, bool rareOnl
         reward.push_back(card);
     }
     return reward;
+}
+
+bool Neow::operator==(const Neow::Option &lhs, const Neow::Option &rhs) {
+    return lhs.r == rhs.r &&
+           lhs.d == rhs.d;
+}
+
+bool Neow::operator!=(const Neow::Option &lhs, const Neow::Option &rhs) {
+    return !(rhs == lhs);
 }

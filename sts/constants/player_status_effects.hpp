@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+namespace sts {
+
 enum class PlayerStatus : uint8_t {
 
     // *********    Statuses that use JustApplied  ************
@@ -144,5 +146,6 @@ enum class Orb : uint8_t {
     LIGHTNING,
 };
 
+}
 
 #endif //STS_LIGHTSPEED_PLAYERSTATUSEFFECTS_HPP

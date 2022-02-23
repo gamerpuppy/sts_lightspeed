@@ -66,7 +66,7 @@ int getBestCardToPlay(const BattleContext &bc, fixed_list<int,10> handIdxs) {
     int bestHandIdx;
     for (int i = 0; i < handIdxs.size(); ++i) {
         const auto c = bc.cards.hand[handIdxs[i]];
-        const int priority = 2 * cardPlayMap[static_cast<int>(c.getId())] + (c.isUpgraded() ? -1 : 0);
+        const int priority = 2 * cardPlayMap[static_cast<int>(c.id)] + (c.isUpgraded() ? -1 : 0);
         if (priority < bestPriority) {
             bestPriority = priority;
             bestHandIdx = handIdxs[i];
@@ -358,7 +358,7 @@ void search::SimpleAgent::stepBattleCardPlay(BattleContext &bc) {
 
     for (auto handIdx : playableCardsIdxs) {
         const auto &c = bc.cards.hand[handIdx];
-        if (isAoeCard.test(static_cast<int>(c.getId()))) {
+        if (isAoeCard.test(static_cast<int>(c.id))) {
             aoeCards.push_back(handIdx);
         }
         if (c.cost == 0 || c.costForTurn == 0) {
@@ -378,7 +378,7 @@ void search::SimpleAgent::stepBattleCardPlay(BattleContext &bc) {
         fixed_list<int,10> offensiveCards;
         for (auto handIdx : nonZeroCostCards) {
             const auto &c = bc.cards.hand[handIdx];
-            const bool isDefensive = isDefensiveCard.test(static_cast<int>(c.getId()));
+            const bool isDefensive = isDefensiveCard.test(static_cast<int>(c.id));
             if (!isDefensive) {
                 offensiveCards.push_back(handIdx);
             }
@@ -469,7 +469,7 @@ void search::SimpleAgent::stepBattleCardSelect(BattleContext &bc) {
 
         case CardSelectTask::EXHUME:
             setupCardOptionsHelper(actions, bc.cards.exhaustPile.begin(), bc.cards.exhaustPile.end(),
-                                   [](const auto &c) { return c.getId() != CardId::EXHUME; });
+                                   [](const auto &c) { return c.id != CardId::EXHUME; });
             break;
 
         case CardSelectTask::EXHAUST_ONE:
@@ -751,7 +751,7 @@ void search::SimpleAgent::stepShopScreen(GameContext &gc) {
     for (int i = 0; i < 7; ++i) {
         if (s.cardPrice(i) == -1 ||
             gc.gold < s.cardPrice(i) ||
-            shouldSkip(s.cards[i].getId()))
+            shouldSkip(s.cards[i].id))
         {
             continue;
         }

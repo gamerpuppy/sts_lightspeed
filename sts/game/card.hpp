@@ -5,7 +5,6 @@
 #ifndef STS_LIGHTSPEED_CARD_H
 #define STS_LIGHTSPEED_CARD_H
 
-
 #include <sts/constants/card_ids.hpp>
 #include <sts/data_structure/fixed_list.hpp>
 
@@ -13,14 +12,13 @@ namespace sts {
 
     struct Card {
         CardId id = CardId::INVALID;
-        std::int16_t misc = 0;
-        bool upgraded = false;
+        std::uint16_t misc = 0;
+        std::uint16_t upgraded = false;
 
         Card() = default;
-        Card(CardId id) : id(id) {}
         Card(CardId id, int upgraded) : id(id), upgraded(upgraded) {}
+        Card(CardId id) : Card(id, 0) {}
 
-        [[nodiscard]] CardId getId() const;
         [[nodiscard]] int getUpgraded() const;
         [[nodiscard]] bool isUpgraded() const;
 
@@ -39,6 +37,9 @@ namespace sts {
 
         bool operator==(const Card &rhs) const;
         bool operator!=(const Card &rhs) const;
+
+//        bool operator==(const Card &rhs) const = default;
+//        bool operator!=(const Card &rhs) const = default;
 
         void upgrade();
     };

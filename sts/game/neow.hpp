@@ -14,16 +14,7 @@ namespace sts {
 
     namespace Neow {
 
-        enum class CurrentActionSpace {
-            CHOICE_LIST,
-            MAP_FORK,
-            MAP_BEGIN,
-            COMBAT,
-            REWARDS,
-            SHOP,
-        };
-
-        enum class Bonus {
+        enum class Bonus : uint16_t {
             THREE_CARDS=0,
             ONE_RANDOM_RARE_CARD,
             REMOVE_CARD,
@@ -77,7 +68,7 @@ namespace sts {
         };
 
 
-        enum class Drawback {
+        enum class Drawback : uint16_t  {
             INVALID=0,
             NONE,
             TEN_PERCENT_HP_LOSS,
@@ -102,6 +93,9 @@ namespace sts {
         struct Option {
             Bonus r;
             Drawback d;
+
+            friend bool operator==(const Option &lhs, const Option &rhs);
+            friend bool operator!=(const Option &lhs, const Option &rhs);
         };
 
         std::array<Option, 4> getOptions(Random &r);

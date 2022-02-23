@@ -5,13 +5,6 @@
 #ifndef STS_LIGHTSPEED_PLAYER_H
 #define STS_LIGHTSPEED_PLAYER_H
 
-//
-// Created by gamerpuppy on 4/21/2021.
-//
-
-#ifndef STS_AI_PLAYER_H
-#define STS_AI_PLAYER_H
-
 #include <iostream>
 #include <vector>
 #include <cstdint>
@@ -478,10 +471,5 @@ namespace sts {
 
 
 }
-
-
-#endif //STS_AI_PLAYER_H
-
-
 
 #endif //STS_LIGHTSPEED_PLAYER_H

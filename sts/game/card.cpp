@@ -3,26 +3,18 @@
 //
 
 #include <sts/game/card.hpp>
+#include <cassert>
+
 
 using namespace sts;
 
 void Card::upgrade() {
-    upgraded = true;
-    if (id == CardId::SEARING_BLOW) {
-        ++misc;
-    }
-}
-
-CardId Card::getId() const {
-    return id;
+    assert(id == CardId::SEARING_BLOW || upgraded == 0);
+    ++upgraded;
 }
 
 int Card::getUpgraded() const {
-    if (id == CardId::SEARING_BLOW) {
-        return misc;
-    } else {
-        return upgraded;
-    }
+    return upgraded;
 }
 
 bool Card::isUpgraded() const {
@@ -50,7 +42,13 @@ CardRarity Card::getRarity() const {
 }
 
 int Card::getBaseDamage() const {
-    return cardBaseDamage[upgraded ? 1 : 0][static_cast<int>(id)];
+    if (id == CardId::SEARING_BLOW) {
+        const int n = getUpgraded();
+        const int baseDmg = n * (n+7) / 2 + 12;
+        return baseDmg;
+    } else {
+        return cardBaseDamage[upgraded ? 1 : 0][static_cast<int>(id)];
+    }
 }
 
 bool Card::isStarterStrikeOrDefend() const {
@@ -67,7 +65,7 @@ bool Card::isStarterStrike() const {
 bool Card::canUpgrade() const {
     switch (getType()) {
         case CardType::ATTACK:
-            return !upgraded || getId() == CardId::SEARING_BLOW;
+            return !upgraded || id == CardId::SEARING_BLOW;
         case CardType::SKILL:
         case CardType::POWER:
             return !upgraded;
@@ -94,3 +92,4 @@ bool Card::operator==(const Card &rhs) const {
 bool Card::operator!=(const Card &rhs) const {
     return !(rhs == *this);
 }
+

@@ -22,7 +22,7 @@ void Deck::initFromSaveFile(const SaveFile &s) {
     for (const auto &c : s.cards) {
         obtainRaw(c);
 
-        if (c.getId() == bottledCardIds[static_cast<int>(c.getType())]) {
+        if (c.id == bottledCardIds[static_cast<int>(c.getType())]) {
             bottleCard(static_cast<int>(cards.size()-1), c.getType());
             bottledCardIds[static_cast<int>(c.getType())] = CardId::INVALID;
         }
@@ -69,7 +69,7 @@ int Deck::getTransformableCount(int limit, bool includeBottled) const {
 
 bool Deck::hasCardForWingStatue() const {
     for (const auto &c : cards) {
-        if (getBaseDamage(c.getId(), c.getUpgraded()) >= 10) {
+        if (getBaseDamage(c.id, c.getUpgraded()) >= 10) {
             return true;
         }
     }
@@ -241,7 +241,7 @@ void Deck::remove(GameContext &gc, int idx) {
             --cardTypeCounts[static_cast<int>(CardType::CURSE)];
             --transformableCount;
         }
-        if (c.getId() == CardId::PARASITE) {
+        if (c.id == CardId::PARASITE) {
             gc.loseMaxHp(3);
         }
         cards.remove(idx);

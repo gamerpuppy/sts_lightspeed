@@ -6,7 +6,6 @@
 
 using namespace sts;
 
-
 bool CardQueue::isEmpty() const {
     return size == 0;
 }

@@ -2,8 +2,8 @@
 // Created by gamerpuppy on 7/24/2021.
 //
 
-#ifndef STS_LIGHTSPEED_CARDMANAGER_H
-#define STS_LIGHTSPEED_CARDMANAGER_H
+#ifndef STS_LIGHTSPEED_CARD_MANAGER_HPP
+#define STS_LIGHTSPEED_CARD_MANAGER_HPP
 
 #include <vector>
 #include <array>
@@ -99,4 +99,4 @@ namespace sts {
 
 }
 
-#endif //STS_LIGHTSPEED_CARDMANAGER_H
+#endif //STS_LIGHTSPEED_CARDMANAGER_HPP

@@ -21,11 +21,11 @@ namespace sts {
 
     std::ostream& operator<<(std::ostream &os, const Card &card) {
         os << cardNames[static_cast<int>(card.id)];
-        if (card.getId() == CardId::RITUAL_DAGGER) {
+        if (card.id == CardId::RITUAL_DAGGER) {
             os << "=" << card.misc;
         }
         if (card.upgraded) {
-            if (card.getId() == CardId::SEARING_BLOW) {
+            if (card.id == CardId::SEARING_BLOW) {
                 os << "+" << card.getUpgraded();
             } else {
                 os << "+";
@@ -184,7 +184,7 @@ namespace sts {
     std::ostream& printCardInstanceSimple(std::ostream &os, const CardInstance &card) {
         os << cardNames[static_cast<int>(card.id)];
         // todo genetic algorithm
-        if (card.getId() == CardId::RITUAL_DAGGER) {
+        if (card.id == CardId::RITUAL_DAGGER) {
             os << "=" << card.specialData;
         }
         if (card.upgraded) {

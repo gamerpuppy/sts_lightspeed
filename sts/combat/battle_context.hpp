@@ -23,8 +23,6 @@
 
 namespace sts {
 
-
-
     enum class Outcome {
         UNDECIDED=0,
         PLAYER_VICTORY,

@@ -34,7 +34,6 @@ namespace sts::search {
 
         std::default_random_engine rng;
 
-
         // public interface
         void playout(GameContext &gc);
 

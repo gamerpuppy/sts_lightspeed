@@ -232,8 +232,8 @@ void search::ScumSearchAgent2::cardSelectPolicy(GameContext &gc) {
     for (int i = 0; i < gc.info.toSelectCards.size(); ++i) {
         const auto &c = gc.info.toSelectCards[i].card;
 
-        auto playOrder = search::Expert::getPlayOrdering(c.getId());
-        auto obtainWeight = search::Expert::getObtainWeight(c.getId());
+        auto playOrder = search::Expert::getPlayOrdering(c.id);
+        auto obtainWeight = search::Expert::getObtainWeight(c.id);
 
         switch (gc.info.selectScreenType) {
             case CardSelectScreenType::TRANSFORM:
@@ -293,7 +293,7 @@ void search::ScumSearchAgent2::stepRewardsPolicy(GameContext &gc) {
 double getAvgDeckWeight(const GameContext &gc) {
     int sum = 0;
     for (const auto &c : gc.deck.cards) {
-        sum += search::Expert::getObtainWeight(c.getId(), c.isUpgraded());
+        sum += search::Expert::getObtainWeight(c.id, c.isUpgraded());
     }
     return (double) sum / gc.deck.size();
 }
@@ -312,7 +312,7 @@ void search::ScumSearchAgent2::weightedCardRewardPolicy(GameContext &gc) {
             constexpr double act1AttackMultiplier = 1.4;
 
             const auto &c = r.cardRewards[rIdx][cIdx];
-            double weight = std::pow(search::Expert::getObtainWeight(c.getId(), c.isUpgraded()), 1.2);
+            double weight = std::pow(search::Expert::getObtainWeight(c.id, c.isUpgraded()), 1.2);
             if (gc.act == 1 && c.getType() == CardType::ATTACK) {
                 weight *= act1AttackMultiplier;
             }

@@ -2,8 +2,8 @@
 // Created by gamerpuppy on 7/4/2021.
 //
 
-#ifndef STS_LIGHTSPEED_MONSTERGROUP_H
-#define STS_LIGHTSPEED_MONSTERGROUP_H
+#ifndef STS_LIGHTSPEED_MONSTERGROUP_HPP
+#define STS_LIGHTSPEED_MONSTERGROUP_HPP
 
 #include <array>
 #include <iostream>
@@ -57,4 +57,5 @@ namespace sts {
     std::ostream &operator<<(std::ostream &os, const MonsterGroup &g);
 
 }
-#endif //STS_LIGHTSPEED_MONSTERGROUP_H
+
+#endif //STS_LIGHTSPEED_MONSTERGROUP_HPP

@@ -13,7 +13,7 @@ CardInstance::CardInstance(CardId id, bool upgraded) : id(id), upgraded(upgraded
     costForTurn = cost;
 }
 
-CardInstance::CardInstance(const Card &card) : CardInstance(card.getId(), card.isUpgraded()) {
+CardInstance::CardInstance(const Card &card) : CardInstance(card.id, card.isUpgraded()) {
     if (id == CardId::SEARING_BLOW) {
         specialData = card.getUpgraded();
     } else {

@@ -209,15 +209,9 @@ sts::SaveFile::SaveFile(const std::string &json, sts::CharacterClass cc): json(j
         c.at("id").get_to(card.id);
 
         int upgrades = 0;
-        c.at("upgrades").get_to(upgrades);
+        c.at("upgrades").get_to(card.upgraded);
+        c.at("misc").get_to(card.misc);
 
-        if (card.id == CardId::SEARING_BLOW) {
-            card.misc = upgrades;
-            card.upgraded = card.misc;
-        } else {
-            c.at("misc").get_to(card.misc);
-            card.upgraded = upgrades > 0;
-        }
         cards.push_back(card);
     }
 
