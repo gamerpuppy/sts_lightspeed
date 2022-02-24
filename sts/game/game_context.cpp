@@ -199,7 +199,7 @@ void GameContext::initFromSave(const SaveFile &s) {
             assert(false);  // other rooms not supported right now.
     }
 
-    deck.initFromSaveFile(s);
+    deck.initFromSave(s);
 
     initRelicsFromSave(s);
 
@@ -1291,10 +1291,6 @@ bool GameContext::obtainRelic(RelicId r) {
     if (relics.has(r)) {
         return false;
     }
-
-#ifdef sts_asserts
-    assert(!relics.has(r));
-#endif
 
     relics.setHasRelic(r, true);
 
@@ -3796,7 +3792,7 @@ void GameContext::openCardSelectScreen(CardSelectScreenType type, int selectCoun
             case CardSelectScreenType::TRANSFORM:
                 for (int i = 0; i < deck.size(); ++i) {
                     const auto &c = deck.cards[i];
-                    if (c.canTransform() && !deck.isCardBottled(i)) {
+                    if (c.canTransform() && !deck.cardIsBottled(i)) {
                         info.toSelectCards.push_back({c, i});
                     }
                 }

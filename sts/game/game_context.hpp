@@ -324,11 +324,9 @@ namespace sts {
         void loseGold(int amount, bool inShop=false);
         void loseMaxHp(int amount);
 
-
         void drinkPotion(Potion p);
         void drinkPotionAtIdx(int idx);
         void discardPotionAtIdx(int idx);
-
 
         void openTreasureRoomChest();
         void selectScreenTransform();

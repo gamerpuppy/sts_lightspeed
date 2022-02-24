@@ -15,12 +15,12 @@
 
 using namespace sts;
 
-void Deck::initFromSaveFile(const SaveFile &s) {
+void Deck::initFromSave(const SaveFile &s) {
     // the first card with a matching id will be bottled
     CardId bottledCardIds[] {s.bottledCards[0], s.bottledCards[1], s.bottledCards[2], CardId::INVALID};
 
     for (const auto &c : s.cards) {
-        obtainRaw(c);
+        obtainSimple(c);
 
         if (c.id == bottledCardIds[static_cast<int>(c.getType())]) {
             bottleCard(static_cast<int>(cards.size()-1), c.getType());
@@ -37,27 +37,24 @@ bool Deck::hasCurse() const {
     return cardTypeCounts[static_cast<int>(CardType::CURSE)];
 }
 
-bool Deck::isCardBottled(int idx) const {
-    return idx == bottleIdxs[0] || idx == bottleIdxs[1] || idx == bottleIdxs[2];
+bool Deck::cardIsBottled(int idx) const {
+    return idx == bottleIdxs[0] | idx == bottleIdxs[1] | idx == bottleIdxs[2];
 }
 
-bool Deck::anyCardBottled() const {
-    return bottleIdxs[0] == -1 || bottleIdxs[1] == -1 || bottleIdxs[2] == -1;
+bool Deck::hasBottledCard() const {
+    return bottleIdxs[0] != -1 | bottleIdxs[1] != -1 | bottleIdxs[2] != -1;
 }
 
 int Deck::getUpgradeableCount() const {
     return upgradeableCount;
 }
 
-int Deck::getTransformableCount(int limit, bool includeBottled) const {
+int Deck::getTransformableCount(bool includeBottled) const {
     if (includeBottled) {
         int count = transformableCount;
         for (int i = 0; i < 3; ++i) {
             if (bottleIdxs[i] != -1) {
                 ++count;
-                if (limit != -1 && count >= limit) {
-                    return count;
-                }
             }
         }
         return count;
@@ -182,7 +179,7 @@ void Deck::obtain(GameContext &gc, Card card, int count) {
             break;
     }
 
-
+// fixme bug here with bloody idol
     if (gc.relics.has(RelicId::CERAMIC_FISH)) { // todo check if ceramic fish activates before omamori
         gc.obtainGold(9 * count);
     }
@@ -192,9 +189,8 @@ void Deck::obtain(GameContext &gc, Card card, int count) {
     }
 }
 
-void Deck::obtainRaw(Card card) {
+void Deck::obtainSimple(Card card) {
     cards.push_back(card);
-    ++transformableCount;
     ++cardTypeCounts[static_cast<int>(card.getType())];
 
     switch (card.getType()) {
@@ -228,7 +224,7 @@ void Deck::bottleCard(int idx, CardType bottleType) {
     --transformableCount;
 }
 
-void Deck::removeBottle(CardType bottleType) {
+void Deck::unbottleCard(CardType bottleType) {
     bottleIdxs[static_cast<int>(bottleType)] = -1;
     ++transformableCount;
 }
@@ -254,7 +250,7 @@ void Deck::remove(GameContext &gc, int idx) {
         --upgradeableCount;
     }
 
-    if (!anyCardBottled()) { // if no bottled cards, can do simple remove
+    if (!hasBottledCard()) { // if no bottled cards, can do simple remove
         cards.remove(idx);
         return;
     }
@@ -263,17 +259,14 @@ void Deck::remove(GameContext &gc, int idx) {
     for (int i = 0; i < 3; ++i) {
         if (idx == bottleIdxs[i]) {
             bottleIdxs[i] = -1;
-            ++transformableCount;  // if was in a bottle (not counted as transformable), we need to change the transformable count backIdx
+            ++transformableCount;
 
         } else if (idx < bottleIdxs[i]) {
             --bottleIdxs[i]; // shift the bottleIdx to reflect shift in the cards list
         }
     }
 
-    for (int i = idx; i+1 < cards.size(); ++i) {
-        cards[i] = cards[i+1]; // shift cards to erase remove card
-    }
-    cards.resize(cards.size()-1);
+    cards.remove(idx);
 }
 
 void Deck::upgrade(int idx) {

@@ -34,12 +34,8 @@ namespace sts {
         [[nodiscard]] bool isStarterStrikeOrDefend() const;
         [[nodiscard]] bool isStarterStrike() const;
 
-
         bool operator==(const Card &rhs) const;
         bool operator!=(const Card &rhs) const;
-
-//        bool operator==(const Card &rhs) const = default;
-//        bool operator!=(const Card &rhs) const = default;
 
         void upgrade();
     };

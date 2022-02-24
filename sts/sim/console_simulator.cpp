@@ -742,11 +742,11 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             int goldCost1 = unfavorable ? 75 : 60;
             if (gc->gold >= goldCost1) {
                 if (cleanUpIsRemoveCard) {
-                    if (gc->deck.getTransformableCount(1) >= 1) { // todo this could be wrong,
+                    if (gc->deck.getTransformableCount(false) >= 1) { // todo this could be wrong,
                         os << "2: [Clean Up] Lose " << goldCost1 << " Gold. Remove a card.\n";
                     }
                 } else {
-                    if (gc->deck.getTransformableCount(2) >= 2) { // todo the requirement for this could be too strict
+                    if (gc->deck.getTransformableCount(false) >= 2) { // todo the requirement for this could be too strict
                         os << "3: [Clean Up] Lose " << goldCost1 << " Gold. Transform 2 random cards.\n";
                     }
                 }
@@ -754,7 +754,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
 
             int goldCost2 = unfavorable ? 110 : 90;
             if (gc->gold >= goldCost2) {
-                if (gc->deck.getTransformableCount(1) >= 1) {
+                if (gc->deck.getTransformableCount(false) >= 1) {
                     os << "4: [Full Service] Lose "<< goldCost2 << " Gold. Remove a card, then upgrade a random card.\n";
                 }
             }
@@ -765,7 +765,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
 
         case Event::AUGMENTER: { // Augmenter
             os << "0: [Test J.A.X] Obtain a J.A.X.\n";
-            if (gc->deck.getTransformableCount(2) > 1) {
+            if (gc->deck.getTransformableCount(false) > 1) {
                 os << "1: [Become Test Subject] Choose and Transform 2 cards in your deck.\n";
             }
             os << "2: [Ingest Mutagens] Obtain Mutagenic Strength.\n";
@@ -950,7 +950,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
             break;
 
         case Event::PURIFIER:
-            if (gc->deck.getTransformableCount(1) > 0) {
+            if (gc->deck.getTransformableCount(false) > 0) {
                 os << "0: [Pray] Remove a card. \n";
             }
             os << "1: [Leave] Nothing happens.\n";
@@ -1045,7 +1045,7 @@ void ConsoleSimulator::printEventActions(std::ostream &os) const {
         }
 
         case Event::TRANSMORGRIFIER:
-            if (gc->deck.getTransformableCount(1) > 0) {
+            if (gc->deck.getTransformableCount(false) > 0) {
                 os << "0: [Pray] Transform a card. \n";
             }
             os << "1: [Leave] Nothing happens.\n";

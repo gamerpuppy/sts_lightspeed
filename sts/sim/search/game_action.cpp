@@ -78,13 +78,13 @@ bool isValidDesignerInSpireEventAction(const GameContext &gc, const search::Game
     const auto goldCost1 = unfavorable ? 75 : 60;
     if (gc.gold >= goldCost1) {
         if (cleanUpIsRemoveCard) {
-            if (gc.deck.getTransformableCount(1) >= 1) {
+            if (gc.deck.getTransformableCount(false) >= 1) {
                 if (select == 2) {
                     return true;
                 }
             }
         } else {
-            if (gc.deck.getTransformableCount(2) >= 2) {
+            if (gc.deck.getTransformableCount(false) >= 2) {
                 if (select == 3) {
                     return true;
                 }
@@ -94,7 +94,7 @@ bool isValidDesignerInSpireEventAction(const GameContext &gc, const search::Game
 
     const auto goldCost2= unfavorable ? 110 : 90;
     if (gc.gold >= goldCost2) {
-        if (gc.deck.getTransformableCount(1) >= 1) {
+        if (gc.deck.getTransformableCount(false) >= 1) {
             if (select == 4) {
                 return true;
             }
@@ -742,18 +742,18 @@ int search::GameAction::getValidEventSelectBits(const GameContext &gc) {
             const auto goldCost1 = unfavorable ? 75 : 60;
             if (gc.gold >= goldCost1) {
                 if (cleanUpIsRemoveCard) {
-                    if (gc.deck.getTransformableCount(1) >= 1) {
+                    if (gc.deck.getTransformableCount(false) >= 1) {
                         bits |= 4;
                     }
                 } else {
-                    if (gc.deck.getTransformableCount(2) >= 2) {
+                    if (gc.deck.getTransformableCount(false) >= 2) {
                         bits |= 8;
                     }
                 }
             }
             const auto goldCost2= unfavorable ? 110 : 90;
             if (gc.gold >= goldCost2) {
-                if (gc.deck.getTransformableCount(1) >= 1) {
+                if (gc.deck.getTransformableCount(false) >= 1) {
                     bits |= 16;
                 }
             }
@@ -761,7 +761,7 @@ int search::GameAction::getValidEventSelectBits(const GameContext &gc) {
         }
 
         case Event::AUGMENTER:
-            if (gc.deck.getTransformableCount(2) >= 2) {
+            if (gc.deck.getTransformableCount(false) >= 2) {
                 return 0x7;
             } else {
                 return 0b101;
@@ -822,7 +822,7 @@ int search::GameAction::getValidEventSelectBits(const GameContext &gc) {
 
         case Event::PURIFIER:
         case Event::TRANSMORGRIFIER:
-            if (gc.deck.getTransformableCount() > 0) {
+            if (gc.deck.getTransformableCount(false) > 0) {
                 return 0x3;
             } else {
                 return 0x2;
