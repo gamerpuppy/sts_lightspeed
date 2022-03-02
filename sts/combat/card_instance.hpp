@@ -56,6 +56,9 @@ namespace sts {
         [[nodiscard]] bool isBloodCard() const;
         [[nodiscard]] bool usesSpecialData() const;
 
+        bool operator==(const CardInstance &rhs) const;
+        bool operator!=(const CardInstance &rhs) const;
+
         // *****  *****
         void upgradeBaseCost(int newBaseCost); // Blood for Blood when upgraded
         void updateCost(int amount);

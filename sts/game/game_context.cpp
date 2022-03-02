@@ -16,7 +16,7 @@
 
 #include <sts/combat/battle_context.hpp>
 
-#include <sts/game/save.hpp>
+#include "sts/common/save.hpp"
 #include <sts/game/misc.hpp>
 
 using namespace sts;
@@ -73,6 +73,10 @@ GameContext::GameContext(CharacterClass cc, std::uint64_t seed, int ascension)
     curEvent = Event::NEOW;
     info.neowRewards = Neow::getOptions(neowRng);
     screenState = ScreenState::EVENT_SCREEN;
+}
+
+GameContext::GameContext(const SaveFile &s) : GameContext() {
+    this->initFromSave(s);
 }
 
 void GameContext::initFromSave(const SaveFile &s) {
@@ -474,7 +478,6 @@ void GameContext::initRelics() {
     java::Collections::shuffle(rareRelicPool.begin(), rareRelicPool.end(), java::Random(relicRng.nextLong()));
     java::Collections::shuffle(shopRelicPool.begin(), shopRelicPool.end(), java::Random(relicRng.nextLong()));
     java::Collections::shuffle(bossRelicPool.begin(), bossRelicPool.end(), java::Random(relicRng.nextLong()));
-
 }
 
 

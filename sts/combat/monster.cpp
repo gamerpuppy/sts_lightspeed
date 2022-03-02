@@ -107,7 +107,6 @@ void Monster::applyEndOfRoundPowers(BattleContext &bc) {
     if (hasStatus<MS::GENERIC_STRENGTH_UP>()) {
         buff<MS::STRENGTH>(getStatus<MS::GENERIC_STRENGTH_UP>());
     }
-
 }
 
 void Monster::construct(BattleContext &bc, MonsterId monsterId, int monsterIdx) {

@@ -6,16 +6,16 @@
 #define STS_LIGHTSPEED_SAVEFILEMAPPINGS_H
 
 
-#include <nlohmann/json.hpp>
+#include "third_party/nlohmann/json.hpp"
 
-#include <sts/constants/relic_ids.hpp>
-#include <sts/constants/potions.hpp>
-#include <sts/constants/card_ids.hpp>
-#include <sts/constants/monster_encounters.hpp>
-#include <sts/constants/events.hpp>
+#include "sts/constants/relic_ids.hpp"
+#include "sts/constants/potions.hpp"
+#include "sts/constants/card_ids.hpp"
+#include "sts/constants/monster_encounters.hpp"
+#include "sts/constants/events.hpp"
 
-#include <sts/game/neow.hpp>
-#include <sts/game/save.hpp>
+#include "sts/game/neow.hpp"
+#include "sts/common/save.hpp"
 
 namespace sts {
 

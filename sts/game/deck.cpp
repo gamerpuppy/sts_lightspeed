@@ -11,7 +11,7 @@
 #include <sts/common/java.hpp>
 
 #include <sts/game/game_context.hpp>
-#include <sts/game/save.hpp>
+#include "sts/common/save.hpp"
 
 using namespace sts;
 

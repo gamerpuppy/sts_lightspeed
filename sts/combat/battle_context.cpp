@@ -12,6 +12,10 @@ namespace sts {
     thread_local BattleContext *g_debug_bc;
 }
 
+BattleContext::BattleContext(const GameContext &gc) : BattleContext() {
+    this->init(gc);
+}
+
 // assume all bc fields have just been initialized by in class member initializers
 void BattleContext::init(const GameContext &gc) {
     init(gc, gc.info.encounter);
@@ -2865,7 +2869,7 @@ void BattleContext::mummifiedHandOnUsePower() {
 
     for (int i = matchingIdxList.size()-1; i >= 0; --i) {
         const auto uniqueId = cards.hand[matchingIdxList[i]].getUniqueId();
-        if (cardQueue.containsCardWithId(uniqueId)) {
+        if (cardQueue.containsCardWithuUniqueId(uniqueId)) {
             matchingIdxList.remove(i);
         }
     }

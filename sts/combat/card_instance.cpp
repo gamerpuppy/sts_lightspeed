@@ -344,6 +344,21 @@ bool CardInstance::canUse(const BattleContext &bc, int target, const bool inAuto
     return true;
 }
 
+bool CardInstance::operator==(const CardInstance &rhs) const {
+    return id == rhs.id &&
+           uniqueId == rhs.uniqueId &&
+           specialData == rhs.specialData &&
+           cost == rhs.cost &&
+           costForTurn == rhs.costForTurn &&
+           upgraded == rhs.upgraded &&
+           freeToPlayOnce == rhs.freeToPlayOnce &&
+           retain == rhs.retain;
+}
+
+bool CardInstance::operator!=(const CardInstance &rhs) const {
+    return !(rhs == *this);
+}
+
 namespace sts {
 
     std::ostream &operator<<(std::ostream &os, const CardInstance &c) {

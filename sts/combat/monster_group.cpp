@@ -9,7 +9,7 @@
 
 #include <sts/combat/battle_context.hpp>
 
-using namespace sts;
+namespace sts {
 
 bool MonsterGroup::areMonstersBasicallyDead() const {
     return monstersAlive <= 0;
@@ -36,6 +36,14 @@ int MonsterGroup::getFirstTargetable() const {
 
 int MonsterGroup::getAliveCount() const {
     return monstersAlive;
+}
+
+Monster &MonsterGroup::operator[](int idx) {
+    return arr[idx];
+}
+
+const Monster &MonsterGroup::operator[](int idx) const {
+    return arr[idx];
 }
 
 int MonsterGroup::getRandomMonsterIdx(Random &rng, bool aliveOnly) const {
@@ -631,22 +639,20 @@ void MonsterGroup::applyEmeraldEliteBuff(BattleContext &bc, const int buffType, 
 
 }
 
-namespace sts {
+std::ostream &operator<<(std::ostream &os, const MonsterGroup &g) {
+    const std::string s = "\n\t";
 
-    std::ostream &operator<<(std::ostream &os, const MonsterGroup &g) {
-        const std::string s = "\n\t";
+    os << "MonsterGroup { ";
+    os << s << "monsterCount: " << g.monsterCount;
+    os << s << "monstersAlive: " << g.monstersAlive;
+    os << s << "extraRollMoveOnTurnBits: " << g.extraRollMoveOnTurn.to_string();
 
-        os << "MonsterGroup { ";
-        os << s << "monsterCount: " << g.monsterCount;
-        os << s << "monstersAlive: " << g.monstersAlive;
-        os << s << "extraRollMoveOnTurnBits: " << g.extraRollMoveOnTurn.to_string();
-
-        for (int i = 0; i < g.monsterCount; ++i) {
-            os << s << g.arr[i];
-        }
-        os << "\n}\n";
-        return os;
+    for (int i = 0; i < g.monsterCount; ++i) {
+        os << s << g.arr[i];
     }
+    os << "\n}\n";
+    return os;
+}
 
 }
 

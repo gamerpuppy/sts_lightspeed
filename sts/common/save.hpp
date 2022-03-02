@@ -13,14 +13,14 @@
 #include <vector>
 #include <cassert>
 
-#include <sts/constants/events.hpp>
-#include <sts/constants/monster_encounters.hpp>
-#include <sts/constants/relic_ids.hpp>
-#include <sts/constants/character_classes.hpp>
-#include <sts/constants/potions.hpp>
+#include "sts/constants/events.hpp"
+#include "sts/constants/monster_encounters.hpp"
+#include "sts/constants/relic_ids.hpp"
+#include "sts/constants/character_classes.hpp"
+#include "sts/constants/potions.hpp"
 
-#include <sts/game/neow.hpp>
-#include <sts/game/card.hpp>
+#include "sts/game/neow.hpp"
+#include "sts/game/card.hpp"
 
 namespace sts {
 
@@ -149,7 +149,6 @@ namespace sts {
         SaveFile(const std::string &json, CharacterClass cc);
 
         static SaveFile loadFromPath(const std::string& path, CharacterClass cc);
-
         static std::string getJsonFromSaveFile(const std::string &savePath);
         static void writeJsonToSaveFile(std::ifstream &jsonIs, const std::string &savePath);
         static std::string readFileToStringHelper(const std::string &path);

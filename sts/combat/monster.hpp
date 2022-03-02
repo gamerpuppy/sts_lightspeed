@@ -23,7 +23,6 @@ namespace sts {
     };
 
     struct Monster {
-
         /*
          * Things to possibly cache about a monster
          * - damage actions
@@ -100,7 +99,7 @@ namespace sts {
         [[nodiscard]] int getStatusInternal(MonsterStatus s) const; // only to be used by printLogs methods
 
 
-        constexpr bool hasStatus(MonsterStatus) const;
+        [[nodiscard]] constexpr bool hasStatus(MonsterStatus) const;
 
         template <MonsterStatus> [[nodiscard]] bool hasStatus() const;
         template <MonsterStatus> [[nodiscard]] int getStatus() const;
@@ -158,7 +157,6 @@ namespace sts {
         [[nodiscard]] DamageInfo getMoveBaseDamage(const BattleContext &bc) const;
 
         // monster specific functions
-
         void stealGoldFromPlayer(BattleContext &bc, int amount);
         static void largeSlimeSplit(BattleContext &bc, MonsterId mediumSlimeType, int placeIdx, int hp);
         static void slimeBossSplit(BattleContext &bc, int hp);

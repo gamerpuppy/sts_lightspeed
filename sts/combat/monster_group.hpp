@@ -30,6 +30,9 @@ namespace sts {
         [[nodiscard]] int getFirstTargetable() const;
         [[nodiscard]] int getRandomMonsterIdx(Random &rng, bool aliveOnly=true) const;
 
+        Monster& operator[](int idx);
+        const Monster& operator[](int idx) const;
+
         // initialization
 
         void init(BattleContext &bc, MonsterEncounter encounter);

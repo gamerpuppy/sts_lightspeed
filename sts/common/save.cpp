@@ -2,11 +2,11 @@
 // Created by gamerpuppy on 7/8/2021.
 //
 
-#include <nlohmann/json.hpp>
+#include "third_party/nlohmann/json.hpp"
 #include <sstream>
 
-#include <sts/game/save.hpp>
-#include <sts/constants/save_file_mappings.hpp>
+#include "save.hpp"
+#include "save_file_mappings.hpp"
 
 using namespace sts;
 
@@ -208,7 +208,6 @@ sts::SaveFile::SaveFile(const std::string &json, sts::CharacterClass cc): json(j
         Card card;
         c.at("id").get_to(card.id);
 
-        int upgrades = 0;
         c.at("upgrades").get_to(card.upgraded);
         c.at("misc").get_to(card.misc);
 
@@ -251,9 +250,9 @@ std::string SaveFile::getJsonFromSaveFile(const std::string &path) {
     auto dataBits = Base64::decode(utf8Content);
     auto json = xorWithKey(dataBits);
 
-#ifdef sts_print_debug
-    std::cout << json;
-#endif
+//#ifdef sts_print_debug
+//    std::cout << json;
+//#endif
     return json;
 }
 
@@ -261,9 +260,9 @@ void SaveFile::writeJsonToSaveFile(std::ifstream &jsonIs, const std::string &sav
     const nlohmann::json j = nlohmann::json::parse(jsonIs);
     std::string cleanedJsonStr = j.dump();
 
-#ifdef sts_print_debug
-    std::cout << cleanedJsonStr;
-#endif
+//#ifdef sts_print_debug
+//    std::cout << cleanedJsonStr;
+//#endif
 
     auto obfuscatedStr = xorWithKey(cleanedJsonStr);
     auto base64Encoding = Base64::encode(cleanedJsonStr);

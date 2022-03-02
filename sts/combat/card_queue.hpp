@@ -51,13 +51,11 @@ namespace sts {
         void pushFront(CardQueueItem item);
         void pushBack(CardQueueItem item);
         [[nodiscard]] bool isEmpty() const;
-        [[nodiscard]] bool containsCardWithId(int uniqueId) const;
+        [[nodiscard]] bool containsCardWithuUniqueId(int uniqueId) const;
 
         CardQueueItem popFront();
         CardQueueItem popBack();
         CardQueueItem &front();
-
-
     };
 
 }

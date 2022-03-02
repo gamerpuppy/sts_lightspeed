@@ -10,7 +10,7 @@ bool CardQueue::isEmpty() const {
     return size == 0;
 }
 
-bool CardQueue::containsCardWithId(int uniqueId) const {
+bool CardQueue::containsCardWithuUniqueId(int uniqueId) const {
     int idx = frontIdx;
     for (int i = 0; i < size; ++i) {
         if (frontIdx >= capacity) {

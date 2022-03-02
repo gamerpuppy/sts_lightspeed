@@ -159,8 +159,8 @@ namespace sts {
         std::uint64_t seed;
 
         Random aiRng;
-        Random cardRandomRng;
         Random cardRng;
+        Random cardRandomRng;
         Random eventRng;
         Random mathUtilRng;
         Random merchantRng;
@@ -239,6 +239,7 @@ namespace sts {
 
         GameContext() = default;
         GameContext(CharacterClass cc, std::uint64_t seed, int ascensionLevel);
+        explicit GameContext(const SaveFile &);
 
         void initFromSave(const SaveFile &s);
         void initRelicsFromSave(const SaveFile &s);

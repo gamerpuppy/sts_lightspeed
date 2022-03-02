@@ -11,7 +11,7 @@ file (GLOB_RECURSE STS_TEST_SOURCES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/sts
 list(FILTER STS_SOURCES EXCLUDE REGEX ".*\\.test\\.cpp")
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS  "-Wno-shift-count-overflow -O2 -pthread")
+set(CMAKE_CXX_FLAGS  "-Wno-shift-count-overflow -Wno-deprecated -pthread")
 
 find_package(Catch2 3 REQUIRED)
 

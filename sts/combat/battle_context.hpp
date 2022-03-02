@@ -90,6 +90,8 @@ namespace sts {
 
         BattleContext() = default;
         BattleContext(const BattleContext &rhs) = default;
+        explicit BattleContext(const GameContext &);
+
 
 // ****************************************
 

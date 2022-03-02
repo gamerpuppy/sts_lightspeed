@@ -134,11 +134,16 @@ CardReward sts::Neow::getCardReward(Random &rng, CharacterClass cc, bool rareOnl
     return reward;
 }
 
-bool Neow::operator==(const Neow::Option &lhs, const Neow::Option &rhs) {
+namespace sts::Neow {
+
+    bool operator==(const Neow::Option &lhs, const Neow::Option &rhs) {
     return lhs.r == rhs.r &&
            lhs.d == rhs.d;
+    }
+
+    bool operator!=(const Neow::Option &lhs, const Neow::Option &rhs) {
+        return !(rhs == lhs);
+    }
+
 }
 
-bool Neow::operator!=(const Neow::Option &lhs, const Neow::Option &rhs) {
-    return !(rhs == lhs);
-}

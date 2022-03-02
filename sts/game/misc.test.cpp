@@ -9,7 +9,6 @@
 using namespace sts;
 
 TEST_CASE("getRandomPotion Test 1") {
-
     auto seed = SeedHelper::getLong("TK");
     Random potionRng(seed);
 
