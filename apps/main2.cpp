@@ -44,10 +44,13 @@ int main() {
 
     auto best = searcher.root.edges[0].action;
     int mostVisits = 0;
+    std::ofstream outfile;
+    outfile.open("test.log", std::ios_base::app);
     for (auto edge : searcher.root.edges) {
         if (edge.node.simulationCount > mostVisits) {
             mostVisits = edge.node.simulationCount;
             best = edge.action;
+            edge.action.printDesc(outfile, bc);
         }
     }
     std::cout << static_cast<int>(best.getActionType()) << " " << best.getSourceIdx() << " " << best.getTargetIdx() << std::endl;
