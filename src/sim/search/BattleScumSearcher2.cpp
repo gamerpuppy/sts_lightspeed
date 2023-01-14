@@ -157,7 +157,7 @@ void search::BattleScumSearcher2::playoutRandom(BattleContext &state, std::vecto
         enumerateActionsForNode(tempNode, state);
         if (tempNode.edges.empty()) {
             std::cerr << state.seed << " " << simulationIdx << std::endl;
-            std::cerr << state.monsters.arr[0].getName() << " " << state.floorNum << " " << monsterEncounterStrings[static_cast<int>(state.encounter)] << std::endl;
+            std::cerr << state.monsters.arr[0].getName() << " " << state.floorNum << " " << monsterEncouterNames[static_cast<int>(state.encounter)] << std::endl;
             assert(false);
         }
 

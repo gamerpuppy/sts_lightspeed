@@ -411,6 +411,57 @@ namespace sts {
             "WRITHING_MASS_STRONG_STRIKE",
     };
 
+    static const MonsterMoveId getMonsterMoveFromId(MonsterId monsterId, int id) {
+        switch(monsterId) {
+            case MonsterId::ACID_SLIME_L:
+                switch(id) {
+                    case 1:
+                        return MMID::ACID_SLIME_L_CORROSIVE_SPIT;
+                    case 2:
+                        return MMID::ACID_SLIME_L_TACKLE;
+                    case 3:
+                        return MMID::ACID_SLIME_L_SPLIT;
+                    case 4:
+                        return MMID::ACID_SLIME_L_LICK;
+                }
+                break;
+            case MonsterId::CULTIST:
+                switch(id) {
+                    case 1:
+                        return MMID::CULTIST_DARK_STRIKE;
+                    case 3:
+                        return MMID::CULTIST_INCANTATION;
+                }
+                break;
+            case MonsterId::JAW_WORM:
+                switch(id) {
+                    case 1:
+                        return MMID::JAW_WORM_CHOMP;
+                    case 2:
+                        return MMID::JAW_WORM_BELLOW;
+                    case 3:
+                        return MMID::JAW_WORM_THRASH;
+                }
+                break;
+            case MonsterId::RED_LOUSE:
+                switch(id) {
+                    case 3:
+                        return MMID::RED_LOUSE_BITE;
+                    case 4:
+                        return MMID::RED_LOUSE_GROW;
+                }
+                break;
+            case MonsterId::GREEN_LOUSE:
+                switch(id) {
+                    case 3:
+                        return MMID::GREEN_LOUSE_BITE;
+                    case 4:
+                        return MMID::GREEN_LOUSE_SPIT_WEB;
+                }
+        }
+        return MMID::INVALID;
+    }
+
     static constexpr bool isMoveAttack(MMID move) { // todo add intent information / base damage / multi attack info
 
         switch (move) {

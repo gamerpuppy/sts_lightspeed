@@ -6,6 +6,10 @@
 #define STS_LIGHTSPEED_MONSTERIDS_H
 
 #include <cstdint>
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <string>
 
 namespace sts {
 
@@ -78,8 +82,77 @@ namespace sts {
         WRITHING_MASS,
     };
 
-    static constexpr const char* const  monsterIdStrings[] = {
-            "INVALID = 0",
+    static constexpr const char* const monsterIdIds[] = {
+        "INVALID",
+        "AcidSlime_L",
+        "AcidSlime_M",
+        "AcidSlime_S",
+        "AwakenedOne",
+        "BanditBear",
+        "SlaverBlue",
+        "BookOfStabbing",
+        "BronzeAutomaton",
+        "BronzeOrb",
+        "Byrd",
+        "Centurion",
+        "Chosen",
+        "CorruptHeart",
+        "Cultist",
+        "Dagger",
+        "Darkling",
+        "Deca",
+        "Donu",
+        "Exploder",
+        "GremlinFat",
+        "FungiBeast",
+        "GiantHead",
+        "FuzzyLouseDefensive",
+        "GremlinLeader",
+        "GremlinNob",
+        "GremlinWizard",
+        "Hexaghost",
+        "JawWorm",
+        "Lagavulin",
+        "Looter",
+        "GremlinWarrior",
+        "Mugger",
+        "Healer",
+        "Nemesis",
+        "Orb Walker",
+        "BanditChild",
+        "FuzzyLouseNormal",
+        "SlaverRed",
+        "Reptomancer",
+        "Repulsor",
+        "BanditLeader",
+        "Sentry",
+        "Shelled Parasite",
+        "GremlinTsundere",
+        "SlimeBoss",
+        "SnakePlant",
+        "GremlinThief",
+        "Snecko",
+        "SphericGuardian",
+        "Spiker",
+        "SpikeSlime_L",
+        "SpikeSlime_M",
+        "SpikeSlime_S",
+        "Serpent",
+        "SpireShield",
+        "SpireSpear",
+        "SlaverBoss",
+        "Champ",
+        "TheCollector",
+        "TheGuardian",
+        "Maw",
+        "TimeEater",
+        "TorchHead",
+        "Transient",
+        "WrithingMass",
+    };
+
+    static constexpr const char* const  monsterIdEnumNames[] = {
+            "INVALID",
             "ACID_SLIME_L",
             "ACID_SLIME_M",
             "ACID_SLIME_S",
@@ -146,6 +219,13 @@ namespace sts {
             "TRANSIENT",
             "WRITHING_MASS",
     };
+
+    static const MonsterId getMonsterIdFromId(std::string id) {
+        auto it = std::find(std::begin(monsterIdIds), std::end(monsterIdIds), id);
+        if (it == std::end(monsterIdIds)) return MonsterId::INVALID;
+        auto idx = it - std::begin(monsterIdIds);
+        return static_cast<MonsterId>(idx);
+    }
 
     constexpr int monsterHpRange[][2][2] = {
             {{0,0},{0,0}}, // INVALID = 0

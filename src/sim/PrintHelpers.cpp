@@ -123,14 +123,14 @@ namespace sts {
     void printMonsterLists(std::ostream &os, const GameContext &gc) {
         os << "\tmonsterList: offset(" << gc.monsterListOffset << ") {";
         for (auto m : gc.monsterList) {
-            os << monsterEncounterStrings[static_cast<int>(m)] << ", ";
+            os << monsterEncouterNames[static_cast<int>(m)] << ", ";
         }
         os << "\n";
 
 
         os << "\teliteMonsterList: offset(" << gc.eliteMonsterListOffset << ") {";
         for (auto m : gc.eliteMonsterList) {
-            os << monsterEncounterStrings[static_cast<int>(m)] << ", ";
+            os << monsterEncouterNames[static_cast<int>(m)] << ", ";
         }
         os << "\n";
     }
@@ -143,8 +143,8 @@ namespace sts {
         os  << "floorNum: " << gc.floorNum
             << " act: " << gc.act
             << " ascension: " << gc.ascension
-            << " boss: " << monsterEncounterStrings[static_cast<int>(gc.boss)]
-            << " boss2: " << monsterEncounterStrings[static_cast<int>(gc.secondBoss)]
+            << " boss: " << monsterEncouterNames[static_cast<int>(gc.boss)]
+            << " boss2: " << monsterEncouterNames[static_cast<int>(gc.secondBoss)]
             << '\n';
 
         os << "\tcurRoom: " << roomStrings[static_cast<int>(gc.curRoom)]
@@ -201,7 +201,7 @@ namespace sts {
     void printOutcome(std::ostream &os, const GameContext &gc) {
         if (gc.outcome == sts::GameOutcome::PLAYER_VICTORY) {
             os << gc.seed << " won at floor " << gc.floorNum << " against "
-                      << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
+                      << monsterEncouterNames[static_cast<int>(gc.info.encounter)];
             os << " " << gc.deck << " " << gc.relics << std::endl;
 
         } else {
@@ -210,7 +210,7 @@ namespace sts {
             if (gc.curRoom == sts::Room::EVENT) {
                 os << eventGameNames[static_cast<int>(gc.curEvent)];
             } else if (gc.curRoom == Room::BOSS || gc.curRoom == Room::ELITE || gc.curRoom == Room::MONSTER) {
-                os << monsterEncounterStrings[static_cast<int>(gc.info.encounter)];
+                os << monsterEncouterNames[static_cast<int>(gc.info.encounter)];
             }
             os << " " << gc.deck << " " << gc.relics << std::endl;
         }

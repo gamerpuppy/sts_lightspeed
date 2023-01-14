@@ -15,10 +15,26 @@ namespace sts {
 
 // assume all bc fields have just been initialized by in class member initializers
 void BattleContext::init(const GameContext &gc) {
-    init(gc, gc.info.encounter);
+    init(gc, gc.info.encounter, false);
 }
 
-void BattleContext::init(const GameContext &gc, MonsterEncounter encounterToInit) {
+void BattleContext::init(const GameContext &gc, MonsterEncounter encounterToInit, bool allowInvalidEncounter) {
+    this->partialInitOne(gc, encounterToInit);
+
+    monsters.init(*this, encounterToInit, allowInvalidEncounter);
+    if (gc.map->burningEliteX == gc.curMapNodeX && gc.map->burningEliteY == gc.curMapNodeY) {
+        monsters.applyEmeraldEliteBuff(*this, gc.map->burningEliteBuff, gc.act);
+    }
+
+    this->partialInitTwo(gc);
+
+    initRelics(gc);
+    player.energy += player.energyPerTurn;
+
+    executeActions();
+}
+
+void BattleContext::partialInitOne(const GameContext &gc, MonsterEncounter encounterToInit) {
     undefinedBehaviorEvoked = false;
     haveUsedDiscoveryAction = false;
     seed = gc.seed;
@@ -53,12 +69,9 @@ void BattleContext::init(const GameContext &gc, MonsterEncounter encounterToInit
     player.curHp = gc.curHp;
     player.maxHp = gc.maxHp;
     player.gold = gc.gold;
+}
 
-    monsters.init(*this, encounterToInit);
-    if (gc.map->burningEliteX == gc.curMapNodeX && gc.map->burningEliteY == gc.curMapNodeY) {
-        monsters.applyEmeraldEliteBuff(*this, gc.map->burningEliteBuff, gc.act);
-    }
-
+void BattleContext::partialInitTwo(const GameContext &gc) {
     player.cardDrawPerTurn = 5;
     if (gc.hasRelic(R::SNECKO_EYE)) {
         player.cardDrawPerTurn += 2;
@@ -69,11 +82,6 @@ void BattleContext::init(const GameContext &gc, MonsterEncounter encounterToInit
     //addToBot(Actions::DrawCards(player.cardDrawPerTurn));
 
     cards.init(gc, *this);
-
-    initRelics(gc);
-    player.energy += player.energyPerTurn;
-
-    executeActions();
 }
 
 // this doesnt apply powers in order, so if that matters in the future all relics will have to be sorted

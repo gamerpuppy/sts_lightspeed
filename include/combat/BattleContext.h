@@ -99,7 +99,9 @@ namespace sts {
 // ****************************************
 
         void init(const GameContext &gc);
-        void init(const GameContext &gc, MonsterEncounter encounterToInit);
+        void init(const GameContext &gc, MonsterEncounter encounterToInit, bool allowInvalidEncounter);
+        void partialInitOne(const GameContext &gc, MonsterEncounter encounterToInit);
+        void partialInitTwo(const GameContext &gc);
 
         void initRelics(const GameContext &gc);
 

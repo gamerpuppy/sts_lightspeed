@@ -5,10 +5,16 @@
 #ifndef STS_LIGHTSPEED_MONSTERSTATUSEFFECTS_H
 #define STS_LIGHTSPEED_MONSTERSTATUSEFFECTS_H
 
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <string>
+
 namespace sts {
 
     enum class MonsterStatus: std::uint8_t {
-        ARTIFACT=0,
+        INVALID = 0,
+        ARTIFACT,
         BLOCK_RETURN,
         CHOKED,
         CORPSE_EXPLOSION,
@@ -56,14 +62,69 @@ namespace sts {
         REGROW,
         SHIFTING,
         STASIS,
-
-        INVALID,
     };
 
+    static constexpr const char* const enemyStatusIds[] = {
+        "INVALID",
+        "Artifact",
+        "BlockReturnPower",
+        "Choked",
+        "CorpseExplosionPower",
+        "Lockon",
+        "PathToVictoryPower",
+        "Metallicize",
+        "Plated Armor",
+        "Poison",
+        "Regeneration",
+        "Shackled",
+        "Strength",
+        "Vulnerable",
+        "Weakened",
+
+        "Angry",
+        "BeatOfDeath",
+        "Curiosity",
+        "Curl Up",
+        "Anger",
+        "Fading",
+        "Flight",
+        "Generic Strength Up Power",
+        "Intangible",
+        "Malleable",
+        "Mode Shift",
+        "Ritual",
+        "Slow",
+        "Spore Cloud",
+        "Thievery",
+        "Thorns",
+        "Time Warp",
+
+        "Invincible",
+        "Compulsive",
+        "Sharp Hide",
+
+        "INVALID", // ASLEEP is not a power in the actual game but instead a bool flag on lagavulin
+        "Barricade",
+        "Minion",
+        "INVALID", // MINION_LEADER is not a power in the actual game but instead custom die() logic on gremlin leader, bronze automaton, reptomancer, the collector, and awakened one second phase
+        "Painful Stabs",
+        
+        "Life Link",
+        "Shifting",
+        "Stasis",
+    };
+
+    static const MonsterStatus getMonsterStatusFromId(std::string id) {
+        auto it = std::find(std::begin(enemyStatusIds), std::end(enemyStatusIds), id);
+        if (it == std::end(enemyStatusIds)) return MonsterStatus::INVALID;
+        auto idx = it - std::begin(enemyStatusIds);
+        return static_cast<MonsterStatus>(idx);
+    }
 
     typedef MonsterStatus MS;
 
     static constexpr const char* const enemyStatusStrings[]{
+        "INVALID",
         "Artifact",
         "Block Return",
         "Choked",
@@ -110,8 +171,6 @@ namespace sts {
         "Regrow",
         "Shifting",
         "Stasis",
-
-        "INVALID",
     };
 
     static constexpr const char* const monsterStatusEnumStrings[]{

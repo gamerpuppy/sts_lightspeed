@@ -162,6 +162,14 @@ namespace sts {
 
     static constexpr const char *potionEnumNames[] = {"INVALID","EMPTY_POTION_SLOT","AMBROSIA","ANCIENT_POTION","ATTACK_POTION","BLESSING_OF_THE_FORGE","BLOCK_POTION","BLOOD_POTION","BOTTLED_MIRACLE","COLORLESS_POTION","CULTIST_POTION","CUNNING_POTION","DEXTERITY_POTION","DISTILLED_CHAOS","DUPLICATION_POTION","ELIXIR_POTION","ENERGY_POTION","ENTROPIC_BREW","ESSENCE_OF_DARKNESS","ESSENCE_OF_STEEL","EXPLOSIVE_POTION","FAIRY_POTION","FEAR_POTION","FIRE_POTION","FLEX_POTION","FOCUS_POTION","FRUIT_JUICE","GAMBLERS_BREW","GHOST_IN_A_JAR","HEART_OF_IRON","LIQUID_BRONZE","LIQUID_MEMORIES","POISON_POTION","POTION_OF_CAPACITY","POWER_POTION","REGEN_POTION","SKILL_POTION","SMOKE_BOMB","SNECKO_OIL","SPEED_POTION","STANCE_POTION","STRENGTH_POTION","SWIFT_POTION","WEAK_POTION",};
 
+    static const Potion getPotionFromId(std::string id) {
+        if (id == "Potion Slot") return Potion::EMPTY_POTION_SLOT;
+        auto it = std::find(std::begin(potionIds), std::end(potionIds), id);
+        if (it == std::end(potionIds)) return Potion::INVALID;
+        auto idx = it - std::begin(potionIds);
+        return static_cast<Potion>(idx);
+    }
+
     enum class PotionRarity {
         COMMON=0,
         UNCOMMON,
