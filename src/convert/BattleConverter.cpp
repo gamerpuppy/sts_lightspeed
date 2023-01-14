@@ -24,6 +24,11 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         monster.curHp = m["current_hp"];
         monster.maxHp = m["max_hp"];
         monster.block = m["block"];
+
+        // createMonster increments monstersAlive,
+        // which would be decremented if HP were set to 0
+        // in any typical fashion, but directly setting it
+        // above does not so we must fix this here
         if (monster.curHp <= 0) {
             --bc.monsters.monstersAlive;
         }
@@ -59,6 +64,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
         cardInstance.cost = c["cost"];
         bc.cards.moveToDrawPileTop(cardInstance);
+        bc.cards.notifyAddCardToCombat(cardInstance);
     }
 
     auto discardPile = json["game_state"]["combat_state"]["discard_pile"];
@@ -68,6 +74,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
         cardInstance.cost = c["cost"];
         bc.cards.moveToDiscardPile(cardInstance);
+        bc.cards.notifyAddCardToCombat(cardInstance);
     }
 
     auto hand = json["game_state"]["combat_state"]["hand"];
@@ -77,6 +84,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
         cardInstance.cost = c["cost"];
         bc.cards.moveToHand(cardInstance);
+        bc.cards.notifyAddCardToCombat(cardInstance);
     }
 
     // TODO: powers for the player

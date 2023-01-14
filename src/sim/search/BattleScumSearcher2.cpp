@@ -78,6 +78,8 @@ void search::BattleScumSearcher2::step() {
             auto &edgeTaken = curNode.edges[selectIdx];
 
 //            edgeTaken.action.printDesc(std::cout, curState) << std::endl;
+            // this can be sped up by storing the battle context in the node
+            // since the simulation is deterministic for the result of taking the action
             edgeTaken.action.execute(curState);
 
             actionStack.push_back(edgeTaken.action);
@@ -161,6 +163,8 @@ void search::BattleScumSearcher2::playoutRandom(BattleContext &state, std::vecto
             assert(false);
         }
 
+        // should this really be being constructed each time
+        // why not just use a normal rng
         auto dist = std::uniform_int_distribution<int>(0, static_cast<int>(tempNode.edges.size())-1);
         const int selectedIdx = dist(randGen);
 
@@ -218,6 +222,8 @@ void search::BattleScumSearcher2::enumerateCardActions(search::BattleScumSearche
 
         bool isUniqueAction = true;
 
+        // this doesn't make any sense. duplicate cards can appear in more locations than just next to each other
+        // this only handles like literally just dual wield on the turn it is played
         if (handIdx > 0) {
             const auto &lastCard = bc.cards.hand[handIdx-1];
 
@@ -235,6 +241,7 @@ void search::BattleScumSearcher2::enumerateCardActions(search::BattleScumSearche
         }
 
         if (isUniqueAction) {
+            // this is being called a *lot* maybe swap it for a lookup table instead of a switch statement
             playableHandIdxs.push_back( {handIdx, search::Expert::getPlayOrdering(c.getId())} );
         }
     }
@@ -409,17 +416,18 @@ double search::BattleScumSearcher2::evaluateEndState(const BattleContext &bc) {
     double potionScore = bc.potionCount * 4;
 
     if (bc.outcome == Outcome::PLAYER_VICTORY) {
-        return 100 * (35 + bc.player.curHp + potionScore - (bc.turn * 0.01));
-
+        //return 100 * (35 + bc.player.curHp + potionScore - (bc.turn * 0.01));
+        return bc.player.curHp / 100.0f; // I want winning scores in the range (0.0, 1.0) though feed messes with this a *little*
     } else {
 //        double statusScore =
 //                (bc.player.getStatus<PS::STRENGTH>() * .5);
-        const bool couldHaveSpikers = bc.encounter == MonsterEncounter::THREE_SHAPES || bc.encounter == MonsterEncounter::FOUR_SHAPES;
-        double energyPenalty = bc.energyWasted * -0.2 * (couldHaveSpikers ? 0 : 1);
-        double drawBonus = bc.cardsDrawn * 0.03;
-        double aliveScore = bc.monsters.monstersAlive*-1;
+        // const bool couldHaveSpikers = bc.encounter == MonsterEncounter::THREE_SHAPES || bc.encounter == MonsterEncounter::FOUR_SHAPES;
+        // double energyPenalty = bc.energyWasted * -0.2 * (couldHaveSpikers ? 0 : 1);
+        // double drawBonus = bc.cardsDrawn * 0.03;
+        // double aliveScore = bc.monsters.monstersAlive*-1;
 
-        return (1-getNonMinionMonsterCurHpRatio(bc))*10 + aliveScore + energyPenalty + drawBonus + potionScore / 2 + (bc.turn * .2);
+        // return (1-getNonMinionMonsterCurHpRatio(bc))*10 + aliveScore + energyPenalty + drawBonus + potionScore / 2 + (bc.turn * .2);
+        return -getNonMinionMonsterCurHpRatio(bc); // I want losing scores in the range (-1.0, 0.0)
     }
 }
 
