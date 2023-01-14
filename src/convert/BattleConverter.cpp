@@ -33,8 +33,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
             --bc.monsters.monstersAlive;
         }
 
-        // TODO: does communication mod need to provide isEscaping
-
+        monster.isEscapingB = m["is_escaping"];
         monster.halfDead = m["half_dead"];
 
         // TODO: does communication mod need to provide escapeNext
@@ -62,7 +61,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         auto c = drawPile[i];
         CardId cardId = getCardIdFromId(c["id"]);
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
-        cardInstance.cost = c["cost"];
+        cardInstance.costForTurn = c["cost"];
         bc.cards.moveToDrawPileTop(cardInstance);
         bc.cards.notifyAddCardToCombat(cardInstance);
     }
@@ -72,7 +71,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         auto c = discardPile[i];
         CardId cardId = getCardIdFromId(c["id"]);
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
-        cardInstance.cost = c["cost"];
+        cardInstance.costForTurn = c["cost"];
         bc.cards.moveToDiscardPile(cardInstance);
         bc.cards.notifyAddCardToCombat(cardInstance);
     }
@@ -82,7 +81,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         auto c = hand[i];
         CardId cardId = getCardIdFromId(c["id"]);
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
-        cardInstance.cost = c["cost"];
+        cardInstance.costForTurn = c["cost"];
         bc.cards.moveToHand(cardInstance);
         bc.cards.notifyAddCardToCombat(cardInstance);
     }
