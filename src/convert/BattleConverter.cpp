@@ -132,6 +132,10 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
     }
     // ensure the MonsterGroup position includes the preplacedIdx
     bc.monsters.monsterCount = std::max(preplacedIdx + 1, bc.monsters.monsterCount);
+    // special case for bronze automaton, ensure monsterCount is at least preplacedIdx + 2
+    if (countMonsterOccurrences(monsters, MonsterId::BRONZE_AUTOMATON) >= 1) {
+        bc.monsters.monsterCount = std::max(preplacedIdx + 2, bc.monsters.monsterCount);
+    }
     bc.partialInitTwo(gc);
     bc.player.energy = json["game_state"]["combat_state"]["player"]["energy"];
 
