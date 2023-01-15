@@ -87,7 +87,9 @@ void GameContext::initFromJson(const nlohmann::json &json) {
     curMapNodeY = 0;
 
     cc = getCharacterClassFromEnumName(json["game_state"]["class"]);
-    curHp = json["game_state"]["current_hp"];
+
+    // set player HP to some absurd value so we can compute based on HP lost rather than HP remaining
+    curHp = 1000; // json["game_state"]["current_hp"];
     maxHp = json["game_state"]["max_hp"];
     gold = json["game_state"]["gold"];
     speedrunPace = false;
