@@ -78,8 +78,6 @@ void search::BattleScumSearcher2::step() {
             auto &edgeTaken = curNode.edges[selectIdx];
 
 //            edgeTaken.action.printDesc(std::cout, curState) << std::endl;
-            // this can be sped up by storing the battle context in the node
-            // since the simulation is deterministic for the result of taking the action
             edgeTaken.action.execute(curState);
 
             actionStack.push_back(edgeTaken.action);

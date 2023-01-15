@@ -10,6 +10,55 @@ BattleConverter::BattleConverter() {}
 
 BattleConverter::~BattleConverter() {}
 
+int countMonsterOccurrences(const nlohmann::json &monsters, const MonsterId id) {
+    int count = 0;
+    for (int i = 0; i < monsters.size(); ++i) {
+        if (getMonsterIdFromId(monsters[i]["id"]) == id) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
+int computePreplacedIdx(const nlohmann::json &monsters) {
+    // the simulator special cases bronze automaton, collector, gremlin leader, and reptomancer with their summons
+    // as such I can't just place every monster at an arbitrary position since these monsters must be positioned in specific locations
+    // so assert that there is at most one of these (since multiple cannot be placed correctly)
+    int countBronzeAutomaton = countMonsterOccurrences(monsters, MonsterId::BRONZE_AUTOMATON);
+    int countTheCollector = countMonsterOccurrences(monsters, MonsterId::THE_COLLECTOR);
+    int countGremlinLeader = countMonsterOccurrences(monsters, MonsterId::GREMLIN_LEADER);
+    int countReptomancer = countMonsterOccurrences(monsters, MonsterId::REPTOMANCER);
+    int countSpikeSlimeL = countMonsterOccurrences(monsters, MonsterId::SPIKE_SLIME_L);
+    int countAcidSlimeL = countMonsterOccurrences(monsters, MonsterId::ACID_SLIME_L);
+#ifdef sts_asserts
+    assert(countBronzeAutomaton + countTheCollector + countGremlinLeader + countReptomancer <= 1);
+    assert(countSpikeSlimeL <= 1);
+    assert(countAcidSlimeL <= 1);
+#endif
+    
+    if (countBronzeAutomaton >= 1) {
+        return 1;
+    } else if (countTheCollector >= 1) {
+        return 2;
+    } else if (countGremlinLeader >= 1) {
+        return 3;
+    } else if (countReptomancer >= 1) {
+        return 2;
+    } else if (countSpikeSlimeL + countAcidSlimeL >= 2) {
+        return 2; // according to the simulator slime boss needs the second slime to be positioned at idx 2    
+    } else {
+        return -1;
+    }
+}
+
+bool isSpecialCase(const MonsterId id) {
+    return id == MonsterId::BRONZE_AUTOMATON || id == MonsterId::THE_COLLECTOR || id == MonsterId::GREMLIN_LEADER || id == MonsterId::REPTOMANCER
+        || id == MonsterId::ACID_SLIME_L; // only the acid slime needs to be special-cased
+                                          // note that in reality any L slime that has another monster after it needs to have the following monster special-cased 
+                                          // to an idx 1 further over but in vanilla this only matters during slime boss so we can just move the following monster
+                                          // ACID_SLIME_L to position 2 always
+}
+
 BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
     GameContext gc;
     gc.initFromJson(json);
@@ -17,9 +66,11 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
     bc.partialInitOne(gc, MonsterEncounter::INVALID);
     auto monsters = json["game_state"]["combat_state"]["monsters"];
     int monstersIdx = 0;
+    int preplacedIdx = computePreplacedIdx(monsters);
     for (int i = 0; i < monsters.size(); ++i) {
         auto m = monsters[i];
-
+        MonsterId monsterId = getMonsterIdFromId(m["id"]);
+        
         // any monster that has been defeated can be removed from consideration entirely
         // this is necessary because the simulator expects at most 5 monsters to exist
         // and during some fights (ex. slime boss) there exist more than 5 monsters if
@@ -28,41 +79,59 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
             continue;
         }
 
-        MonsterId monsterId = getMonsterIdFromId(m["id"]);
-        bc.monsters.createMonster(bc, monsterId);
-        Monster &monster = bc.monsters.arr[monstersIdx++];
-        monster.curHp = m["current_hp"];
-        monster.maxHp = m["max_hp"];
-        monster.block = m["block"];
+        Monster *monster;
+        
+        // ensure that monstersIdx and the MonsterGroup always skips past the preplaced position
+        if (monstersIdx == preplacedIdx) {
+            monstersIdx += 1;
+            bc.monsters.monsterCount += 1;
+        }
 
-        monster.isEscapingB = m["is_escaping"];
-        monster.halfDead = m["half_dead"];
+        if (isSpecialCase(monsterId)) {
+            // preplaced monster gets put into its position
+            int cachedCount = bc.monsters.monsterCount;
+            bc.monsters.monsterCount = preplacedIdx;
+            bc.monsters.createMonster(bc, monsterId);
+            monster = &bc.monsters.arr[preplacedIdx];
+            // restore the previous position in the MonsterGroup
+            bc.monsters.monsterCount = cachedCount;
+        } else {
+            bc.monsters.createMonster(bc, monsterId);
+            monster = &bc.monsters.arr[monstersIdx++];
+        }
+
+        monster->curHp = m["current_hp"];
+        monster->maxHp = m["max_hp"];
+        monster->block = m["block"];
+
+        monster->isEscapingB = m["is_escaping"];
+        monster->halfDead = m["half_dead"];
 
         // createMonster increments monstersAlive,
         // which gets deceremented when a monster leaves battle
         // in a typical fashion (hp goes to 0 or escapes)
         // but that has to be explicitly done during this conversion process
-        if (monster.curHp <= 0 || monster.isEscapingB) {
+        if (monster->curHp <= 0 || monster->isEscapingB) {
             --bc.monsters.monstersAlive;
         }
 
-        // TODO: does communication mod need to provide escapeNext
-
-        monster.moveHistory[0] = getMonsterMoveFromId(monsterId, m["move_id"]);
+        monster->moveHistory[0] = getMonsterMoveFromId(monsterId, m["move_id"]);
         if (m.contains("last_move_id")) {
-            monster.moveHistory[1] = getMonsterMoveFromId(monsterId, m["last_move_id"]);
+            monster->moveHistory[1] = getMonsterMoveFromId(monsterId, m["last_move_id"]);
         }
 
         auto powers = m["powers"];
         for (int j = 0; j < powers.size(); ++j) {
             auto p = powers[j];
             MonsterStatus monsterStatus = getMonsterStatusFromId(p["id"]);
-            monster.setStatus(monsterStatus, p["amount"]);
+            monster->setStatus(monsterStatus, p["amount"]);
             if (m.contains("just_applied")) {
-                monster.setJustApplied(monsterStatus, p["just_applied"]);
+                monster->setJustApplied(monsterStatus, p["just_applied"]);
             }
         }
     }
+    // ensure the MonsterGroup position includes the preplacedIdx
+    bc.monsters.monsterCount = std::max(preplacedIdx + 1, bc.monsters.monsterCount);
     bc.partialInitTwo(gc);
     bc.player.energy = json["game_state"]["combat_state"]["player"]["energy"];
 

@@ -610,7 +610,7 @@ namespace sts {
                     case 1:
                         return MMID::EXPLODER_SLAM;
                     case 2:
-                        assert(false); // this move is unused
+                        return MMID::EXPLODER_EXPLODE;
                         break;
                 }
                 break;
