@@ -15,7 +15,7 @@
 
 namespace sts::search {
 
-    typedef std::function<double (const BattleContext&)> EvalFnc;
+    typedef std::function<double (const BattleContext&, const BattleContext&)> EvalFnc;
 
     // to find a solution to a battle with tree pruning
     struct BattleScumSearcher2 {
@@ -67,7 +67,7 @@ namespace sts::search {
         void enumerateCardActions(Node &node, const BattleContext &bc);
         void enumeratePotionActions(Node &node, const BattleContext &bc);
         void enumerateCardSelectActions(Node &node, const BattleContext &bc);
-        static double evaluateEndState(const BattleContext &bc);
+        static double evaluateEndState(const BattleContext &rootBc, const BattleContext &bc);
 
         void printSearchTree(std::ostream &os, int levels);
         void printSearchStack(std::ostream &os, bool skipLast=false);

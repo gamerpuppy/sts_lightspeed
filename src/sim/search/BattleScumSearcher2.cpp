@@ -28,7 +28,7 @@ void search::BattleScumSearcher2::search(int64_t simulations) {
     g_debug_scum_search = this;
 
     if (isTerminalState(*rootState)) {
-        auto evaluation = evaluateEndState(*rootState);
+        auto evaluation = evaluateEndState(*rootState, *rootState);
         outcomePlayerHp = rootState->player.curHp;
         bestActionSequence = {};
 
@@ -89,7 +89,7 @@ void search::BattleScumSearcher2::step() {
 }
 
 void search::BattleScumSearcher2::updateFromPlayout(const std::vector<Node *> &stack, const std::vector<Action> &actionStack, const BattleContext &endState) {
-    const auto evaluation = evaluateEndState(endState);
+    const auto evaluation = evaluateEndState(*rootState, endState);
 
     if (evaluation > bestActionValue) {
         bestActionSequence = actionStack;
@@ -392,41 +392,66 @@ void search::BattleScumSearcher2::enumerateCardSelectActions(search::BattleScumS
     }
 }
 
-double getNonMinionMonsterCurHpRatio(const BattleContext &bc) {
+double getMonsterHpScale(const Monster &m) {
+    // the HP amounts of splitting enemies need to be inflated in order to ensure the evaluation function
+    // correctly recognizes that splitting the enemies constitutes progress towards a successful resolution
+    // to the fight
+
+    // this is necessary because otherwise the evaluation function will believe that a slime boss at 80/140 HP is a better
+    // state than two large slimes both at 60/60 HP since that is 120HP total vs 80HP so the hitpoints of the bigger splitting
+    // enemy need to be valued at twice the value of the hitpoints of the enemy they split into - the factor of 2 representing
+    // the fact that it splits into two smaller enemies with the same HP amount as the large enemy had 
+    switch (m.id) {
+        case MonsterId::SLIME_BOSS:
+            return 4.0;
+        case MonsterId::ACID_SLIME_L:
+        case MonsterId::SPIKE_SLIME_L:
+            return 2.0;
+        default:
+            return 1.0;
+    }
+}
+
+double getNonMinionMonsterCurHpTotal(const BattleContext &bc) {
     int curHpTotal = 0;
+
+    for (int i = 0; i < bc.monsters.monsterCount; ++i) {
+        const auto &m = bc.monsters.arr[i];
+        if (!m.hasStatus<MS::MINION>() && m.id != sts::MonsterId::INVALID) {
+            // TODO: need to add the HP of the awakened one's second form
+            curHpTotal += m.curHp * getMonsterHpScale(m);
+        }
+    }
+
+    return curHpTotal;
+}
+
+double getNonMinionMonsterMaxHpTotal(const BattleContext &bc) {
     int maxHpTotal = 0;
 
     for (int i = 0; i < bc.monsters.monsterCount; ++i) {
         const auto &m = bc.monsters.arr[i];
         if (!m.hasStatus<MS::MINION>() && m.id != sts::MonsterId::INVALID) {
-            curHpTotal += m.curHp;
-            maxHpTotal += m.maxHp;
+            // TODO: need to add the HP of the awakened one's second form
+            maxHpTotal += m.maxHp * getMonsterHpScale(m);
         }
     }
 
-    if (curHpTotal == 0 || maxHpTotal == 0) {
-        return 0;
-    }
-
-    return (double)curHpTotal / maxHpTotal;
+    return maxHpTotal;
 }
 
-double search::BattleScumSearcher2::evaluateEndState(const BattleContext &bc) {
-    double potionScore = bc.potionCount * 4;
-
+double search::BattleScumSearcher2::evaluateEndState(const BattleContext &rootBc, const BattleContext &bc) {
+    // gives end state values normalized to the range (-1.0, 1.0)
     if (bc.outcome == Outcome::PLAYER_VICTORY) {
-        //return 100 * (35 + bc.player.curHp + potionScore - (bc.turn * 0.01));
-        return bc.player.curHp / 100.0f; // I want winning scores in the range (0.0, 1.0) though feed messes with this a *little*
+        // produces winning scores in the range (0.0, 1.0)
+        return bc.player.curHp / 100.0f; 
     } else {
-//        double statusScore =
-//                (bc.player.getStatus<PS::STRENGTH>() * .5);
-        // const bool couldHaveSpikers = bc.encounter == MonsterEncounter::THREE_SHAPES || bc.encounter == MonsterEncounter::FOUR_SHAPES;
-        // double energyPenalty = bc.energyWasted * -0.2 * (couldHaveSpikers ? 0 : 1);
-        // double drawBonus = bc.cardsDrawn * 0.03;
-        // double aliveScore = bc.monsters.monstersAlive*-1;
+        double curHpTotal = getNonMinionMonsterCurHpTotal(bc);
+        double maxHpTotal = getNonMinionMonsterMaxHpTotal(rootBc);
+        double hpRatio = curHpTotal / maxHpTotal;
 
-        // return (1-getNonMinionMonsterCurHpRatio(bc))*10 + aliveScore + energyPenalty + drawBonus + potionScore / 2 + (bc.turn * .2);
-        return -getNonMinionMonsterCurHpRatio(bc); // I want losing scores in the range (-1.0, 0.0)
+        // produces losing scores in the range (-1.0, 0.0)
+        return -hpRatio;
     }
 }
 
