@@ -25,16 +25,16 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         monster.maxHp = m["max_hp"];
         monster.block = m["block"];
 
-        // createMonster increments monstersAlive,
-        // which would be decremented if HP were set to 0
-        // in any typical fashion, but directly setting it
-        // above does not so we must fix this here
-        if (monster.curHp <= 0) {
-            --bc.monsters.monstersAlive;
-        }
-
         monster.isEscapingB = m["is_escaping"];
         monster.halfDead = m["half_dead"];
+
+        // createMonster increments monstersAlive,
+        // which gets deceremented when a monster leaves battle
+        // in a typical fashion (hp goes to 0 or escapes)
+        // but that has to be explicitly done during this conversion process
+        if (monster.curHp <= 0 || monster.isEscapingB) {
+            --bc.monsters.monstersAlive;
+        }
 
         // TODO: does communication mod need to provide escapeNext
 

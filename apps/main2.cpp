@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <iomanip>
 
 #include "combat/BattleContext.h"
 #include "convert/BattleConverter.h"
@@ -46,11 +47,15 @@ int main() {
     int mostVisits = 0;
     std::ofstream outfile;
     outfile.open("test.log", std::ios_base::app);
+    outfile << "====" << std::endl;
     for (auto edge : searcher.root.edges) {
+        outfile << edge.node.simulationCount << " visits / " << std::fixed << std::setprecision(3) << (edge.node.evaluationSum / edge.node.simulationCount) << " value for ";
+        edge.action.printDesc(outfile, bc);
+        outfile << std::endl;
         if (edge.node.simulationCount > mostVisits) {
             mostVisits = edge.node.simulationCount;
             best = edge.action;
-            edge.action.printDesc(outfile, bc);
+            
         }
     }
     std::cout << static_cast<int>(best.getActionType()) << " " << best.getSourceIdx() << " " << best.getTargetIdx() << std::endl;

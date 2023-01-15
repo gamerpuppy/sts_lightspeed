@@ -3311,7 +3311,9 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             }
         }
 
-        case MonsterId::TORCH_HEAD: // setting in collector spawn move
+        case MonsterId::TORCH_HEAD:
+            return MonsterMoveId::TORCH_HEAD_TACKLE;
+
         default:
             break;
     }

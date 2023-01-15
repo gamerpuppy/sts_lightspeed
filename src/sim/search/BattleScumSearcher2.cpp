@@ -280,27 +280,26 @@ void search::BattleScumSearcher2::enumeratePotionActions(search::BattleScumSearc
         }
         ++foundPotions;
 
-        // not enumerating the discard of a potion if it can be used
+        // fairy potions cannot be used directly
         if (p == Potion::FAIRY_POTION) {
-            node.edges.push_back({Action(ActionType::POTION, pIdx, -1)});
             continue;
         }
 
+        // if the potion requires a valid target and there are none, it cannot be used
+        if (potionRequiresTarget(p) && !hasValidTarget) {
+            continue;
+        }
+
+        // otherwise enumerate all valid ways to use the potion
         if (!potionRequiresTarget(p)) {
+            // non-targeted potions have one use action
             node.edges.push_back({Action(ActionType::POTION, pIdx)});
-            continue;
-        }
-
-        // potion requires target
-        if (!hasValidTarget) {
-            node.edges.push_back({Action(ActionType::POTION, pIdx, -1)});
-            continue;
-        }
-
-        // there is a valid target
-        for (int tIdx = 0; tIdx < bc.monsters.monsterCount; ++tIdx) {
-            if (bc.monsters.arr[tIdx].isTargetable()) {
-                node.edges.push_back({Action(ActionType::POTION, pIdx, tIdx)});
+        } else {
+            // targeted potions have one use action per valid monster target
+            for (int tIdx = 0; tIdx < bc.monsters.monsterCount; ++tIdx) {
+                if (bc.monsters.arr[tIdx].isTargetable()) {
+                    node.edges.push_back({Action(ActionType::POTION, pIdx, tIdx)});
+                }
             }
         }
     }
