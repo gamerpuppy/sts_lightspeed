@@ -144,7 +144,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         auto c = drawPile[i];
         CardId cardId = getCardIdFromId(c["id"]);
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
-        cardInstance.costForTurn = c["cost"];
+        cardInstance.costForTurn = static_cast<int8_t>(c["cost"]);
         bc.cards.moveToDrawPileTop(cardInstance);
         bc.cards.notifyAddCardToCombat(cardInstance);
     }
@@ -154,7 +154,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         auto c = discardPile[i];
         CardId cardId = getCardIdFromId(c["id"]);
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
-        cardInstance.costForTurn = c["cost"];
+        cardInstance.costForTurn = static_cast<int8_t>(c["cost"]);
         bc.cards.moveToDiscardPile(cardInstance);
         bc.cards.notifyAddCardToCombat(cardInstance);
     }
@@ -164,18 +164,20 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         auto c = hand[i];
         CardId cardId = getCardIdFromId(c["id"]);
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
-        cardInstance.costForTurn = c["cost"];
+        cardInstance.costForTurn = static_cast<int8_t>(c["cost"]);
         bc.cards.moveToHand(cardInstance);
         bc.cards.notifyAddCardToCombat(cardInstance);
     }
 
-    auto powers = json["game_state"]["player"]["powers"];
+    auto powers = json["game_state"]["combat_state"]["player"]["powers"];
     for (int j = 0; j < powers.size(); ++j) {
         auto p = powers[j];
         PlayerStatus playerStatus = getPlayerStatusFromId(p["id"]);
         bc.player.setHasStatus(playerStatus, true);
         bc.player.setStatusValueNoChecks(playerStatus, p["amount"]);
-        bc.player.setJustApplied(playerStatus, p["just_applied"]);
+        if (p.contains("just_applied")) {
+            bc.player.setJustApplied(playerStatus, p["just_applied"]);
+        }
     }
 
     // these would typically be initialized in BattleContext::initRelics

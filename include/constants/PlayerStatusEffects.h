@@ -6,6 +6,10 @@
 #define STS_LIGHTSPEED_PLAYERSTATUSEFFECTS_H
 
 #include <cstdint>
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <string>
 
 enum class PlayerStatus : std::uint8_t {
 
@@ -142,6 +146,17 @@ static constexpr const char* const playerStatusIds[] {
     "WrathNextTurnPower",
 
     "Amplify",
+    "Blur",
+    "Buffer",
+    "Collect",
+    "Double Tap",
+    "DuplicationPower",
+    "Echo Form",
+    "FreeAttackPower",
+    "Rebound",
+    "Mantra",
+
+    "Accuracy",
     "After Image",
     "BattleHymn",
     "Brutality",
