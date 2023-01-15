@@ -169,14 +169,14 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         bc.cards.notifyAddCardToCombat(cardInstance);
     }
 
-    // TODO: powers for the player
-    // auto powers = json["game_state"]["player"]["powers"];
-    // for (int j = 0; j < powers.size(); ++j) {
-    //     auto p = powers[j];
-    //     PlayerStatus playerStatus = getPlayerStatusFromId(p["id"]);
-    //     bc.player.setStatus(playerStatus, p["amount"]);
-    //     bc.player.setJustApplied(playerStatus, p["just_applied"]);
-    // }
+    auto powers = json["game_state"]["player"]["powers"];
+    for (int j = 0; j < powers.size(); ++j) {
+        auto p = powers[j];
+        PlayerStatus playerStatus = getPlayerStatusFromId(p["id"]);
+        bc.player.setHasStatus(playerStatus, true);
+        bc.player.setStatusValueNoChecks(playerStatus, p["amount"]);
+        bc.player.setJustApplied(playerStatus, p["just_applied"]);
+    }
 
     // these would typically be initialized in BattleContext::initRelics
     // but that performs additional initialization that only occurs at the start of battle

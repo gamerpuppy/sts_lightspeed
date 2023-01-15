@@ -112,6 +112,97 @@ enum class PlayerStatus : std::uint8_t {
     THE_BOMB
 };
 
+static constexpr const char* const playerStatusIds[] {
+    "INVALID",
+    "Double Damage",
+    "Draw Reduction",
+    "Frail",
+    "IntangiblePlayer",
+    "Vulnerable",
+    "Weakened",
+
+    "Bias",
+    "Confusion",
+    "Entangled",
+    "EnergyDownPower",
+    "Hex",
+    "DexLoss",
+    "Flex",
+    "NoBlockPower",
+    "No Draw",
+    "Wraith Form v2",
+
+    "Barricade",
+    "EndTurnDeath",
+    "Corruption",
+    "Electro",
+    "Surrounded",
+    "MasterRealityPower",
+    "Pen Nib",
+    "WrathNextTurnPower",
+
+    "Amplify",
+    "After Image",
+    "BattleHymn",
+    "Brutality",
+    "Burst",
+    "Combust",
+    "Creative AI",
+    "Dark Embrace",
+    "Demon Form",
+    "DevaForm",
+    "DevotionPower",
+    "Draw Card",
+    "Energized",
+    "Envenom",
+    "EstablishmentPower",
+    "Evolve",
+    "Feel No Pain",
+    "Fire Breathing",
+    "Flame Barrier",
+    "Focus",
+    "WireheadingPower",
+    "Hello",
+    "Infinite Blades",
+    "Juggernaut",
+    "LikeWaterPower",
+    "Loop",
+    "Magnetism",
+    "Mayhem",
+    "Metallicize",
+    "Next Turn Block",
+    "Noxious Fumes",
+    "OmegaPower",
+    "Panache",
+    "Phantasmal",
+    "Plated Armor",
+    "Rage",
+    "Regeneration",
+    "Ritual",
+    "Rupture",
+    "Sadistic",
+    "StaticDischarge",
+    "Thorns",
+    "Thousand Cuts",
+    "Tools Of The Trade",
+    "Vigor",
+    "WaveOfTheHandPower",
+
+    "Equilibrium",
+    "Artifact",
+    "Dexterity",
+    "Strength",
+
+    "TheBomb",
+};
+
+static const PlayerStatus getPlayerStatusFromId(std::string id) {
+    auto it = std::find(std::begin(playerStatusIds), std::end(playerStatusIds), id);
+    if (it == std::end(playerStatusIds)) return PlayerStatus::INVALID;
+    auto idx = it - std::begin(playerStatusIds);
+    return static_cast<PlayerStatus>(idx);
+}
+
 typedef PlayerStatus PS;
 
 static constexpr const char* const playerStatusStrings[] {
