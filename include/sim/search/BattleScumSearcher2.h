@@ -35,7 +35,8 @@ namespace sts::search {
         Node root;
 
         EvalFnc evalFnc;
-        double explorationParameter = 3*sqrt(2);
+        double unexploredNodeValueParameter = 100.0; // only needs to be large enough to be larger than any realistic value of the quality term + the exploration term
+        double explorationParameter = 10*sqrt(2);
 
         double bestActionValue = std::numeric_limits<double>::min();
         double minActionValue = std::numeric_limits<double>::max();

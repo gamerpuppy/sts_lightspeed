@@ -16,11 +16,21 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
     BattleContext bc;
     bc.partialInitOne(gc, MonsterEncounter::INVALID);
     auto monsters = json["game_state"]["combat_state"]["monsters"];
+    int monstersIdx = 0;
     for (int i = 0; i < monsters.size(); ++i) {
         auto m = monsters[i];
+
+        // any monster that has been defeated can be removed from consideration entirely
+        // this is necessary because the simulator expects at most 5 monsters to exist
+        // and during some fights (ex. slime boss) there exist more than 5 monsters if
+        // we consider the "gone" ones (which communication mod does)
+        if (m["is_gone"]) {
+            continue;
+        }
+
         MonsterId monsterId = getMonsterIdFromId(m["id"]);
         bc.monsters.createMonster(bc, monsterId);
-        Monster &monster = bc.monsters.arr[i];
+        Monster &monster = bc.monsters.arr[monstersIdx++];
         monster.curHp = m["current_hp"];
         monster.maxHp = m["max_hp"];
         monster.block = m["block"];

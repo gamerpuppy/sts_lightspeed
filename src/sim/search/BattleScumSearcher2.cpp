@@ -116,12 +116,14 @@ double search::BattleScumSearcher2::evaluateEdge(const search::BattleScumSearche
 
     const auto &edge = parent.edges[edgeIdx];
 
-    double qualityValue = 0;
-    if (!bestActionSequence.empty()) {
-        auto avgEvaluation = edge.node.evaluationSum / (edge.node.simulationCount+1);
-        double evalRange = bestActionValue - minActionValue;
-        qualityValue = avgEvaluation / evalRange;
+    // unexplored nodes must be assigned a sufficiently large value
+    // that they are explored at a priority over any other node
+    if (edge.node.simulationCount == 0) {
+        return unexploredNodeValueParameter;
     }
+
+    double qualityValue = edge.node.evaluationSum / (edge.node.simulationCount+1);
+
 
     double explorationValue = explorationParameter *
             std::sqrt(std::log(parent.simulationCount+1) / (edge.node.simulationCount+1));
