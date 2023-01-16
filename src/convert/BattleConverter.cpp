@@ -13,7 +13,8 @@ BattleConverter::~BattleConverter() {}
 int countMonsterOccurrences(const nlohmann::json &monsters, const MonsterId id) {
     int count = 0;
     for (int i = 0; i < monsters.size(); ++i) {
-        if (getMonsterIdFromId(monsters[i]["id"]) == id) {
+        // only consider the monsters that are not gone
+        if (!monsters[i]["is_gone"] && getMonsterIdFromId(monsters[i]["id"]) == id) {
             count += 1;
         }
     }
@@ -87,7 +88,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
             bc.monsters.monsterCount += 1;
         }
 
-        if (isSpecialCase(monsterId)) {
+        if (preplacedIdx >= 0 && isSpecialCase(monsterId)) {
             // preplaced monster gets put into its position
             int cachedCount = bc.monsters.monsterCount;
             bc.monsters.monsterCount = preplacedIdx;
@@ -139,12 +140,14 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
     bc.partialInitTwo(gc);
     bc.player.energy = json["game_state"]["combat_state"]["player"]["energy"];
 
+    int uniqueCardId = 0;
     auto drawPile = json["game_state"]["combat_state"]["draw_pile"];
     for (int i = 0; i < drawPile.size(); ++i) {
         auto c = drawPile[i];
         CardId cardId = getCardIdFromId(c["id"]);
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
         cardInstance.costForTurn = static_cast<int8_t>(c["cost"]);
+        cardInstance.uniqueId = uniqueCardId++;
         bc.cards.moveToDrawPileTop(cardInstance);
         bc.cards.notifyAddCardToCombat(cardInstance);
     }
@@ -155,6 +158,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         CardId cardId = getCardIdFromId(c["id"]);
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
         cardInstance.costForTurn = static_cast<int8_t>(c["cost"]);
+        cardInstance.uniqueId = uniqueCardId++;
         bc.cards.moveToDiscardPile(cardInstance);
         bc.cards.notifyAddCardToCombat(cardInstance);
     }
@@ -165,9 +169,12 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         CardId cardId = getCardIdFromId(c["id"]);
         CardInstance cardInstance(cardId, c["upgrades"] > 0);
         cardInstance.costForTurn = static_cast<int8_t>(c["cost"]);
+        cardInstance.uniqueId = uniqueCardId++;
         bc.cards.moveToHand(cardInstance);
         bc.cards.notifyAddCardToCombat(cardInstance);
     }
+
+    bc.cards.nextUniqueCardId = uniqueCardId;
 
     auto powers = json["game_state"]["combat_state"]["player"]["powers"];
     for (int j = 0; j < powers.size(); ++j) {

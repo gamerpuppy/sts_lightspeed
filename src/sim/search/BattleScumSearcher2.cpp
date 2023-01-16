@@ -59,7 +59,7 @@ void search::BattleScumSearcher2::step() {
         if (isLeaf) {
 
             ++simulationIdx;
-            enumerateActionsForNode(curNode, curState);
+            enumerateActionsForNode(curNode, curState, false);
             const auto selectIdx = selectFirstActionForLeafNode(curNode);
             auto &edgeTaken = curNode.edges[selectIdx];
 
@@ -156,34 +156,79 @@ void search::BattleScumSearcher2::playoutRandom(BattleContext &state, std::vecto
     Node tempNode; // temp
     while (!isTerminalState(state)) {
         ++simulationIdx;
-        enumerateActionsForNode(tempNode, state);
-        if (tempNode.edges.empty()) {
-            std::cerr << state.seed << " " << simulationIdx << std::endl;
-            std::cerr << state.monsters.arr[0].getName() << " " << state.floorNum << " " << monsterEncouterNames[static_cast<int>(state.encounter)] << std::endl;
-            assert(false);
+
+        // attempt fast selection of the random action
+        Action action;
+        switch (state.inputState) {
+            case InputState::PLAYER_NORMAL:
+                if (state.isCardPlayAllowed() && state.cards.cardsInHand > 0) {
+                    auto dist = std::uniform_int_distribution<int>(0, static_cast<int>(state.cards.cardsInHand)-1);
+                    const int cardIdx = dist(randGen);
+                    const auto &c = state.cards.hand[cardIdx];
+                    if (c.canUseOnAnyTarget(state)) {
+                        if (c.requiresTarget() && state.monsters.monsterCount > 0) {
+                            auto dist2 = std::uniform_int_distribution<int>(0, static_cast<int>(state.monsters.monsterCount)-1);
+                            const int monsterIdx = dist(randGen);
+                            const auto &m = state.monsters.arr[monsterIdx];
+                            if (m.isTargetable()) {
+                                action = Action(ActionType::CARD, cardIdx, monsterIdx);
+                            }
+                        } else {
+                            action = Action(ActionType::CARD, cardIdx);
+                        }
+                    }
+                }
+                break;
+                // skip potions because I don't want to write the code for it (this is technically expert knowledge suggesting potions shouldn't be used during rollouts - whatever)
+                // skip end turn because heuristically it's a terrible choice (this is expert knowledge being added to the search)
+            case InputState::CARD_SELECT:
+                break;
+                // skip card select because that code is complicated and it'd be hard to do correctly
+                // in a fast manner - so we just let the normal selection do it
+        };
+
+        // if fast selection was successful use it
+        if (action.isValidAction(state)) {
+            actionStack.push_back(action);
+            action.execute(state);
+
+            tempNode.edges.clear();
+        // otherwise compute all actions and pick one
+        } else {
+            enumerateActionsForNode(tempNode, state, true);
+            if (tempNode.edges.empty()) {
+                std::cerr << state.seed << " " << simulationIdx << std::endl;
+                std::cerr << state.monsters.arr[0].getName() << " " << state.floorNum << " " << monsterEncouterNames[static_cast<int>(state.encounter)] << std::endl;
+                assert(false);
+            }
+
+            auto dist = std::uniform_int_distribution<int>(0, static_cast<int>(tempNode.edges.size())-1);
+            const int selectedIdx = dist(randGen);
+
+            const auto action = tempNode.edges[selectedIdx].action;
+    //        action.printDesc(std::cout, state) << std::endl;
+            actionStack.push_back(action);
+            action.execute(state);
+
+            tempNode.edges.clear();
         }
-
-        // should this really be being constructed each time
-        // why not just use a normal rng
-        auto dist = std::uniform_int_distribution<int>(0, static_cast<int>(tempNode.edges.size())-1);
-        const int selectedIdx = dist(randGen);
-
-        const auto action = tempNode.edges[selectedIdx].action;
-//        action.printDesc(std::cout, state) << std::endl;
-        actionStack.push_back(action);
-        action.execute(state);
-
-        tempNode.edges.clear();
     }
 }
 
 void search::BattleScumSearcher2::enumerateActionsForNode(search::BattleScumSearcher2::Node &node,
-                                                               const BattleContext &bc) {
+                                                               const BattleContext &bc, const bool forRandom) {
     switch (bc.inputState) {
         case InputState::PLAYER_NORMAL:
             enumerateCardActions(node, bc);
             enumeratePotionActions(node, bc);
-            node.edges.push_back({Action(ActionType::END_TURN)});
+
+            // skip end turn for random rollouts because it's such a terrible choice that it
+            // makes it incredibly hard for the tree search to find good choices
+            // this does end up incorporating a bit of expert knowledge but expert knowledge
+            // is typically considered reasonable to add to monte carlo tree search
+            if (!forRandom || node.edges.size() == 0) {
+                node.edges.push_back({Action(ActionType::END_TURN)});
+            }
             break;
 
         case InputState::CARD_SELECT:

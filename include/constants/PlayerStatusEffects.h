@@ -127,6 +127,7 @@ static constexpr const char* const playerStatusIds[] {
 
     "Bias",
     "Confusion",
+    "Constricted",
     "Entangled",
     "EnergyDownPower",
     "Hex",
