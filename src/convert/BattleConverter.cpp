@@ -230,6 +230,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
                 // status value is unused for the bomb
                 bc.player.setStatusValueNoChecks(playerStatus, 0);
             default:
+                break;
         };
     }
 

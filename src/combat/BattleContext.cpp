@@ -1207,6 +1207,8 @@ void BattleContext::useAttackCard() {
         default:
 #ifdef sts_asserts
             std::cerr << "attempted to use unimplemented card: " << c.getName() << std::endl;
+            std::cerr << seed << std::endl;
+            std::cout << *this << '\n';
             assert(false);
 #endif
             break;
