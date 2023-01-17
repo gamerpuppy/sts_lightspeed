@@ -68,7 +68,6 @@ namespace sts {
 
         // Shield Gremlin target
         // GreenLouse / RedLouse D
-        // Red Slaver entangled turn
         // hexaghost divider damage
         // Gremlin wizard charge
         // book of stabbing n

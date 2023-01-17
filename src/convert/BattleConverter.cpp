@@ -122,7 +122,21 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         if (m.contains("last_move_id")) {
             monster->moveHistory[1] = getMonsterMoveFromId(monsterId, m["last_move_id"]);
         }
+        if (m.contains("miscInt")) {
+            monster->miscInfo = m["miscInt"];
+        } else if (m.contains("miscBool")) {
+            monster->miscInfo = m["miscBool"];
+        }
 
+        // some monster specific information
+        switch(monster->id) {
+            case MonsterId::HEXAGHOST:
+                monster->uniquePower0 = m["active_orbs"];
+                break;
+        };
+       
+
+        // monster powers
         auto powers = m["powers"];
         for (int j = 0; j < powers.size(); ++j) {
             auto p = powers[j];
@@ -131,6 +145,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
             if (p.contains("just_applied")) {
                 monster->setJustApplied(monsterStatus, p["just_applied"]);
             }
+            // handle the stasis power since it keeps track of a card
             if (p.contains("card") && monsterStatus == MonsterStatus::STASIS) {
                 auto c = p["card"];
                 CardId cardId = getCardIdFromId(c["id"]);
