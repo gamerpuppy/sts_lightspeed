@@ -24,8 +24,11 @@ search::BattleScumSearcher2::BattleScumSearcher2(const BattleContext &bc,
                                                                                    randGen(bc.seed+bc.floorNum) {
 }
 
-void search::BattleScumSearcher2::search(int64_t simulations) {
+void search::BattleScumSearcher2::search(int64_t simulations, long maxTimeMillis) {
     g_debug_scum_search = this;
+    startTime = std::chrono::duration_cast< std::chrono::milliseconds >(
+        std::chrono::system_clock::now().time_since_epoch()
+    );
 
     if (isTerminalState(*rootState)) {
         auto evaluation = evaluateEndState(*rootState, *rootState);
@@ -37,6 +40,16 @@ void search::BattleScumSearcher2::search(int64_t simulations) {
     }
 
     for (std::int64_t simCount = 0; simCount < simulations; ++simCount) {
+        if (simCount % 100 == 0) {
+            std::chrono::milliseconds curTime = std::chrono::duration_cast< std::chrono::milliseconds >(
+                std::chrono::system_clock::now().time_since_epoch()
+            );
+
+            // early termination if the time limit is reached
+            if ((curTime - startTime).count() >= maxTimeMillis) {
+                return;
+            }
+        }
         step();
     }
 }

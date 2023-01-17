@@ -7,6 +7,7 @@
 
 #include "sim/search/Action.h"
 
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <random>
@@ -33,6 +34,7 @@ namespace sts::search {
 
         std::unique_ptr<const BattleContext> rootState;
         Node root;
+        std::chrono::milliseconds startTime;
 
         EvalFnc evalFnc;
         double unexploredNodeValueParameter = 100.0; // only needs to be large enough to be larger than any realistic value of the quality term + the exploration term
@@ -51,7 +53,7 @@ namespace sts::search {
         explicit BattleScumSearcher2(const BattleContext &bc, EvalFnc evalFnc=&evaluateEndState);
 
         // public methods
-        void search(int64_t simulations);
+        void search(int64_t simulations, long max_time_millis);
         void step();
 
         // private helpers

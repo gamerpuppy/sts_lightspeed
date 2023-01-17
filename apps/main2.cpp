@@ -17,7 +17,7 @@ using namespace sts;
 using namespace std::chrono;
 
 void search2(search::BattleScumSearcher2 &searcher, int simulations) {
-    searcher.search(simulations);
+    searcher.search(simulations, 1000);
 }
 
 int main() {
@@ -33,7 +33,7 @@ int main() {
     milliseconds ms1 = duration_cast< milliseconds >(
         system_clock::now().time_since_epoch()
     );
-    int thread_count = 12;
+    int thread_count = 1;
     search::BattleScumSearcher2 *searchers[thread_count];
     std::thread *threads[thread_count];
     for (int i = 0; i < thread_count; ++i) {

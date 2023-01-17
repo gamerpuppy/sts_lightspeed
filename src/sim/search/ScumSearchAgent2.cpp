@@ -70,7 +70,7 @@ void search::ScumSearchAgent2::playoutBattle(BattleContext &bc) {
                                               (bossSimulationMultiplier * simulationCountBase) : simulationCountBase;
 
         search::BattleScumSearcher2 searcher(bc);
-        searcher.search(simulationCount);
+        searcher.search(simulationCount, 1000);
 
         if (searcher.outcomePlayerHp > bestOutcomePlayerHp)
         {

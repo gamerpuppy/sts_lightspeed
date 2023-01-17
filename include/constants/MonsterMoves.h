@@ -445,6 +445,8 @@ namespace sts {
                 break;
             case MonsterId::AWAKENED_ONE:
                 switch(id) {
+                    case 1:
+                        return MMID::AWAKENED_ONE_SLASH;
                     case 2:
                         return MMID::AWAKENED_ONE_SOUL_STRIKE;
                     case 3:
