@@ -203,18 +203,32 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         // special case powers that need extra info
         switch(playerStatus) {
             case PlayerStatus::COMBUST:
-                bc.player.combustHpLoss += p["misc"];
+                bc.player.combustHpLoss = p["misc"];
                 break;
             case PlayerStatus::DEVA:
-                bc.player.devaFormEnergyPerTurn += p["misc"];
+                bc.player.devaFormEnergyPerTurn = p["misc"];
                 break;
             case PlayerStatus::ECHO_FORM:
-                bc.player.echoFormCardsDoubled += p["misc"];
+                bc.player.echoFormCardsDoubled = p["misc"];
                 break;
             case PlayerStatus::PANACHE:
-                bc.player.panacheCounter += p["amount"];
+                bc.player.panacheCounter = p["amount"];
+                // override original status value since it needs to be the damage not the amount
                 bc.player.setStatusValueNoChecks(playerStatus, p["damage"]);
                 break;
+            case PlayerStatus::THE_BOMB:
+                if (p["amount"] == 1) {
+                    bc.player.bomb1 = p["amount"];
+                } else if (p["amount"] == 2) {
+                    bc.player.bomb2 = p["amount"];
+                } else if (p["amount"] == 3) {
+                    bc.player.bomb3 = p["amount"];
+                } else {
+                    std::cerr << "the bomb must have an amount of either 1, 2, or 3 - no other values are valid - got " << p["amount"] << std::endl;
+                    assert(false);
+                }
+                // status value is unused for the bomb
+                bc.player.setStatusValueNoChecks(playerStatus, 0);
             default:
         };
     }
