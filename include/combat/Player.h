@@ -61,7 +61,7 @@ namespace sts {
         std::uint64_t relicBits0 = 0;
         std::uint64_t relicBits1 = 0;
 
-        // special info
+        // special relic info
         int8_t  happyFlowerCounter = 0;
         int8_t  incenseBurnerCounter = 0;
         int8_t  inkBottleCounter = 0;
@@ -71,11 +71,16 @@ namespace sts {
         int8_t  sundialCounter = 0;
         bool haveUsedNecronomiconThisTurn = false;
 
+        // special power info
         int8_t  combustHpLoss = 0;
         int16_t  devaFormEnergyPerTurn = 0;
         int8_t  echoFormCardsDoubled = 0;
         int8_t  panacheCounter = 0;
+        int8_t bomb1 = 0;
+        int8_t bomb2 = 0;
+        int8_t bomb3 = 0;
 
+        // special general info
         int16_t  cardsPlayedThisTurn = 0;
         int16_t attacksPlayedThisTurn = 0;
         int16_t skillsPlayedThisTurn = 0;
@@ -85,10 +90,6 @@ namespace sts {
         // currently unused
         int16_t lastAttackUnblockedDamage = 0;
         int16_t timesDamagedThisCombat = 0;
-
-        int8_t bomb1 = 0;
-        int8_t bomb2 = 0;
-        int8_t bomb3 = 0;
 
         template <RelicId r> void setHasRelic(bool value);
         void setHasStatus(PlayerStatus s, bool value);
@@ -321,10 +322,6 @@ namespace sts {
 
         if (s == PS::COMBUST) {
             ++combustHpLoss;
-        }
-
-        if (s == PS::PANACHE && !hasStatus<PS::PANACHE>()) {
-            panacheCounter = 5;
         }
 
         if (hasStatus<s>()) {

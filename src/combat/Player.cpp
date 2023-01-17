@@ -264,6 +264,10 @@ void Player::damage(BattleContext &bc, const int calculatedDamage, const bool se
     }
 
     if (damage > 0) {
+        if (damage <= 0) {
+            std::cerr << "tried to lose less than 0 hp in damage" << std::endl;
+            std::cerr << bc << std::endl;
+        }
         hpWasLost(bc, damage, selfDamage);
     }
 }
@@ -312,6 +316,10 @@ void Player::attacked(BattleContext &bc, int enemyIdx, int calculatedDamage) {
             bc.addToBot( Actions::MakeTempCardInDiscard({CardId::WOUND}) );
         }
 
+        if (damage <= 0) {
+            std::cerr << "tried to lose less than 0 hp in attacked" << std::endl;
+            std::cerr << bc << std::endl;
+        }
         hpWasLost(bc, damage, false);
 
     } else {
@@ -331,10 +339,18 @@ void Player::loseHp(BattleContext &bc, int amount, bool selfDamage) {
         }
     }
 
+    if (amount <= 0) {
+        std::cerr << "tried to lose less than 0 hp in loseHp" << std::endl;
+        std::cerr << bc << std::endl;
+    }
     hpWasLost(bc, amount, selfDamage);
 }
 
 void Player::hpWasLost(BattleContext &bc, int amount, bool selfDamage) {
+    if (amount <= 0) {
+        std::cerr << "tried to lose less than 0 hp in hpWasLost" << std::endl;
+        std::cerr << bc << std::endl;
+    }
     assert(amount > 0);
 
     bool wasBloodied = curHp <= maxHp/2;

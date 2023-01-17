@@ -199,6 +199,24 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         if (p.contains("just_applied")) {
             bc.player.setJustApplied(playerStatus, p["just_applied"]);
         }
+
+        // special case powers that need extra info
+        switch(playerStatus) {
+            case PlayerStatus::COMBUST:
+                bc.player.combustHpLoss += p["misc"];
+                break;
+            case PlayerStatus::DEVA:
+                bc.player.devaFormEnergyPerTurn += p["misc"];
+                break;
+            case PlayerStatus::ECHO_FORM:
+                bc.player.echoFormCardsDoubled += p["misc"];
+                break;
+            case PlayerStatus::PANACHE:
+                bc.player.panacheCounter += p["amount"];
+                bc.player.setStatusValueNoChecks(playerStatus, p["damage"]);
+                break;
+            default:
+        };
     }
 
     // these would typically be initialized in BattleContext::initRelics
