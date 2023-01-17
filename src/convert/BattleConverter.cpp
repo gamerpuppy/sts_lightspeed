@@ -65,6 +65,8 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
     gc.initFromJson(json);
     BattleContext bc;
     bc.partialInitOne(gc, MonsterEncounter::INVALID);
+    int uniqueCardId = 0;
+
     auto monsters = json["game_state"]["combat_state"]["monsters"];
     int monstersIdx = 0;
     int preplacedIdx = computePreplacedIdx(monsters);
@@ -129,18 +131,30 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
             if (m.contains("just_applied")) {
                 monster->setJustApplied(monsterStatus, p["just_applied"]);
             }
+            if (m.contains("card")) {
+                auto c = m["card"];
+                CardId cardId = getCardIdFromId(c["id"]);
+                CardInstance cardInstance(cardId, c["upgrades"] > 0);
+                cardInstance.costForTurn = static_cast<int8_t>(c["cost"]);
+                cardInstance.uniqueId = uniqueCardId++;
+                bc.cards.stasisCards[std::min(1, monster->idx)] = cardInstance;
+            }
         }
     }
+
     // ensure the MonsterGroup position includes the preplacedIdx
     bc.monsters.monsterCount = std::max(preplacedIdx + 1, bc.monsters.monsterCount);
+
     // special case for bronze automaton, ensure monsterCount is at least preplacedIdx + 2
     if (countMonsterOccurrences(monsters, MonsterId::BRONZE_AUTOMATON) >= 1) {
         bc.monsters.monsterCount = std::max(preplacedIdx + 2, bc.monsters.monsterCount);
     }
+
+
+
     bc.partialInitTwo(gc);
     bc.player.energy = json["game_state"]["combat_state"]["player"]["energy"];
 
-    int uniqueCardId = 0;
     auto drawPile = json["game_state"]["combat_state"]["draw_pile"];
     for (int i = 0; i < drawPile.size(); ++i) {
         auto c = drawPile[i];

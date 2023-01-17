@@ -142,7 +142,8 @@ void BattleSimulator::printPotionActions(std::ostream &os) const {
     for (int i = 0; i < bc->potionCapacity; ++i) {
         const auto p = bc->potions[i];
         if (p == Potion::EMPTY_POTION_SLOT ||
-            p == Potion::FAIRY_POTION) {
+            p == Potion::FAIRY_POTION ||
+            p == Potion::SMOKE_BOMB) { // TODO: make this available in non-boss combats (and when not surrounded)
             continue;
         }
 

@@ -2408,9 +2408,7 @@ void BattleContext::drinkPotion(int idx, int target) {
             addToBot(Actions::DiscoveryAction(CardType::SKILL, hasBark ? 2 : 1));
             break;
 
-        case Potion::SMOKE_BOMB:
-            // todo
-            break;
+
 
         case Potion::SNECKO_OIL:
             addToBot(Actions::DrawCards(hasBark ? 10 : 5));
@@ -2438,6 +2436,8 @@ void BattleContext::drinkPotion(int idx, int target) {
             addToBot(Actions::DebuffEnemy<MS::WEAK>(target, hasBark ? 6 : 3, false));
             break;
 
+        case Potion::SMOKE_BOMB:
+            // todo make this skip the remainder of the combat
         case Potion::INVALID:
         case Potion::EMPTY_POTION_SLOT:
         case Potion::FAIRY_POTION:

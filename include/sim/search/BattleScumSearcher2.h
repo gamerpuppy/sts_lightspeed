@@ -53,7 +53,7 @@ namespace sts::search {
         explicit BattleScumSearcher2(const BattleContext &bc, EvalFnc evalFnc=&evaluateEndState);
 
         // public methods
-        void search(int64_t simulations, long max_time_millis);
+        void search(int64_t simulations, long maxTimeMillis);
         void step();
 
         // private helpers

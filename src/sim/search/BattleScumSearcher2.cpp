@@ -339,7 +339,8 @@ void search::BattleScumSearcher2::enumeratePotionActions(search::BattleScumSearc
         ++foundPotions;
 
         // fairy potions cannot be used directly
-        if (p == Potion::FAIRY_POTION) {
+        // TODO: smoke bombs are not implemented lol
+        if (p == Potion::FAIRY_POTION || p == Potion::SMOKE_BOMB) {
             continue;
         }
 
@@ -476,8 +477,10 @@ double getNonMinionMonsterCurHpTotal(const BattleContext &bc) {
     for (int i = 0; i < bc.monsters.monsterCount; ++i) {
         const auto &m = bc.monsters.arr[i];
         if (!m.hasStatus<MS::MINION>() && m.id != sts::MonsterId::INVALID) {
-            // TODO: need to add the HP of the awakened one's second form
             curHpTotal += m.curHp * getMonsterHpScale(m);
+            if (m.id == sts::MonsterId::AWAKENED_ONE && !m.miscInfo) { // is awakened one stage 1 // todo change to status
+                curHpTotal += m.maxHp * getMonsterHpScale(m);
+            }
         }
     }
 
@@ -490,8 +493,10 @@ double getNonMinionMonsterMaxHpTotal(const BattleContext &bc) {
     for (int i = 0; i < bc.monsters.monsterCount; ++i) {
         const auto &m = bc.monsters.arr[i];
         if (!m.hasStatus<MS::MINION>() && m.id != sts::MonsterId::INVALID) {
-            // TODO: need to add the HP of the awakened one's second form
             maxHpTotal += m.maxHp * getMonsterHpScale(m);
+            if (m.id == sts::MonsterId::AWAKENED_ONE) {
+                maxHpTotal += m.maxHp * getMonsterHpScale(m);
+            }
         }
     }
 
