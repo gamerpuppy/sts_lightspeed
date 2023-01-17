@@ -33,15 +33,17 @@ int main() {
     milliseconds ms1 = duration_cast< milliseconds >(
         system_clock::now().time_since_epoch()
     );
+    // std::cout << bc << std::endl;
     int thread_count = 12;
     search::BattleScumSearcher2 *searchers[thread_count];
     std::thread *threads[thread_count];
     for (int i = 0; i < thread_count; ++i) {
-        bc.cardRandomRng.setCounter(i * 1000);
-        bc.aiRng.setCounter(i * 1000);
-        bc.shuffleRng.setCounter(i * 1000);
-        bc.miscRng.setCounter(i * 1000);
-        bc.potionRng.setCounter(i * 1000);
+        int rngMod = 2;
+        bc.cardRandomRng.setCounter(rngMod * 1000);
+        bc.aiRng.setCounter(rngMod * 1000);
+        bc.shuffleRng.setCounter(rngMod * 1000);
+        bc.miscRng.setCounter(rngMod * 1000);
+        bc.potionRng.setCounter(rngMod * 1000);
         searchers[i] = new search::BattleScumSearcher2(bc);
         threads[i] = new std::thread(search2, std::ref(*searchers[i]), 100000);
     }

@@ -128,11 +128,11 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
             auto p = powers[j];
             MonsterStatus monsterStatus = getMonsterStatusFromId(p["id"]);
             monster->setStatus(monsterStatus, p["amount"]);
-            if (m.contains("just_applied")) {
+            if (p.contains("just_applied")) {
                 monster->setJustApplied(monsterStatus, p["just_applied"]);
             }
-            if (m.contains("card")) {
-                auto c = m["card"];
+            if (p.contains("card") && monsterStatus == MonsterStatus::STASIS) {
+                auto c = p["card"];
                 CardId cardId = getCardIdFromId(c["id"]);
                 CardInstance cardInstance(cardId, c["upgrades"] > 0);
                 cardInstance.costForTurn = static_cast<int8_t>(c["cost"]);
