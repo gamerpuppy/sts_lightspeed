@@ -69,6 +69,7 @@ void BattleContext::partialInitOne(const GameContext &gc, MonsterEncounter encou
     player.curHp = gc.curHp;
     player.maxHp = gc.maxHp;
     player.gold = gc.gold;
+    player.cc = gc.cc;
 }
 
 void BattleContext::partialInitTwo(const GameContext &gc) {
@@ -3155,6 +3156,7 @@ namespace sts {
 
         os << bc.monsters;
         os << bc.player;
+        os << "chosen class:(" << static_cast<int>(bc.player.cc) << ")\n"; 
         os << bc.cards;
         os << "}\n";
         return os;

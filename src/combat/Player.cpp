@@ -932,7 +932,7 @@ namespace sts {
 
         os << "\t" << "hp:(" << p.curHp << "/" << p.maxHp << ")"
             << " energy:(" << p.energy << "/" << static_cast<int>(p.energyPerTurn)
-        << ") block:(" << p.block << ")\n";
+            << ") block:(" << p.block << ")\n";
 
         printStatusEffects(os, p);
         printRelics(os, p);

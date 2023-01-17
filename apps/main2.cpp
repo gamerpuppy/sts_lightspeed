@@ -51,7 +51,6 @@ int main() {
     milliseconds ms2 = duration_cast< milliseconds >(
         system_clock::now().time_since_epoch()
     );
-
     // std::cout << "took " << (ms2 - ms1).count() << "ms\n";
 
     // std::cout << searcher.bestActionValue << '\n';
