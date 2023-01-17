@@ -466,10 +466,6 @@ double getMonsterHpScale(const Monster &m) {
         case MonsterId::ACID_SLIME_L:
         case MonsterId::SPIKE_SLIME_L:
             return 2.0;
-        // the amount of HP transient has is irrelevant to how well the player is doing since they never kill it
-        // score only purely based on remaining HP at the end of the rollout
-        case MonsterId::TRANSIENT:
-            return 0.0;
         default:
             return 1.0;
     }

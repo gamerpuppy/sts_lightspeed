@@ -129,6 +129,7 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
         }
 
         // some monster specific information
+        // TODO: still missing Shield Gremlin target *and* bronze automaton lastBoostWasFlail
         switch(monster->id) {
             case MonsterId::HEXAGHOST:
                 monster->uniquePower0 = m["active_orbs"];
