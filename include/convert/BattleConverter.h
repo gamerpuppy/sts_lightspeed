@@ -12,7 +12,7 @@ namespace sts {
         BattleConverter();
         ~BattleConverter();
 
-        BattleContext convertFromJson(const nlohmann::json &json);
+        BattleContext convertFromJson(const nlohmann::json &json, int *monsterIdxMap);
     };
 
 }

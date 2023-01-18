@@ -513,9 +513,8 @@ double search::BattleScumSearcher2::evaluateEndState(const BattleContext &rootBc
         double maxHpTotal = getNonMinionMonsterMaxHpTotal(rootBc);
         double hpRatio = 0.0;
         if (maxHpTotal != 0.0) {
-            curHpTotal / maxHpTotal;
+            hpRatio = curHpTotal / maxHpTotal;
         }
-
         // produces losing scores in the range (-1.0, 0.0)
         return -hpRatio;
     }

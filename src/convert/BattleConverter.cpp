@@ -60,7 +60,7 @@ bool isSpecialCase(const MonsterId id) {
                                           // ACID_SLIME_L to position 2 always
 }
 
-BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
+BattleContext BattleConverter::convertFromJson(const nlohmann::json &json, int *monsterIdxMap) {
     GameContext gc;
     gc.initFromJson(json);
     BattleContext bc;
@@ -95,11 +95,13 @@ BattleContext BattleConverter::convertFromJson(const nlohmann::json &json) {
             int cachedCount = bc.monsters.monsterCount;
             bc.monsters.monsterCount = preplacedIdx;
             bc.monsters.createMonster(bc, monsterId);
+            monsterIdxMap[preplacedIdx] = i;
             monster = &bc.monsters.arr[preplacedIdx];
             // restore the previous position in the MonsterGroup
             bc.monsters.monsterCount = cachedCount;
         } else {
             bc.monsters.createMonster(bc, monsterId);
+            monsterIdxMap[monstersIdx] = i;
             monster = &bc.monsters.arr[monstersIdx++];
         }
 
