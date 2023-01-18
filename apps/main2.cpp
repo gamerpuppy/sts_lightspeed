@@ -28,7 +28,11 @@ int main() {
 
     nlohmann::json json = nlohmann::json::parse(jsonString);
     BattleConverter converter;
-    BattleContext bc = converter.convertFromJson(json);
+    int monsterIdxMap[5];
+    for (int i = 0; i < 5; ++i) {
+        monsterIdxMap[i] = -1;
+    }
+    BattleContext bc = converter.convertFromJson(json, monsterIdxMap);
 
     milliseconds ms1 = duration_cast< milliseconds >(
         system_clock::now().time_since_epoch()
@@ -38,7 +42,7 @@ int main() {
     search::BattleScumSearcher2 *searchers[thread_count];
     std::thread *threads[thread_count];
     for (int i = 0; i < thread_count; ++i) {
-        int rngMod = 2;
+        int rngMod = i;
         bc.cardRandomRng.setCounter(rngMod * 1000);
         bc.aiRng.setCounter(rngMod * 1000);
         bc.shuffleRng.setCounter(rngMod * 1000);
@@ -82,7 +86,12 @@ int main() {
             best = searchers[0]->root.edges[j].action;
         }
     }
-    std::cout << static_cast<int>(best.getActionType()) << " " << best.getSourceIdx() << " " << best.getTargetIdx() << std::endl;
+    nlohmann::json monsterIdxMapJson = nlohmann::json::array();
+    for (int i = 0; i < 5; ++i) {
+        monsterIdxMapJson[i] = monsterIdxMap[i];
+    }
+
+    std::cout << static_cast<int>(best.getActionType()) << " " << best.getSourceIdx() << " " << best.getTargetIdx() << " " << monsterIdxMapJson.dump() << std::endl;
     return 0;
 }
 
