@@ -22,8 +22,6 @@ void search2(search::BattleScumSearcher2 &searcher, int simulations) {
 
 int main() {
     std::string jsonString;
-    //std::ifstream infile("test.json");
-    // std::getline(infile, jsonString);
     std::getline(std::cin, jsonString);
 
     nlohmann::json json = nlohmann::json::parse(jsonString);

@@ -339,7 +339,7 @@ void search::BattleScumSearcher2::enumeratePotionActions(search::BattleScumSearc
         ++foundPotions;
 
         // fairy potions cannot be used directly
-        // TODO: smoke bombs are not implemented lol
+        // TODO: smoke bombs are also not implemented lol
         if (p == Potion::FAIRY_POTION || p == Potion::SMOKE_BOMB) {
             continue;
         }
