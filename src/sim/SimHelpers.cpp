@@ -20,7 +20,7 @@ SimHelpers::SimHelpers() {
     }
 
     for (int i = static_cast<int>(MonsterId::INVALID); i <= static_cast<int>(MonsterId::WRITHING_MASS); ++i) {
-        const auto stringKey = monsterIdStrings[i];
+        const auto stringKey = monsterIdEnumNames[i];
         const auto id = static_cast<MonsterId>(i);
         monsterIdStringMap.insert({stringKey, id});
     }

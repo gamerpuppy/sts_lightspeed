@@ -173,7 +173,11 @@ void CardManager::removeFromExhaustPile(int idx) {
 
 void CardManager::moveToHand(const CardInstance &c) {
 #ifdef sts_asserts
-    assert(cardsInHand < 10);
+    if (cardsInHand >= 10) {
+        std::cerr << *g_debug_bc << '\n';
+        std::cerr << "attempted to move a card to hand when the hand was full" << std::endl;
+        assert(false);
+    }
 #endif
     notifyAddToHand(c);
     hand[cardsInHand++] = c;

@@ -163,11 +163,11 @@ PYBIND11_MODULE(slaythespire, m) {
         .value("BATTLE", ScreenState::BATTLE);
 
     pybind11::enum_<CharacterClass> characterClass(m, "CharacterClass");
-    characterClass.value("IRONCLAD", CharacterClass::IRONCLAD)
+    characterClass.value("INVALID", CharacterClass::INVALID)
+            .value("IRONCLAD", CharacterClass::IRONCLAD)
             .value("SILENT", CharacterClass::SILENT)
             .value("DEFECT", CharacterClass::DEFECT)
-            .value("WATCHER", CharacterClass::WATCHER)
-            .value("INVALID", CharacterClass::INVALID);
+            .value("WATCHER", CharacterClass::WATCHER);
 
     pybind11::enum_<Room> roomEnum(m, "Room");
     roomEnum.value("SHOP", Room::SHOP)

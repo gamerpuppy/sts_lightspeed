@@ -12,6 +12,59 @@
 using namespace sts;
 
 
+void Player::setHasStatus(PlayerStatus s, bool value) {
+//        static_assert(s != PlayerStatus::THE_BOMB);
+
+    switch (s) {
+        case PS::ARTIFACT:
+        case PS::DEXTERITY:
+        case PS::STRENGTH:
+        case PS::FOCUS:
+            return;
+        default:
+            break;
+    }
+
+    //static_assert(((int)s) < 64); // did we add too many status effects
+    int idx = static_cast<int>(s);
+    if (value) {
+        if (idx < 64) {
+            statusBits0 |= 1ULL << idx;
+        } else {
+            statusBits1 |= 1ULL << (idx-64);
+        }
+    } else {
+        if (idx < 64) {
+            statusBits0 &= ~(1ULL << idx);
+        } else {
+            statusBits1 &= ~(1ULL << (idx-64));
+        }
+    }
+}
+
+void Player::setStatusValueNoChecks(PlayerStatus s, int value) {
+    switch (s) {
+        case PS::ARTIFACT:
+            artifact = value;
+            break;
+
+        case PS::DEXTERITY:
+            dexterity = value;
+            break;
+
+        case PS::FOCUS:
+            focus = value;
+            break;
+
+        case PS::STRENGTH:
+            strength = value;
+            break;
+
+        default:
+            statusMap[s] = value;
+    }
+}
+
 bool Player::hasRelicRuntime(RelicId r) const {
     if ((int) r < 64) {
         return relicBits0 & (1ULL << (int)r);
@@ -62,6 +115,14 @@ int Player::getStatusRuntime(PlayerStatus s) const {
             } else {
                 return 0;
             }
+    }
+}
+
+void Player::setJustApplied(PlayerStatus s, bool value) {
+    if (value) {
+        justAppliedBits |= (1ULL << static_cast<int>(s));
+    } else {
+        justAppliedBits &= ~(1ULL << static_cast<int>(s));
     }
 }
 
@@ -203,6 +264,10 @@ void Player::damage(BattleContext &bc, const int calculatedDamage, const bool se
     }
 
     if (damage > 0) {
+        if (damage <= 0) {
+            std::cerr << "tried to lose less than 0 hp in damage" << std::endl;
+            std::cerr << bc << std::endl;
+        }
         hpWasLost(bc, damage, selfDamage);
     }
 }
@@ -251,6 +316,10 @@ void Player::attacked(BattleContext &bc, int enemyIdx, int calculatedDamage) {
             bc.addToBot( Actions::MakeTempCardInDiscard({CardId::WOUND}) );
         }
 
+        if (damage <= 0) {
+            std::cerr << "tried to lose less than 0 hp in attacked" << std::endl;
+            std::cerr << bc << std::endl;
+        }
         hpWasLost(bc, damage, false);
 
     } else {
@@ -270,10 +339,18 @@ void Player::loseHp(BattleContext &bc, int amount, bool selfDamage) {
         }
     }
 
+    if (amount <= 0) {
+        std::cerr << "tried to lose less than 0 hp in loseHp" << std::endl;
+        std::cerr << bc << std::endl;
+    }
     hpWasLost(bc, amount, selfDamage);
 }
 
 void Player::hpWasLost(BattleContext &bc, int amount, bool selfDamage) {
+    if (amount <= 0) {
+        std::cerr << "tried to lose less than 0 hp in hpWasLost" << std::endl;
+        std::cerr << bc << std::endl;
+    }
     assert(amount > 0);
 
     bool wasBloodied = curHp <= maxHp/2;
@@ -871,7 +948,7 @@ namespace sts {
 
         os << "\t" << "hp:(" << p.curHp << "/" << p.maxHp << ")"
             << " energy:(" << p.energy << "/" << static_cast<int>(p.energyPerTurn)
-        << ") block:(" << p.block << ")\n";
+            << ") block:(" << p.block << ")\n";
 
         printStatusEffects(os, p);
         printRelics(os, p);

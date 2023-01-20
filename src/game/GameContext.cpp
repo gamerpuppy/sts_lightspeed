@@ -71,6 +71,69 @@ GameContext::GameContext(CharacterClass cc, std::uint64_t seed, int ascension)
     screenState = ScreenState::EVENT_SCREEN;
 }
 
+// this initialization only properly sets up things for an already known combat
+// it will not recreate the entire state properly from the communication mod json state
+void GameContext::initFromJson(const nlohmann::json &json) {
+    seed = json["game_state"]["seed"];
+
+    outcome = GameOutcome::UNDECIDED;
+    ascension = json["game_state"]["ascension_level"];
+    act = json["game_state"]["act"];
+    floorNum = json["game_state"]["floor"];
+
+    // this information isn't being sent by communication mod unless the agent is on the map screen
+    // set to 0,0 since it isn't relevant to simulating combats
+    curMapNodeX = 0;
+    curMapNodeY = 0;
+
+    cc = getCharacterClassFromEnumName(json["game_state"]["class"]);
+
+    curHp = json["game_state"]["current_hp"];
+    maxHp = json["game_state"]["max_hp"];
+    gold = json["game_state"]["gold"];
+    speedrunPace = false;
+
+    // the seed usage counts aren't sent by communication mod
+    // set to 0 uses since it isn't relevant to simulating combats without perfect knowledge
+    treasureRng = Random(seed);
+    eventRng = Random(seed);
+    relicRng = Random(seed);
+    potionRng = Random(seed);
+    cardRng = Random(seed);
+    cardRandomRng = Random(seed);
+    merchantRng = Random(seed);
+    mathUtilRng = Random(seed);
+    merchantRng = Random(seed);
+    miscRng = Random(seed+floorNum);
+    monsterRng = Random(seed);
+
+    // don't bother initializing the deck
+
+    initRelicsFromJson(json);
+
+    potionCount = 0;
+    auto potions = json["game_state"]["potions"];
+    potionCapacity = potions.size();
+    for (int i = 0; i < potions.size(); ++i) {
+        auto p = potions[i];
+        if (p["id"] != "Potion Slot") {
+            ++potionCount;
+        }
+        this->potions[i] = getPotionFromId(p["id"]);
+    }
+
+    map = std::make_shared<Map>(Map::fromSeed(seed, ascension, act, true));
+}
+
+void GameContext::initRelicsFromJson(const nlohmann::json &json) {
+    for (int i = 0; i < json["game_state"]["relics"].size(); ++i) {
+        auto r = json["game_state"]["relics"][i];
+        RelicId relicId = getRelicFromId(r["id"]);
+        RelicInstance relic {relicId, r["counter"]};
+        relics.add(relic);
+    }
+}
+
 void GameContext::initFromSave(const SaveFile &s) {
     seed = s.seed;
 

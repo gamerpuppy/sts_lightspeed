@@ -83,7 +83,7 @@ bool isValidPotionAction(const BattleContext &bc, const search::Action &a) {
 
     } else {
 
-        if (p == sts::Potion::FAIRY_POTION) {
+        if (p == sts::Potion::FAIRY_POTION || p == sts::Potion::SMOKE_BOMB) { // TODO: allow using the smoke bomb in non-boss combats (and when not surrounded)
             return false;
         }
 

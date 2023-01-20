@@ -50,8 +50,8 @@ int MonsterGroup::getRandomMonsterIdx(Random &rng, bool aliveOnly) const {
 #ifdef sts_asserts
                 // seed 11195
                 if (i >= monsterCount) {
-                    std::cerr << monsterIdStrings[static_cast<int>(arr[0].id)] << " "
-                    << monsterIdStrings[static_cast<int>(arr[1].id)] << " "
+                    std::cerr << monsterIdEnumNames[static_cast<int>(arr[0].id)] << " "
+                    << monsterIdEnumNames[static_cast<int>(arr[1].id)] << " "
                     << "count:" << monsterCount << " "
                     << "alive:" << monstersAlive << std::endl;
                     assert(false);
@@ -73,8 +73,8 @@ int MonsterGroup::getRandomMonsterIdx(Random &rng, bool aliveOnly) const {
     }
 }
 
-void MonsterGroup::init(BattleContext &bc, MonsterEncounter encounter) {
-    createMonsters(bc, encounter);
+void MonsterGroup::init(BattleContext &bc, MonsterEncounter encounter, bool allowInvalidEncounter) {
+    createMonsters(bc, encounter, allowInvalidEncounter);
     for (int i = 0; i < monsterCount; ++i) {
         if (arr[i].idx != -1) {
             arr[i].rollMove(bc);
@@ -94,7 +94,7 @@ void MonsterGroup::createMonster(BattleContext &bc, MonsterId id) {
     ++monstersAlive;
 }
 
-void MonsterGroup::createMonsters(BattleContext &bc, MonsterEncounter encounter) {
+void MonsterGroup::createMonsters(BattleContext &bc, MonsterEncounter encounter, bool allowInvalidEncounter) {
     switch (encounter) {
 
         case MonsterEncounter::GREMLIN_GANG: {
@@ -467,6 +467,7 @@ void MonsterGroup::createMonsters(BattleContext &bc, MonsterEncounter encounter)
             break;
 
         case MonsterEncounter::INVALID:
+            if (allowInvalidEncounter) break;
         default:
             assert(false);
             break;

@@ -68,7 +68,6 @@ namespace sts {
 
         // Shield Gremlin target
         // GreenLouse / RedLouse D
-        // Red Slaver entangled turn
         // hexaghost divider damage
         // Gremlin wizard charge
         // book of stabbing n
@@ -106,7 +105,9 @@ namespace sts {
 
         template <MonsterStatus> [[nodiscard]] bool hasStatus() const;
         template <MonsterStatus> [[nodiscard]] int getStatus() const;
+        void setHasStatus(MonsterStatus s, bool value=true);
         template <MonsterStatus> void setHasStatus(bool value=true);
+        void setStatus(MonsterStatus s, int amount);
         template <MonsterStatus> void setStatus(int amount);
         template <MonsterStatus> void decrementStatus(int amount=1);
         template <MonsterStatus> void addDebuff(int amount, bool isSourceMonster=true);
@@ -114,7 +115,9 @@ namespace sts {
         template <MonsterStatus> void buff(int amount=1);
 
 
+        void setJustApplied(MonsterStatus s, bool value);
         template <MonsterStatus> void setJustApplied(bool value);
+        bool wasJustApplied(MonsterStatus s) const;
         template <MonsterStatus> [[nodiscard]] bool wasJustApplied() const;
 
         [[nodiscard]] bool isAlive() const;
@@ -177,110 +180,16 @@ namespace sts {
 
     template <MonsterStatus s>
     void Monster::setHasStatus(bool value) {
-        if (s == MS::STRENGTH) {
-            return; // should not be called
-        }
-        if (value) {
-            statusBits |= (1ULL << (int)s);
-        } else {
-            statusBits &= ~(1ULL << (int)s);
-        }
+        setHasStatus(s, value);
     }
-
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
     template <MonsterStatus s>
     void Monster::setStatus(int amount) {
-        if (isBooleanPower(s)) {
-            setHasStatus<s>(amount);
-            return;
-        }
-
-        switch (s) {
-            case MonsterStatus::ARTIFACT:
-                artifact = amount;
-                return;
-
-            case MonsterStatus::BLOCK_RETURN:
-                blockReturn = amount;
-                return;
-
-            case MonsterStatus::CHOKED:
-                choked = amount;
-                return;
-
-            case MonsterStatus::CORPSE_EXPLOSION:
-                corpseExplosion = amount;
-                return;
-
-            case MonsterStatus::LOCK_ON:
-                lockOn = amount;
-                return;
-
-            case MonsterStatus::MARK:
-                mark = amount;
-                return;
-
-            case MonsterStatus::METALLICIZE:
-                metallicize = amount;
-                return;
-
-            case MonsterStatus::PLATED_ARMOR:
-                platedArmor = amount;
-                return;
-
-            case MonsterStatus::POISON:
-                poison = amount;
-                return;
-
-            case MonsterStatus::REGEN:
-                regen = amount;
-                return;
-
-            case MonsterStatus::SHACKLED:
-                shackled = amount;
-                return;
-
-            case MonsterStatus::STRENGTH:
-                strength = amount;
-                return;
-
-            case MonsterStatus::VULNERABLE:
-                vulnerable = amount;
-                return;
-
-            case MonsterStatus::WEAK:
-                weak = amount;
-                return;
-
-            case MonsterStatus::ANGRY:
-            case MonsterStatus::BEAT_OF_DEATH:
-            case MonsterStatus::CURIOSITY:
-            case MonsterStatus::CURL_UP:
-            case MonsterStatus::ENRAGE:
-            case MonsterStatus::FADING:
-            case MonsterStatus::FLIGHT:
-            case MonsterStatus::GENERIC_STRENGTH_UP:
-            case MonsterStatus::INTANGIBLE:
-            case MonsterStatus::MALLEABLE:
-            case MonsterStatus::MODE_SHIFT:
-            case MonsterStatus::RITUAL:
-            case MonsterStatus::SLOW:
-            case MonsterStatus::SPORE_CLOUD:
-            case MonsterStatus::THIEVERY:
-            case MonsterStatus::THORNS:
-            case MonsterStatus::TIME_WARP:
-                uniquePower0 = amount;
-                return;
-
-            case MonsterStatus::INVINCIBLE:
-            case MonsterStatus::REACTIVE:
-            case MonsterStatus::SHARP_HIDE:
-                uniquePower1 = amount;
-                return;
-        }
+        setStatus(s, amount);
     }
+        
 #pragma clang diagnostic pop
 
     template <MonsterStatus s>
@@ -374,33 +283,12 @@ namespace sts {
 
     template <MonsterStatus s>
     void Monster::setJustApplied(bool value) {
-        std::uint64_t mask;
-        if (s == MonsterStatus::VULNERABLE) {
-            mask = 0x1ULL << 63;
-        } else if (s == MonsterStatus::WEAK) {
-            mask = 0x1ULL << 62;
-        } else if (s == MonsterStatus::RITUAL) {
-            mask = 0x1ULL << 61;
-        }
-
-        if (value) {
-            statusBits |= mask;
-        } else {
-            statusBits &= ~mask;
-        }
+        setJustApplied(s, value);
     }
 
     template <MonsterStatus s>
     bool Monster::wasJustApplied() const {
-        std::uint64_t mask;
-        if (s == MonsterStatus::VULNERABLE) {
-            mask = 0x1ULL << 63;
-        } else if (s == MonsterStatus::WEAK) {
-            mask = 0x1ULL << 62;
-        } else if (s == MonsterStatus::RITUAL) {
-            mask = 0x1ULL << 61;
-        }
-        return statusBits & mask;
+        return wasJustApplied(s);
     }
 
     template <MonsterStatus s>

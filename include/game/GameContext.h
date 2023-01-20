@@ -29,6 +29,8 @@
 #include "game/Deck.h"
 #include "game/Shop.h"
 
+#include <nlohmann/json.hpp>
+
 namespace sts {
 
     enum class GameOutcome {
@@ -239,6 +241,8 @@ namespace sts {
         GameContext() = default;
         GameContext(CharacterClass cc, std::uint64_t seed, int ascensionLevel);
 
+        void initFromJson(const nlohmann::json &json);
+        void initRelicsFromJson(const nlohmann::json &json);
         void initFromSave(const SaveFile &s);
         void initRelicsFromSave(const SaveFile &s);
 
