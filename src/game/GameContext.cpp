@@ -2861,6 +2861,7 @@ void GameContext::chooseEventOption(int idx) {
                 default:
                     break;
             }
+            break;
         }
 
         case Event::GOLDEN_SHRINE: { // Golden Shrine
