@@ -253,8 +253,9 @@ std::ostream& printSingleCardSelectDescHelper(std::ostream &os, const BattleCont
     // action is known to be valid here
     os << "{ " << cardSelectTaskStrings[static_cast<int>(bc.cardSelectInfo.cardSelectTask)];
     os << " (" << a.getSelectIdx() << ") ";
-    const auto &c = bc.cards.hand[a.getSelectIdx()];
-    c.printSimpleDesc(os);
+    // TODO we don't know if it's selecting from hand or discard
+    // const auto &c = bc.cards.hand[a.getSelectIdx()];
+    // c.printSimpleDesc(os);
     return os << " }";
 }
 
