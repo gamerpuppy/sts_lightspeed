@@ -330,7 +330,7 @@ void search::SimpleAgent::playoutBattle(BattleContext &bc) {
 }
 
 void search::SimpleAgent::stepBattleCardPlay(BattleContext &bc) {
-    if (!bc.isCardPlayAllowed()) {
+    if (!bc.isCardPlayAllowed() || bc.player.cardsPlayedThisTurn > 1000) {
         takeAction(bc, Action(ActionType::END_TURN));
         return;
     }
