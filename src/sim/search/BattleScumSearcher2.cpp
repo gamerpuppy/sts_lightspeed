@@ -19,9 +19,8 @@ namespace sts::search {
 
 
 
-search::BattleScumSearcher2::BattleScumSearcher2(const BattleContext &bc,
-                                                      search::EvalFnc _evalFnc)  : rootState(new BattleContext(bc)), evalFnc(std::move(_evalFnc)),
-                                                                                   randGen(bc.seed+bc.floorNum) {
+search::BattleScumSearcher2::BattleScumSearcher2(const BattleContext &bc, search::EvalFnc _evalFnc)
+    : rootState(new BattleContext(bc)), evalFnc(std::move(_evalFnc)), randGen(bc.seed+bc.floorNum) {
 }
 
 void search::BattleScumSearcher2::search(int64_t simulations) {
@@ -533,50 +532,3 @@ void search::BattleScumSearcher2::printSearchStack(std::ostream &os, bool skipLa
 //
 //    os.flush();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
