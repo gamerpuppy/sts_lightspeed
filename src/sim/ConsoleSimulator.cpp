@@ -470,12 +470,15 @@ void ConsoleSimulator::printRewardsScreenActions(std::ostream &os) const {
         for (int x = 0; x < r.cardRewards[i].size(); ++x) {
             os << "card " << i << " " << x << ": take " << r.cardRewards[i][x] << "\n";
         }
+        if (gc->hasRelic(RelicId::SINGING_BOWL)) {
+            os << "maxhp " << i << ": +2 max hp; lose card choice\n";
+        }
     }
 
     for (int i = 0; i < r.relicCount; ++i) {
         os << "relic "<< i <<": " << getRelicName(r.relics[i]);
         if (r.sapphireKey && (i == r.relicCount-1)) {
-            os << " lose sapphire key\n";
+            os << "; lose sapphire key\n";
         } else {
             os << '\n';
         }
@@ -493,7 +496,7 @@ void ConsoleSimulator::printRewardsScreenActions(std::ostream &os) const {
         os << "sapphireKey: obtain sapphire key";
         if (r.relicCount > 0) {
             auto loseRelic = r.relics[r.relicCount - 1];
-            os << "- lose " << getRelicName(loseRelic);
+            os << "; lose " << getRelicName(loseRelic);
         }
         os << '\n';
 
@@ -528,7 +531,11 @@ void ConsoleSimulator::takeRewardScreenAction(const std::string &action) {
 
         gc->deck.obtain(*gc, r.cardRewards[takeIdx][takeCardIdx]);
         r.removeCardReward(takeIdx);
-
+        
+    } else if (takeType == "maxhp") {
+        // singing bowl
+        gc->playerIncreaseMaxHp(2);
+        r.removeCardReward(takeIdx);
     } else if (takeType == "relic") {
         gc->obtainRelic(r.relics[takeIdx]);
         if (r.sapphireKey && takeIdx == r.relicCount-1) {

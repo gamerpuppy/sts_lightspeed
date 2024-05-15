@@ -188,6 +188,7 @@ bool isValidRewardsAction(const GameContext &gc, const search::GameAction a) {
                 return false;
             }
             if (a.getIdx2() == 5) {
+                // singing bowl if exists
                 return true;
             }
             return a.getIdx2() < r.cardRewards[a.getIdx1()].size();
