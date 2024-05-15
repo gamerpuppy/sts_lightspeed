@@ -169,6 +169,9 @@ void CardInstance::upgrade() {
             break;
     }
     upgraded = true;
+    // TODO(dmz) is this logic right?
+    cost = getEnergyCost(id, true);
+    costForTurn = cost;
 }
 
 void CardInstance::tookDamage() {
