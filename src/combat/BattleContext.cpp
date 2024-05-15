@@ -1712,7 +1712,7 @@ void BattleContext::onUseAttackCard() {
     }
 
     if (p.hasRelic<R::NUNCHAKU>()) {
-        if (p.nunchakuCounter++ % 10 == 0) {
+        if (++p.nunchakuCounter >= 10) {
             addToBot(Actions::GainEnergy(1));
             p.nunchakuCounter = 0;
         }
