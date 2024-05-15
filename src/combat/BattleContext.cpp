@@ -2266,7 +2266,7 @@ void BattleContext::drinkPotion(int idx, int target) {
             break;
 
         case Potion::BLOCK_POTION:
-            addToBot(Actions::GainBlock(hasBark ? 20 : 10));
+            addToBot(Actions::GainBlock(hasBark ? 24 : 12));
             break;
 
 
