@@ -671,39 +671,26 @@ void BattleContext::clearPostCombatActions() {
     int curIdx = actionQueue.front;
     int placeIdx = actionQueue.front;
 
-    for (int i = 0; i < actionQueue.size; ++i) {
+    int oldsize = actionQueue.size;
+    for (int i = 0; i < oldsize; ++i) {
         if (curIdx >= actionQueue.getCapacity()) {
             curIdx = 0;
         }
-        const bool shouldClear = actionQueue.bits.test(curIdx);
+        const bool shouldClear = actionQueue.bits[curIdx];
 
         if (shouldClear) {
             --actionQueue.size;
-
         } else {
             if (placeIdx >= actionQueue.getCapacity()) {
                 placeIdx = 0;
             }
 
-            actionQueue.bits.set(placeIdx, actionQueue.bits.test(curIdx));
             actionQueue.arr[placeIdx] = actionQueue.arr[curIdx];
+            actionQueue.bits[placeIdx] = actionQueue.bits[curIdx];
             ++placeIdx;
         }
         ++curIdx;
     }
-
-    actionQueue.back = (actionQueue.front + actionQueue.size) % actionQueue.getCapacity();
-
-//    auto actionQueueCopy = actionQueue;
-//    actionQueue.clear();
-//    while (actionQueueCopy.size > 0) {
-//        if (!actionQueueCopy.bits[actionQueueCopy.front]) {
-//
-//            actionQueue.pushBack(actionQueueCopy.popFront());
-//        } else {
-//            actionQueueCopy.popFront();
-//        }
-//    }
 }
 
 void BattleContext::cleanCardQueue() {
