@@ -538,7 +538,9 @@ void BattleContext::updateRelicsOnExit(GameContext &g) const {
                 break;
 
             case RelicId::NEOWS_LAMENT:
-                --r.data;
+                if (r.data > 0) {
+                    --r.data;
+                }
                 break;
 
             case RelicId::NUNCHAKU:
