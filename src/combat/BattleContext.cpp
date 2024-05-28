@@ -2332,7 +2332,7 @@ void BattleContext::drinkPotion(int idx, int target) {
             break;
 
         case Potion::FIRE_POTION:
-            addToBot( Actions::DamageEnemy(idx, hasBark ? 40 : 20) );
+            addToBot( Actions::DamageEnemy(target, hasBark ? 40 : 20) );
             break;
 
         case Potion::FLEX_POTION:
