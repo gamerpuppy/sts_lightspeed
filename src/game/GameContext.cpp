@@ -1355,6 +1355,12 @@ bool GameContext::obtainRelic(RelicId r) {
             break;
         }
 
+        case RelicId::EMPTY_CAGE: {
+            openCardSelectScreen(CardSelectScreenType::REMOVE, 2);
+            opensScreen = true;
+            break;
+        }                                    
+
         case RelicId::LEES_WAFFLE: {
             playerIncreaseMaxHp(7);
             playerHeal(maxHp);
