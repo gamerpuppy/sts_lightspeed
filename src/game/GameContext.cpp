@@ -828,6 +828,9 @@ void GameContext::transitionToMapNode(int mapNodeX) {
         }
 
         case Room::SHOP: {
+            if (hasRelic(RelicId::MEAL_TICKET)) {
+                playerHeal(15);
+            }
             screenState = ScreenState::SHOP_ROOM;
             info.shop.setup(*this);
             break;
