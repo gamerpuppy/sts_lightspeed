@@ -578,6 +578,12 @@ void BattleContext::updateRelicsOnExit(GameContext &g) const {
                 }
                 break;
 
+            case RelicId::MEAT_ON_THE_BONE:
+                if (outcome == Outcome::PLAYER_VICTORY && g.curHp <= g.maxHp / 2) {
+                    g.playerHeal(12);
+                }
+                break;
+
             default:
                 break;
         }
