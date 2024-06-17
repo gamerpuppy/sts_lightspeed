@@ -151,12 +151,6 @@ void CardInstance::upgrade() {
             }
             break;
 
-        case CardId::HAVOC:
-            if (!isUpgraded()) {
-                upgradeBaseCost(0);
-            }
-            break;
-
         case CardId::BLIND:
         case CardId::TRIP:
             if (!isUpgraded()) {
@@ -168,10 +162,14 @@ void CardInstance::upgrade() {
         default:
             break;
     }
-    upgraded = true;
-    // TODO(dmz) is this logic right?
-    cost = getEnergyCost(id, true);
-    costForTurn = cost;
+    if (!isUpgraded()) {
+        upgraded = true;
+        // TODO(dmz) is this logic right?
+        int newcost = getEnergyCost(id, true);
+        if (getEnergyCost(id, false) != newcost) {
+            cost = costForTurn = newcost;
+        }
+    }
 }
 
 void CardInstance::tookDamage() {
