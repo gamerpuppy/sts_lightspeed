@@ -1433,7 +1433,6 @@ bool GameContext::obtainRelic(RelicId r) {
         }
 
         case RelicId::TINY_HOUSE: {
-            relics.relics.push_back({r, 0});
             auto upgradeCards = deck.getUpgradeableCardIdxs();
             java::Collections::shuffle(upgradeCards.begin(), upgradeCards.end(), java::Random(miscRng.nextLong()));
 
