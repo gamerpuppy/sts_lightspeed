@@ -279,7 +279,7 @@ int main(int argc, const char* argv[]) {
         const int ascensionIn = std::stoi(argv[4]);
         const std::uint64_t startSeedLong(std::stoull(argv[5]));
         const int playoutCount(std::stoi(argv[6]));
-        const bool printLevel = std::stoi(argv[7]);
+        const int printLevel = std::stoi(argv[7]);
         g_print_level = printLevel;
         g_searchAscension = ascensionIn;
         g_simulationCount = depthArg;

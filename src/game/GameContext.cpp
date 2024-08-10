@@ -828,6 +828,9 @@ void GameContext::transitionToMapNode(int mapNodeX) {
         }
 
         case Room::SHOP: {
+            if (hasRelic(RelicId::MEAL_TICKET)) {
+                playerHeal(15);
+            }
             screenState = ScreenState::SHOP_ROOM;
             info.shop.setup(*this);
             break;
@@ -1355,6 +1358,12 @@ bool GameContext::obtainRelic(RelicId r) {
             break;
         }
 
+        case RelicId::EMPTY_CAGE: {
+            openCardSelectScreen(CardSelectScreenType::REMOVE, 2);
+            opensScreen = true;
+            break;
+        }                                    
+
         case RelicId::LEES_WAFFLE: {
             playerIncreaseMaxHp(7);
             playerHeal(maxHp);
@@ -1424,7 +1433,6 @@ bool GameContext::obtainRelic(RelicId r) {
         }
 
         case RelicId::TINY_HOUSE: {
-            relics.relics.push_back({r, 0});
             auto upgradeCards = deck.getUpgradeableCardIdxs();
             java::Collections::shuffle(upgradeCards.begin(), upgradeCards.end(), java::Random(miscRng.nextLong()));
 
@@ -2861,6 +2869,7 @@ void GameContext::chooseEventOption(int idx) {
                 default:
                     break;
             }
+            break;
         }
 
         case Event::GOLDEN_SHRINE: { // Golden Shrine

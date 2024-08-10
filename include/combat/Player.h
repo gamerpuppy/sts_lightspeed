@@ -350,10 +350,6 @@ namespace sts {
             ++combustHpLoss;
         }
 
-        if (s == PS::PANACHE && !hasStatus<PS::PANACHE>()) {
-            panacheCounter = 5;
-        }
-
         if (hasStatus<s>()) {
             statusMap[s] += amount;
         } else {

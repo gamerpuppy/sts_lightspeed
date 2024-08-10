@@ -538,7 +538,9 @@ void BattleContext::updateRelicsOnExit(GameContext &g) const {
                 break;
 
             case RelicId::NEOWS_LAMENT:
-                --r.data;
+                if (r.data > 0) {
+                    --r.data;
+                }
                 break;
 
             case RelicId::NUNCHAKU:
@@ -572,6 +574,12 @@ void BattleContext::updateRelicsOnExit(GameContext &g) const {
 
             case RelicId::BLACK_BLOOD:
                 if (outcome == Outcome::PLAYER_VICTORY) {
+                    g.playerHeal(12);
+                }
+                break;
+
+            case RelicId::MEAT_ON_THE_BONE:
+                if (outcome == Outcome::PLAYER_VICTORY && g.curHp <= g.maxHp / 2) {
                     g.playerHeal(12);
                 }
                 break;
@@ -671,39 +679,26 @@ void BattleContext::clearPostCombatActions() {
     int curIdx = actionQueue.front;
     int placeIdx = actionQueue.front;
 
-    for (int i = 0; i < actionQueue.size; ++i) {
+    int oldsize = actionQueue.size;
+    for (int i = 0; i < oldsize; ++i) {
         if (curIdx >= actionQueue.getCapacity()) {
             curIdx = 0;
         }
-        const bool shouldClear = actionQueue.bits.test(curIdx);
+        const bool shouldClear = actionQueue.bits[curIdx];
 
         if (shouldClear) {
             --actionQueue.size;
-
         } else {
             if (placeIdx >= actionQueue.getCapacity()) {
                 placeIdx = 0;
             }
 
-            actionQueue.bits.set(placeIdx, actionQueue.bits.test(curIdx));
             actionQueue.arr[placeIdx] = actionQueue.arr[curIdx];
+            actionQueue.bits[placeIdx] = actionQueue.bits[curIdx];
             ++placeIdx;
         }
         ++curIdx;
     }
-
-    actionQueue.back = (actionQueue.front + actionQueue.size) % actionQueue.getCapacity();
-
-//    auto actionQueueCopy = actionQueue;
-//    actionQueue.clear();
-//    while (actionQueueCopy.size > 0) {
-//        if (!actionQueueCopy.bits[actionQueueCopy.front]) {
-//
-//            actionQueue.pushBack(actionQueueCopy.popFront());
-//        } else {
-//            actionQueueCopy.popFront();
-//        }
-//    }
 }
 
 void BattleContext::cleanCardQueue() {
@@ -730,7 +725,7 @@ void BattleContext::executeActions() {
 
     while (true)
     {
-        if (++loopCount > 100000 || monsters.monstersAlive < 0 || turn > 500) {
+        if (++loopCount > 1000000 || monsters.monstersAlive < 0 || turn > 500) {
             // something went wrong
             if (turn > 500) {
                 outcome = Outcome::PLAYER_LOSS;
@@ -1712,7 +1707,7 @@ void BattleContext::onUseAttackCard() {
     }
 
     if (p.hasRelic<R::NUNCHAKU>()) {
-        if (p.nunchakuCounter++ % 10 == 0) {
+        if (++p.nunchakuCounter >= 10) {
             addToBot(Actions::GainEnergy(1));
             p.nunchakuCounter = 0;
         }
@@ -2266,7 +2261,7 @@ void BattleContext::drinkPotion(int idx, int target) {
             break;
 
         case Potion::BLOCK_POTION:
-            addToBot(Actions::GainBlock(hasBark ? 20 : 10));
+            addToBot(Actions::GainBlock(hasBark ? 24 : 12));
             break;
 
 
@@ -2343,7 +2338,7 @@ void BattleContext::drinkPotion(int idx, int target) {
             break;
 
         case Potion::FIRE_POTION:
-            addToBot( Actions::DamageEnemy(idx, hasBark ? 40 : 20) );
+            addToBot( Actions::DamageEnemy(target, hasBark ? 40 : 20) );
             break;
 
         case Potion::FLEX_POTION:

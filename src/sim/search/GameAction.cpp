@@ -188,6 +188,7 @@ bool isValidRewardsAction(const GameContext &gc, const search::GameAction a) {
                 return false;
             }
             if (a.getIdx2() == 5) {
+                // singing bowl if exists
                 return true;
             }
             return a.getIdx2() < r.cardRewards[a.getIdx1()].size();
@@ -344,8 +345,18 @@ void executeRewardsAction(GameContext &gc, const search::GameAction a) {
             break;
 
         case search::GameAction::RewardsActionType::KEY:
-            r.sapphireKey = false;
-            r.emeraldKey = false;
+            if (r.sapphireKey) {
+                assert(!r.emeraldKey);
+                gc.obtainKey(Key::SAPPHIRE_KEY);
+                r.sapphireKey = false;
+                if (r.relicCount > 0) {
+                    r.removeRelicReward(r.relicCount-1);
+                }
+            } else {
+                assert(r.emeraldKey);
+                gc.obtainKey(Key::EMERALD_KEY);
+                r.emeraldKey = false;
+            }
             break;
 
         case search::GameAction::RewardsActionType::POTION:

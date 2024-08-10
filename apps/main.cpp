@@ -13,7 +13,7 @@
 using namespace sts;
 
 int main() {
-    while (true) {
+    while (!std::cin.eof()) {
         std::cout << "usage: seed character(I/S/D/W) ascensionLevel" << std::endl;
 
         SimulatorContext simCtx;
