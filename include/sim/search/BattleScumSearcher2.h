@@ -7,6 +7,7 @@
 
 #include "sim/search/Action.h"
 
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <random>
@@ -15,7 +16,7 @@
 
 namespace sts::search {
 
-    typedef std::function<double (const BattleContext&)> EvalFnc;
+    typedef std::function<double (const BattleContext&, const BattleContext&)> EvalFnc;
 
     // to find a solution to a battle with tree pruning
     struct BattleScumSearcher2 {
@@ -33,8 +34,10 @@ namespace sts::search {
 
         std::unique_ptr<const BattleContext> rootState;
         Node root;
+        std::chrono::milliseconds startTime;
 
         EvalFnc evalFnc;
+        double unexploredNodeValueParameter = 100.0; // only needs to be large enough to be larger than any realistic value of the quality term + the exploration term
         double explorationParameter = 3*sqrt(2);
 
         double bestActionValue = std::numeric_limits<double>::min();
@@ -50,7 +53,7 @@ namespace sts::search {
         explicit BattleScumSearcher2(const BattleContext &bc, EvalFnc evalFnc=&evaluateEndState);
 
         // public methods
-        void search(int64_t simulations);
+        void search(int64_t simulations, long maxTimeMillis);
         void step();
 
         // private helpers
@@ -63,11 +66,11 @@ namespace sts::search {
 
         void playoutRandom(BattleContext &state, std::vector<Action> &actionStack);
 
-        void enumerateActionsForNode(Node &node, const BattleContext &bc);
+        void enumerateActionsForNode(Node &node, const BattleContext &bc, const bool forRandom);
         void enumerateCardActions(Node &node, const BattleContext &bc);
         void enumeratePotionActions(Node &node, const BattleContext &bc);
         void enumerateCardSelectActions(Node &node, const BattleContext &bc);
-        static double evaluateEndState(const BattleContext &bc);
+        static double evaluateEndState(const BattleContext &rootBc, const BattleContext &bc);
 
         void printSearchTree(std::ostream &os, int levels);
         void printSearchStack(std::ostream &os, bool skipLast=false);

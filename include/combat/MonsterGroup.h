@@ -31,8 +31,8 @@ namespace sts {
 
         // initialization
 
-        void init(BattleContext &bc, MonsterEncounter encounter);
-        void createMonsters(BattleContext &bc, MonsterEncounter encounter);
+        void init(BattleContext &bc, MonsterEncounter encounter, bool allowInvalidEncounter);
+        void createMonsters(BattleContext &bc, MonsterEncounter encounter, bool allowInvalidEncounter);
         void createMonster(BattleContext &bc, MonsterId id);
 
         void createStrongHumanoid(BattleContext &bc);

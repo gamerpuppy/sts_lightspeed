@@ -61,7 +61,7 @@ namespace sts {
         std::uint64_t relicBits0 = 0;
         std::uint64_t relicBits1 = 0;
 
-        // special info
+        // special relic info
         int8_t  happyFlowerCounter = 0;
         int8_t  incenseBurnerCounter = 0;
         int8_t  inkBottleCounter = 0;
@@ -71,11 +71,16 @@ namespace sts {
         int8_t  sundialCounter = 0;
         bool haveUsedNecronomiconThisTurn = false;
 
+        // special power info
         int8_t  combustHpLoss = 0;
         int16_t  devaFormEnergyPerTurn = 0;
         int8_t  echoFormCardsDoubled = 0;
         int8_t  panacheCounter = 0;
+        int8_t bomb1 = 0;
+        int8_t bomb2 = 0;
+        int8_t bomb3 = 0;
 
+        // special general info
         int16_t  cardsPlayedThisTurn = 0;
         int16_t attacksPlayedThisTurn = 0;
         int16_t skillsPlayedThisTurn = 0;
@@ -86,12 +91,10 @@ namespace sts {
         int16_t lastAttackUnblockedDamage = 0;
         int16_t timesDamagedThisCombat = 0;
 
-        int8_t bomb1 = 0;
-        int8_t bomb2 = 0;
-        int8_t bomb3 = 0;
-
         template <RelicId r> void setHasRelic(bool value);
+        void setHasStatus(PlayerStatus s, bool value);
         template <PlayerStatus> void setHasStatus(bool value);
+        void setStatusValueNoChecks(PlayerStatus s, int value);
         template <PlayerStatus> void setStatusValueNoChecks(int value);
 
         template <PlayerStatus> void removeStatus();
@@ -104,6 +107,7 @@ namespace sts {
 
         // for statuses classified as debuff only
         template <PlayerStatus> [[nodiscard]] bool wasJustApplied() const;
+        void setJustApplied(PlayerStatus s, bool value);
         template<PlayerStatus> void setJustApplied(bool value);
 
 
@@ -157,11 +161,7 @@ namespace sts {
 // intangible
     template <PlayerStatus s>
     void Player::setJustApplied(bool value) {
-        if (value) {
-            justAppliedBits |= (1ULL << static_cast<int>(s));
-        } else {
-            justAppliedBits &= ~(1ULL << static_cast<int>(s));
-        }
+        setJustApplied(s, value);
     }
 
     template <PlayerStatus s>
@@ -231,33 +231,7 @@ namespace sts {
 
     template <PlayerStatus s>
     void Player::setHasStatus(bool value) {
-//        static_assert(s != PlayerStatus::THE_BOMB);
-
-        switch (s) {
-            case PS::ARTIFACT:
-            case PS::DEXTERITY:
-            case PS::STRENGTH:
-            case PS::FOCUS:
-                return;
-            default:
-                break;
-        }
-
-        //static_assert(((int)s) < 64); // did we add too many status effects
-        int idx = static_cast<int>(s);
-        if (value) {
-            if (idx < 64) {
-                statusBits0 |= 1ULL << idx;
-            } else {
-                statusBits1 |= 1ULL << (idx-64);
-            }
-        } else {
-            if (idx < 64) {
-                statusBits0 &= ~(1ULL << idx);
-            } else {
-                statusBits1 &= ~(1ULL << (idx-64));
-            }
-        }
+        setHasStatus(s, value);
     }
 
     template <PlayerStatus s>
@@ -419,26 +393,7 @@ namespace sts {
 
     template <PlayerStatus s>
     void Player::setStatusValueNoChecks(int value) {
-        switch (s) {
-            case PS::ARTIFACT:
-                artifact = value;
-                break;
-
-            case PS::DEXTERITY:
-                dexterity = value;
-                break;
-
-            case PS::FOCUS:
-                focus = value;
-                break;
-
-            case PS::STRENGTH:
-                strength = value;
-                break;
-
-            default:
-                statusMap[s] = value;
-        }
+        setStatusValueNoChecks(s, value);
     }
 
     template <RelicId r>

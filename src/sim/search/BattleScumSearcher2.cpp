@@ -23,11 +23,14 @@ search::BattleScumSearcher2::BattleScumSearcher2(const BattleContext &bc, search
     : rootState(new BattleContext(bc)), evalFnc(std::move(_evalFnc)), randGen(bc.seed+bc.floorNum) {
 }
 
-void search::BattleScumSearcher2::search(int64_t simulations) {
+void search::BattleScumSearcher2::search(int64_t simulations, long maxTimeMillis) {
     g_debug_scum_search = this;
+    startTime = std::chrono::duration_cast< std::chrono::milliseconds >(
+        std::chrono::system_clock::now().time_since_epoch()
+    );
 
     if (isTerminalState(*rootState)) {
-        auto evaluation = evaluateEndState(*rootState);
+        auto evaluation = evaluateEndState(*rootState, *rootState);
         outcomePlayerHp = rootState->player.curHp;
         bestActionSequence = {};
 
@@ -36,6 +39,16 @@ void search::BattleScumSearcher2::search(int64_t simulations) {
     }
 
     for (std::int64_t simCount = 0; simCount < simulations; ++simCount) {
+        if (simCount % 100 == 0) {
+            std::chrono::milliseconds curTime = std::chrono::duration_cast< std::chrono::milliseconds >(
+                std::chrono::system_clock::now().time_since_epoch()
+            );
+
+            // early termination if the time limit is reached
+            if ((curTime - startTime).count() >= maxTimeMillis) {
+                return;
+            }
+        }
         step();
     }
 }
@@ -58,7 +71,7 @@ void search::BattleScumSearcher2::step() {
         if (isLeaf) {
 
             ++simulationIdx;
-            enumerateActionsForNode(curNode, curState);
+            enumerateActionsForNode(curNode, curState, false);
             const auto selectIdx = selectFirstActionForLeafNode(curNode);
             auto &edgeTaken = curNode.edges[selectIdx];
 
@@ -86,7 +99,7 @@ void search::BattleScumSearcher2::step() {
 }
 
 void search::BattleScumSearcher2::updateFromPlayout(const std::vector<Node *> &stack, const std::vector<Action> &actionStack, const BattleContext &endState) {
-    const auto evaluation = evaluateEndState(endState);
+    const auto evaluation = evaluateEndState(*rootState, endState);
 
     if (evaluation > bestActionValue) {
         bestActionSequence = actionStack;
@@ -113,12 +126,14 @@ double search::BattleScumSearcher2::evaluateEdge(const search::BattleScumSearche
 
     const auto &edge = parent.edges[edgeIdx];
 
-    double qualityValue = 0;
-    if (!bestActionSequence.empty()) {
-        auto avgEvaluation = edge.node.evaluationSum / (edge.node.simulationCount+1);
-        double evalRange = bestActionValue - minActionValue;
-        qualityValue = avgEvaluation / evalRange;
+    // unexplored nodes must be assigned a sufficiently large value
+    // that they are explored at a priority over any other node
+    if (edge.node.simulationCount == 0) {
+        return unexploredNodeValueParameter;
     }
+
+    double qualityValue = edge.node.evaluationSum / (edge.node.simulationCount+1);
+
 
     double explorationValue = explorationParameter *
             std::sqrt(std::log(parent.simulationCount+1) / (edge.node.simulationCount+1));
@@ -153,32 +168,79 @@ void search::BattleScumSearcher2::playoutRandom(BattleContext &state, std::vecto
     Node tempNode; // temp
     while (!isTerminalState(state)) {
         ++simulationIdx;
-        enumerateActionsForNode(tempNode, state);
-        if (tempNode.edges.empty()) {
-            std::cerr << state.seed << " " << simulationIdx << std::endl;
-            std::cerr << state.monsters.arr[0].getName() << " " << state.floorNum << " " << monsterEncounterStrings[static_cast<int>(state.encounter)] << std::endl;
-            assert(false);
+
+        // attempt fast selection of the random action
+        Action action;
+        switch (state.inputState) {
+            case InputState::PLAYER_NORMAL:
+                if (state.isCardPlayAllowed() && state.cards.cardsInHand > 0) {
+                    auto dist = std::uniform_int_distribution<int>(0, static_cast<int>(state.cards.cardsInHand)-1);
+                    const int cardIdx = dist(randGen);
+                    const auto &c = state.cards.hand[cardIdx];
+                    if (c.canUseOnAnyTarget(state)) {
+                        if (c.requiresTarget() && state.monsters.monsterCount > 0) {
+                            auto dist2 = std::uniform_int_distribution<int>(0, static_cast<int>(state.monsters.monsterCount)-1);
+                            const int monsterIdx = dist(randGen);
+                            const auto &m = state.monsters.arr[monsterIdx];
+                            if (m.isTargetable()) {
+                                action = Action(ActionType::CARD, cardIdx, monsterIdx);
+                            }
+                        } else {
+                            action = Action(ActionType::CARD, cardIdx);
+                        }
+                    }
+                }
+                break;
+                // skip potions because I don't want to write the code for it (this is technically expert knowledge suggesting potions shouldn't be used during rollouts - whatever)
+                // skip end turn because heuristically it's a terrible choice (this is expert knowledge being added to the search)
+            case InputState::CARD_SELECT:
+                break;
+                // skip card select because that code is complicated and it'd be hard to do correctly
+                // in a fast manner - so we just let the normal selection do it
+        };
+
+        // if fast selection was successful use it
+        if (action.isValidAction(state)) {
+            actionStack.push_back(action);
+            action.execute(state);
+
+            tempNode.edges.clear();
+        // otherwise compute all actions and pick one
+        } else {
+            enumerateActionsForNode(tempNode, state, true);
+            if (tempNode.edges.empty()) {
+                std::cerr << state.seed << " " << simulationIdx << std::endl;
+                std::cerr << state.monsters.arr[0].getName() << " " << state.floorNum << " " << monsterEncouterNames[static_cast<int>(state.encounter)] << std::endl;
+                assert(false);
+            }
+
+            auto dist = std::uniform_int_distribution<int>(0, static_cast<int>(tempNode.edges.size())-1);
+            const int selectedIdx = dist(randGen);
+
+            const auto action = tempNode.edges[selectedIdx].action;
+    //        action.printDesc(std::cout, state) << std::endl;
+            actionStack.push_back(action);
+            action.execute(state);
+
+            tempNode.edges.clear();
         }
-
-        auto dist = std::uniform_int_distribution<int>(0, static_cast<int>(tempNode.edges.size())-1);
-        const int selectedIdx = dist(randGen);
-
-        const auto action = tempNode.edges[selectedIdx].action;
-//        action.printDesc(std::cout, state) << std::endl;
-        actionStack.push_back(action);
-        action.execute(state);
-
-        tempNode.edges.clear();
     }
 }
 
 void search::BattleScumSearcher2::enumerateActionsForNode(search::BattleScumSearcher2::Node &node,
-                                                               const BattleContext &bc) {
+                                                               const BattleContext &bc, const bool forRandom) {
     switch (bc.inputState) {
         case InputState::PLAYER_NORMAL:
             enumerateCardActions(node, bc);
             enumeratePotionActions(node, bc);
-            node.edges.push_back({Action(ActionType::END_TURN)});
+
+            // skip end turn for random rollouts because it's such a terrible choice that it
+            // makes it incredibly hard for the tree search to find good choices
+            // this does end up incorporating a bit of expert knowledge but expert knowledge
+            // is typically considered reasonable to add to monte carlo tree search
+            if (!forRandom || node.edges.size() == 0) {
+                node.edges.push_back({Action(ActionType::END_TURN)});
+            }
             break;
 
         case InputState::CARD_SELECT:
@@ -217,6 +279,8 @@ void search::BattleScumSearcher2::enumerateCardActions(search::BattleScumSearche
 
         bool isUniqueAction = true;
 
+        // this doesn't make any sense. duplicate cards can appear in more locations than just next to each other
+        // this only handles like literally just dual wield on the turn it is played
         if (handIdx > 0) {
             const auto &lastCard = bc.cards.hand[handIdx-1];
 
@@ -234,6 +298,7 @@ void search::BattleScumSearcher2::enumerateCardActions(search::BattleScumSearche
         }
 
         if (isUniqueAction) {
+            // this is being called a *lot* maybe swap it for a lookup table instead of a switch statement
             playableHandIdxs.push_back( {handIdx, search::Expert::getPlayOrdering(c.getId())} );
         }
     }
@@ -272,27 +337,27 @@ void search::BattleScumSearcher2::enumeratePotionActions(search::BattleScumSearc
         }
         ++foundPotions;
 
-        // not enumerating the discard of a potion if it can be used
-        if (p == Potion::FAIRY_POTION) {
-            node.edges.push_back({Action(ActionType::POTION, pIdx, -1)});
+        // fairy potions cannot be used directly
+        // TODO: smoke bombs are also not implemented lol
+        if (p == Potion::FAIRY_POTION || p == Potion::SMOKE_BOMB) {
             continue;
         }
 
+        // if the potion requires a valid target and there are none, it cannot be used
+        if (potionRequiresTarget(p) && !hasValidTarget) {
+            continue;
+        }
+
+        // otherwise enumerate all valid ways to use the potion
         if (!potionRequiresTarget(p)) {
+            // non-targeted potions have one use action
             node.edges.push_back({Action(ActionType::POTION, pIdx)});
-            continue;
-        }
-
-        // potion requires target
-        if (!hasValidTarget) {
-            node.edges.push_back({Action(ActionType::POTION, pIdx, -1)});
-            continue;
-        }
-
-        // there is a valid target
-        for (int tIdx = 0; tIdx < bc.monsters.monsterCount; ++tIdx) {
-            if (bc.monsters.arr[tIdx].isTargetable()) {
-                node.edges.push_back({Action(ActionType::POTION, pIdx, tIdx)});
+        } else {
+            // targeted potions have one use action per valid monster target
+            for (int tIdx = 0; tIdx < bc.monsters.monsterCount; ++tIdx) {
+                if (bc.monsters.arr[tIdx].isTargetable()) {
+                    node.edges.push_back({Action(ActionType::POTION, pIdx, tIdx)});
+                }
             }
         }
     }
@@ -385,40 +450,72 @@ void search::BattleScumSearcher2::enumerateCardSelectActions(search::BattleScumS
     }
 }
 
-double getNonMinionMonsterCurHpRatio(const BattleContext &bc) {
+double getMonsterHpScale(const Monster &m) {
+    // the HP amounts of splitting enemies need to be inflated in order to ensure the evaluation function
+    // correctly recognizes that splitting the enemies constitutes progress towards a successful resolution
+    // to the fight
+
+    // this is necessary because otherwise the evaluation function will believe that a slime boss at 80/140 HP is a better
+    // state than two large slimes both at 60/60 HP since that is 120HP total vs 80HP so the hitpoints of the bigger splitting
+    // enemy need to be valued at twice the value of the hitpoints of the enemy they split into - the factor of 2 representing
+    // the fact that it splits into two smaller enemies with the same HP amount as the large enemy had 
+    switch (m.id) {
+        case MonsterId::SLIME_BOSS:
+            return 4.0;
+        case MonsterId::ACID_SLIME_L:
+        case MonsterId::SPIKE_SLIME_L:
+            return 2.0;
+        default:
+            return 1.0;
+    }
+}
+
+double getNonMinionMonsterCurHpTotal(const BattleContext &bc) {
     int curHpTotal = 0;
+
+    for (int i = 0; i < bc.monsters.monsterCount; ++i) {
+        const auto &m = bc.monsters.arr[i];
+        if (!m.hasStatus<MS::MINION>() && m.id != sts::MonsterId::INVALID) {
+            curHpTotal += m.curHp * getMonsterHpScale(m);
+            if (m.id == sts::MonsterId::AWAKENED_ONE && !m.miscInfo) { // is awakened one stage 1 // todo change to status
+                curHpTotal += m.maxHp * getMonsterHpScale(m);
+            }
+        }
+    }
+
+    return curHpTotal;
+}
+
+double getNonMinionMonsterMaxHpTotal(const BattleContext &bc) {
     int maxHpTotal = 0;
 
     for (int i = 0; i < bc.monsters.monsterCount; ++i) {
         const auto &m = bc.monsters.arr[i];
         if (!m.hasStatus<MS::MINION>() && m.id != sts::MonsterId::INVALID) {
-            curHpTotal += m.curHp;
-            maxHpTotal += m.maxHp;
+            maxHpTotal += m.maxHp * getMonsterHpScale(m);
+            if (m.id == sts::MonsterId::AWAKENED_ONE) {
+                maxHpTotal += m.maxHp * getMonsterHpScale(m);
+            }
         }
     }
 
-    if (curHpTotal == 0 || maxHpTotal == 0) {
-        return 0;
-    }
-
-    return (double)curHpTotal / maxHpTotal;
+    return maxHpTotal;
 }
 
-double search::BattleScumSearcher2::evaluateEndState(const BattleContext &bc) {
-    double potionScore = bc.potionCount * 4;
-
+double search::BattleScumSearcher2::evaluateEndState(const BattleContext &rootBc, const BattleContext &bc) {
+    // gives end state values normalized to the range (-1.0, 1.0)
     if (bc.outcome == Outcome::PLAYER_VICTORY) {
-        return 100 * (35 + bc.player.curHp + potionScore - (bc.turn * 0.01));
-
+        // produces winning scores in the range (0.0, 1.0)
+        return bc.player.curHp / 100.0f; 
     } else {
-//        double statusScore =
-//                (bc.player.getStatus<PS::STRENGTH>() * .5);
-        const bool couldHaveSpikers = bc.encounter == MonsterEncounter::THREE_SHAPES || bc.encounter == MonsterEncounter::FOUR_SHAPES;
-        double energyPenalty = bc.energyWasted * -0.2 * (couldHaveSpikers ? 0 : 1);
-        double drawBonus = bc.cardsDrawn * 0.03;
-        double aliveScore = bc.monsters.monstersAlive*-1;
-
-        return (1-getNonMinionMonsterCurHpRatio(bc))*10 + aliveScore + energyPenalty + drawBonus + potionScore / 2 + (bc.turn * .2);
+        double curHpTotal = getNonMinionMonsterCurHpTotal(bc);
+        double maxHpTotal = getNonMinionMonsterMaxHpTotal(rootBc);
+        double hpRatio = 0.0;
+        if (maxHpTotal != 0.0) {
+            hpRatio = curHpTotal / maxHpTotal;
+        }
+        // produces losing scores in the range (-1.0, 0.0)
+        return -hpRatio;
     }
 }
 

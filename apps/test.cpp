@@ -231,7 +231,7 @@ int mcts(int argc, const char *argv[]) {
     search::BattleScumSearcher2 searcher(bc);
 
     auto startTime = std::chrono::high_resolution_clock::now();
-    searcher.search(simulationCount);
+    searcher.search(simulationCount, 1000);
     auto endTime = std::chrono::high_resolution_clock::now();
     double duration = std::chrono::duration<double>(endTime-startTime).count();
 

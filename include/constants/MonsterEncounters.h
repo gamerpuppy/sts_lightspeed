@@ -85,7 +85,7 @@ namespace sts {
         MYSTERIOUS_SPHERE_EVENT,
     };
 
-    static constexpr const char * const monsterEncounterStrings[] = {
+    static constexpr const char * const monsterEncouterNames[] = {
             "INVALID",
             "Cultist",
             "Jaw Worm",

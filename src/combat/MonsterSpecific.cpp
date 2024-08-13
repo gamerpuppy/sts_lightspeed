@@ -1868,7 +1868,7 @@ void Monster::takeTurn(BattleContext &bc) {     // todo, maybe for monsters that
             std::cerr << bc.seed << " ";
             auto x = static_cast<int>(moveHistory[0]);
             if (x >= 0 && x <= static_cast<int>(MMID::WRITHING_MASS_STRONG_STRIKE)) {
-                std::cerr << monsterIdStrings[static_cast<int>(id)] << " " << monsterMoveStrings[x] << std::endl;
+                std::cerr << monsterIdEnumNames[static_cast<int>(id)] << " " << monsterMoveStrings[x] << std::endl;
             }
             assert(false);
         }
@@ -3311,7 +3311,9 @@ MMID Monster::getMoveForRoll(BattleContext &bc, int &monsterData, const int roll
             }
         }
 
-        case MonsterId::TORCH_HEAD: // setting in collector spawn move
+        case MonsterId::TORCH_HEAD:
+            return MonsterMoveId::TORCH_HEAD_TACKLE;
+
         default:
             break;
     }
